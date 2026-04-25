@@ -166,7 +166,7 @@
       "main": [
         [
           {
-            "node": "Push a message",
+            "node": "n8n",
             "type": "main",
             "index": 0
           }
@@ -217,7 +217,7 @@
       "main": [
         [
           {
-            "node": "Push a message",
+            "node": "n8n",
             "type": "main",
             "index": 0
           }
@@ -245,28 +245,6 @@
           }
         ]
       ]
-    },
-    "Push a message": {
-      "main": [
-        [
-          {
-            "node": "n8n",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Push a message2": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "createdAt": "2026-04-25T18:01:28.505Z",
@@ -275,7 +253,7 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "name": "Nextcloud zu Hetzner Backup mit Prüfung",
+  "name": "N8n Flow Backup",
   "nodes": [
     {
       "parameters": {},
@@ -541,15 +519,15 @@
         "operation": "edit",
         "owner": {
           "__rl": true,
-          "mode": "",
-          "value": "={{ $('Config').first().item.repo_owner }}"
+          "value": "={{ $('Config').item.json.repo_owner }}",
+          "mode": ""
         },
         "repository": {
           "__rl": true,
-          "mode": "",
-          "value": "={{ $('Config').first().item.repo_name }}"
+          "value": "={{ $('Config').item.json.repo_name }}",
+          "mode": ""
         },
-        "filePath": "={{ $('Config').first().item.repo_path }}{{ $json.subPath }}{{$('Execute Workflow Trigger').first().json.id}}.json",
+        "filePath": "={{ $('Config').item.json.repo_path }}{{ $json.subPath }}{{$('Execute Workflow Trigger').first().json.id}}.json",
         "fileContent": "={{$('isDiffOrNew').item.json[\"n8n_data_stringy\"]}}",
         "commitMessage": "={{$('Execute Workflow Trigger').first().json.name}} ({{$json.github_status}})"
       },
@@ -679,15 +657,15 @@
         "operation": "get",
         "owner": {
           "__rl": true,
-          "mode": "",
-          "value": "={{ $('Config').first().item.repo_owner }}"
+          "value": "={{ $json.repo_owner }}",
+          "mode": ""
         },
         "repository": {
           "__rl": true,
-          "mode": "",
-          "value": "={{ $('Config').first().item.repo_name }}"
+          "value": "={{ $json.repo_name }}",
+          "mode": ""
         },
-        "filePath": "={{ $('Config').first().item.repo_path }}{{ $('Execute Workflow Trigger').first().json.createdAt.split('-')[0] }}/{{ $('Execute Workflow Trigger').first().json.createdAt.split('-')[1] }}/{{$json.id}}.json",
+        "filePath": "={{ $json.repo_path }}{{ $('Execute Workflow Trigger').first().json.createdAt.split('-')[0] }}/{{ $('Execute Workflow Trigger').first().json.createdAt.split('-')[1] }}/{{$json.id}}.json",
         "asBinaryProperty": false,
         "additionalParameters": {}
       },
@@ -748,28 +726,6 @@
     {
       "parameters": {
         "userKey": "uv1265uon69b2871uey6x8ba94t9dy",
-        "message": "=Starting Workflow Backup [{{ $execution.id }}]",
-        "priority": -1,
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.pushover",
-      "typeVersion": 1,
-      "position": [
-        672,
-        192
-      ],
-      "id": "b159c46d-7d9d-4851-ae71-41feaa85c7c1",
-      "name": "Push a message",
-      "credentials": {
-        "pushoverApi": {
-          "id": "1VD3iZZtoihGdzBM",
-          "name": "Pushover account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "userKey": "uv1265uon69b2871uey6x8ba94t9dy",
         "message": "=Finished Workflow Backup [{{ $execution.id }}]",
         "additionalFields": {}
       },
@@ -781,27 +737,6 @@
       ],
       "id": "2a611521-b973-418e-9bc3-f853c1345b78",
       "name": "Push a message1",
-      "credentials": {
-        "pushoverApi": {
-          "id": "1VD3iZZtoihGdzBM",
-          "name": "Pushover account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "userKey": "uv1265uon69b2871uey6x8ba94t9dy",
-        "message": "=Error Workflow Backup [{{ $execution.id }}]",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.pushover",
-      "typeVersion": 1,
-      "position": [
-        1776,
-        272
-      ],
-      "id": "f3fc97ec-430e-4a9a-b0f3-d90bc4cd3b3c",
-      "name": "Push a message2",
       "credentials": {
         "pushoverApi": {
           "id": "1VD3iZZtoihGdzBM",
@@ -830,6 +765,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2026-04-25T18:58:13.661Z",
-  "versionId": "838a1939-7ab9-404a-94fe-5c0772bcd2ef"
+  "updatedAt": "2026-04-25T19:05:46.522Z",
+  "versionId": "e5a83751-b296-4920-9faa-c9acfa6ee83c"
 }
