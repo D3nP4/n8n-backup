@@ -134,13 +134,7 @@
     },
     "Loop Over Items": {
       "main": [
-        [
-          {
-            "node": "Push a message1",
-            "type": "main",
-            "index": 0
-          }
-        ],
+        [],
         [
           {
             "node": "Execute Workflow",
@@ -159,7 +153,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Push a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Schedule Trigger": {
@@ -649,7 +649,8 @@
         1456,
         176
       ],
-      "typeVersion": 1
+      "typeVersion": 1,
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -726,17 +727,17 @@
     {
       "parameters": {
         "userKey": "uv1265uon69b2871uey6x8ba94t9dy",
-        "message": "=Finished Workflow Backup [{{ $execution.id }}]",
+        "message": "n8n Backup Failed",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.pushover",
       "typeVersion": 1,
       "position": [
-        1296,
-        64
+        1664,
+        272
       ],
-      "id": "2a611521-b973-418e-9bc3-f853c1345b78",
-      "name": "Push a message1",
+      "id": "bbc44fab-acaa-40e5-8132-bcb5d39203f3",
+      "name": "Push a message",
       "credentials": {
         "pushoverApi": {
           "id": "1VD3iZZtoihGdzBM",
@@ -765,6 +766,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2026-04-25T19:05:46.522Z",
-  "versionId": "e5a83751-b296-4920-9faa-c9acfa6ee83c"
+  "updatedAt": "2026-04-25T19:07:04.585Z",
+  "versionId": "b49e7c3e-1d3f-4b83-884a-9db46527bf08"
 }
