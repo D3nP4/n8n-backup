@@ -1,0 +1,37 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {},
+  "createdAt": "2026-04-26T14:10:22.085Z",
+  "id": "Qw8xqlxN0bC1eNuy",
+  "isArchived": true,
+  "meta": {
+    "templateId": "620",
+    "templateCredsSetupCompleted": true
+  },
+  "name": "Manage folders in Nextcloud",
+  "nodes": [],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-04-26T14:10:22.088Z",
+      "createdAt": "2026-04-26T14:10:22.088Z",
+      "role": "workflow:owner",
+      "workflowId": "Qw8xqlxN0bC1eNuy",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-04-26T14:10:40.000Z",
+  "versionId": "a02f6583-32ef-411f-8b12-890ec6b72c1d"
+}
