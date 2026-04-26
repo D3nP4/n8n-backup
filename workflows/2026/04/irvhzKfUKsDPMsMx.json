@@ -1,0 +1,36 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {},
+  "createdAt": "2026-04-26T14:07:18.241Z",
+  "id": "irvhzKfUKsDPMsMx",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "Nextcloud Monatsordner KI sortieren",
+  "nodes": [],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-04-26T14:07:18.245Z",
+      "createdAt": "2026-04-26T14:07:18.245Z",
+      "role": "workflow:owner",
+      "workflowId": "irvhzKfUKsDPMsMx",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-04-26T14:26:44.169Z",
+  "versionId": "b468c791-bf49-43ad-a33a-7483e61facd8"
+}
