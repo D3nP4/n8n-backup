@@ -1,0 +1,249 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Konfiguration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Konfiguration": {
+      "main": [
+        [
+          {
+            "node": "Letzten Monat berechnen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Letzten Monat berechnen": {
+      "main": [
+        [
+          {
+            "node": "Firefly - Transaktionen holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firefly - Transaktionen holen": {
+      "main": [
+        [
+          {
+            "node": "KI Prompt bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KI Prompt bauen": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-04-26T19:22:27.071Z",
+  "id": "23988aC6JmZYvDVs",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "Firefly → ChatGPT → Grafana",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        2080,
+        112
+      ],
+      "id": "e86b9e2b-8472-4238-98eb-42f9c06aaddb",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "firefly_url",
+              "value": "http://192.168.178.42:8051",
+              "type": "string",
+              "id": "c2409aed-ad51-4d10-86d7-3b65ba221a79"
+            },
+            {
+              "name": "firefly_token",
+              "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIwMTlkY2I1Ni05MGNlLTcxY2QtYjRjOC02MzJmODliOTQ5M2IiLCJqdGkiOiJkYjk1NmI0ZDc3ZThhYjBmZGM1NWNkNjQ2ZTE4NmM3NTAyNGRmZDkzY2M1YmEwOTA0OTAyMGIwZTRkMDY1MjA5MDNhMDRhYTFkNmQ1ZTliNCIsImlhdCI6MTc3NzIzMjk1MS4yNTAzNTUsIm5iZiI6MTc3NzIzMjk1MS4yNTAzNTgsImV4cCI6MTgwODc2ODk1MS4xMjY4NzUsInN1YiI6IjEiLCJzY29wZXMiOltdfQ.HCWPie_V7ghnLSKw8O0KXImm6JvL5jx0G7t78_pfKJX_mYnsIllLE_95lfkUh8qrxQXpk-2hFFq-zXBhTox-utF5LsVnwH5OJcfDj9k5pe7MbhYVoSnuLygVl1X0bAdha0idZOb6FfM47xdKtrl0-KGIF2IhT0qUEVDOEOKk9FUBdJ9ODNUZOiEAUeLielqhpO9SaWH3dm0b4lZDmk-dbII6EY0I_ItUc4qDevi6pOWsDfSES7pHy84vzE8QXMqwkIGx0TDAI7Pq8RlZ_86b099QnlKWSA7Hdu0Ze6JB_XEOq7OyOzvnGHYeHyKAEVahQI11VkUJOuMvD4SlfyWK0xcJrIqXFvRDVJ513QBAVPM-eF-eqJ17zXh8fJvhes1a-Z-orcg1xE-8VpDJWetOZNGMeWXhLgV9mClK5Sja5AEERwh1WGUofIpjBw8RkLoTn50Rf7_cNVPbQzaqF-l19-lb1RAibG4Bnt-EkvC8q64W9nqz2klKEG1P_0PmO_uSZs2hnzznnJPYwI-wGd8AuhTdLNb04ZxBXXA_ls_euRyapAXRFrUu53D52St6MQPv1qDLB_3oiKc4ZFlV37ez9uHpIGa0yEUjh7Z0QRzO2pxAzRjUVVWdh0_VAm-z_fK-UOo8ip5cwC5uGPDgffTT3IiASi9-J_72mKmIhI3yfjo",
+              "type": "string",
+              "id": "cca8c3b0-22f4-4ed4-96c0-860b45e8aeb1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c6e264ab-b9da-4f48-b305-5444c5615b0b",
+      "name": "Konfiguration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2032,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst start = new Date(now.getFullYear(), now.getMonth() - 1, 1);\nconst end = new Date(now.getFullYear(), now.getMonth(), 0);\n\nfunction fmt(d) {\n  return d.toISOString().slice(0, 10);\n}\n\nreturn [{\n  json: {\n    ...$json,\n    start_date: fmt(start),\n    end_date: fmt(end),\n    month_label: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`\n  }\n}];"
+      },
+      "id": "56ebf547-85f9-474b-9a4f-79ee05dcd881",
+      "name": "Letzten Monat berechnen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2528,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.firefly_url }}/api/v1/transactions",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "start",
+              "value": "={{ $json.start_date }}"
+            },
+            {
+              "name": "end",
+              "value": "={{ $json.end_date }}"
+            },
+            {
+              "name": "limit",
+              "value": "1000"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.firefly_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2b79e9ae-6cca-44bd-a44b-b59e607d7c63",
+      "name": "Firefly - Transaktionen holen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2752,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $json.data || [];\n\nlet income = 0;\nlet expenses = 0;\nlet transfers = 0;\n\nconst categories = {};\nconst merchants = {};\nconst transactions = [];\n\nfor (const group of data) {\n  const txs = group.attributes?.transactions || [];\n\n  for (const tx of txs) {\n    const amount = Number(tx.amount || 0);\n    const type = tx.type || 'unknown';\n    const category = tx.category_name || 'Ohne Kategorie';\n    const description = tx.description || 'Ohne Beschreibung';\n    const destination = tx.destination_name || '';\n    const source = tx.source_name || '';\n\n    if (type === 'deposit') income += Math.abs(amount);\n    if (type === 'withdrawal') expenses += Math.abs(amount);\n    if (type === 'transfer') transfers += Math.abs(amount);\n\n    if (type === 'withdrawal') {\n      categories[category] = (categories[category] || 0) + Math.abs(amount);\n      const merchant = destination || description;\n      merchants[merchant] = (merchants[merchant] || 0) + Math.abs(amount);\n    }\n\n    transactions.push({\n      date: tx.date,\n      type,\n      amount,\n      description,\n      category,\n      source,\n      destination\n    });\n  }\n}\n\nconst top_categories = Object.entries(categories)\n  .sort((a, b) => b[1] - a[1])\n  .slice(0, 10)\n  .map(([name, amount]) => ({ name, amount: amount.toFixed(2) }));\n\nconst top_merchants = Object.entries(merchants)\n  .sort((a, b) => b[1] - a[1])\n  .slice(0, 10)\n  .map(([name, amount]) => ({ name, amount: amount.toFixed(2) }));\n\nconst config = $('Konfiguration').first().json;\nconst dates = $('Letzten Monat berechnen').first().json;\n\nconst summary = {\n  month: dates.month_label,\n  start_date: dates.start_date,\n  end_date: dates.end_date,\n  transaction_count: transactions.length,\n  income: income.toFixed(2),\n  expenses: expenses.toFixed(2),\n  transfers: transfers.toFixed(2),\n  balance: (income - expenses).toFixed(2),\n  top_categories,\n  top_merchants,\n  transactions\n};\n\nconst systemPrompt = `Du bist ein Finanzanalyst für private Haushalte.\\nAnalysiere Firefly-III-Monatsdaten klar, ehrlich und hilfreich.\\nAntworte auf Deutsch.\\nKeine erfundenen Zahlen. Nutze nur die gelieferten Daten.`;\n\nconst userPrompt = `Analysiere den folgenden Firefly-III-Monat.\\n\\nGib mir:\\n1. Kurzfazit\\n2. Einnahmen, Ausgaben und Bilanz\\n3. Größte Kostentreiber\\n4. Auffällige Buchungen\\n5. Sparpotenzial\\n6. Konkrete Empfehlungen für den nächsten Monat\\n7. Kurze Zusammenfassung als Monatsbericht\\n\\nDaten:\\n${JSON.stringify(summary, null, 2)}`;\n\nreturn {\n  json: {\n    firefly_url: config.firefly_url,\n    firefly_token: config.firefly_token,\n    ...summary,\n    systemPrompt,\n    userPrompt\n  }\n};"
+      },
+      "id": "d4b8e836-cd59-471a-bc25-bdeaa50b4379",
+      "name": "KI Prompt bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2976,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "={{$json.userPrompt}}"
+            },
+            {
+              "role": "system",
+              "content": "={{$json.systemPrompt}}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        3312,
+        112
+      ],
+      "id": "6efc5d60-a8a6-4e3e-ada2-226a2992b7ba",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "EVf6W0jyq4ACcS36",
+          "name": "OpenAI account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-04-26T19:22:27.073Z",
+      "createdAt": "2026-04-26T19:22:27.073Z",
+      "role": "workflow:owner",
+      "workflowId": "23988aC6JmZYvDVs",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-04-26T20:02:46.856Z",
+  "versionId": "65308ece-42f8-4ee1-8e50-dbf3c2668363"
+}
