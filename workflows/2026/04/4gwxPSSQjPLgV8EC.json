@@ -1,0 +1,197 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Manuell starten": {
+      "main": [
+        [
+          {
+            "node": "Konfiguration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Konfiguration": {
+      "main": [
+        [
+          {
+            "node": "Firefly - Transaktionen holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firefly - Transaktionen holen": {
+      "main": [
+        [
+          {
+            "node": "Monatssaldo berechnen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monatssaldo berechnen": {
+      "main": [
+        [
+          {
+            "node": "InfluxDB - Monatswert schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-04-26T21:24:29.459Z",
+  "id": "4gwxPSSQjPLgV8EC",
+  "isArchived": false,
+  "meta": null,
+  "name": "Firefly Monats-Saldo zu InfluxDB",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7f9ebfc0-c47f-4d63-9493-fce1bb117ad6",
+      "name": "Manuell starten",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst year = now.getFullYear();\nconst month = String(now.getMonth() + 1).padStart(2, '0');\n\nconst start = `${year}-${month}-01`;\nconst endDate = new Date(year, now.getMonth() + 1, 0);\nconst end = `${year}-${month}-${String(endDate.getDate()).padStart(2, '0')}`;\n\nreturn [\n  {\n    json: {\n      firefly_url: 'http://192.168.178.42:8051',\n      firefly_token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIwMTlkY2I1Ni05MGNlLTcxY2QtYjRjOC02MzJmODliOTQ5M2IiLCJqdGkiOiJkYjk1NmI0ZDc3ZThhYjBmZGM1NWNkNjQ2ZTE4NmM3NTAyNGRmZDkzY2M1YmEwOTA0OTAyMGIwZTRkMDY1MjA5MDNhMDRhYTFkNmQ1ZTliNCIsImlhdCI6MTc3NzIzMjk1MS4yNTAzNTUsIm5iZiI6MTc3NzIzMjk1MS4yNTAzNTgsImV4cCI6MTgwODc2ODk1MS4xMjY4NzUsInN1YiI6IjEiLCJzY29wZXMiOltdfQ.HCWPie_V7ghnLSKw8O0KXImm6JvL5jx0G7t78_pfKJX_mYnsIllLE_95lfkUh8qrxQXpk-2hFFq-zXBhTox-utF5LsVnwH5OJcfDj9k5pe7MbhYVoSnuLygVl1X0bAdha0idZOb6FfM47xdKtrl0-KGIF2IhT0qUEVDOEOKk9FUBdJ9ODNUZOiEAUeLielqhpO9SaWH3dm0b4lZDmk-dbII6EY0I_ItUc4qDevi6pOWsDfSES7pHy84vzE8QXMqwkIGx0TDAI7Pq8RlZ_86b099QnlKWSA7Hdu0Ze6JB_XEOq7OyOzvnGHYeHyKAEVahQI11VkUJOuMvD4SlfyWK0xcJrIqXFvRDVJ513QBAVPM-eF-eqJ17zXh8fJvhes1a-Z-orcg1xE-8VpDJWetOZNGMeWXhLgV9mClK5Sja5AEERwh1WGUofIpjBw8RkLoTn50Rf7_cNVPbQzaqF-l19-lb1RAibG4Bnt-EkvC8q64W9nqz2klKEG1P_0PmO_uSZs2hnzznnJPYwI-wGd8AuhTdLNb04ZxBXXA_ls_euRyapAXRFrUu53D52St6MQPv1qDLB_3oiKc4ZFlV37ez9uHpIGa0yEUjh7Z0QRzO2pxAzRjUVVWdh0_VAm-z_fK-UOo8ip5cwC5uGPDgffTT3IiASi9-J_72mKmIhI3yfjo',\n      influx_url: 'http://192.168.178.42:8086',\n      influx_org: 'home',\n      influx_bucket: 'firefly',\n      influx_token: 'bitte-aendern-token',\n      month: `${year}-${month}`,\n      start,\n      end\n    }\n  }\n];"
+      },
+      "id": "ab19a353-5c3a-40e5-abef-0dcd9b02d70c",
+      "name": "Konfiguration",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.firefly_url }}/api/v1/transactions",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "start",
+              "value": "={{ $json.start }}"
+            },
+            {
+              "name": "end",
+              "value": "={{ $json.end }}"
+            },
+            {
+              "name": "type",
+              "value": "all"
+            },
+            {
+              "name": "limit",
+              "value": "500"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.firefly_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "05596711-2074-401f-9cf5-1cfa3337ff06",
+      "name": "Firefly - Transaktionen holen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        416,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = $('Konfiguration').first().json;\nconst rows = $json.data || [];\n\nlet income = 0;\nlet expenses = 0;\nlet countIncome = 0;\nlet countExpenses = 0;\n\nfor (const row of rows) {\n  const txs = row.attributes?.transactions || [];\n\n  for (const tx of txs) {\n    const type = String(tx.type || '').toLowerCase();\n    const amount = Math.abs(Number(String(tx.amount || '0').replace(',', '.')));\n\n    if (!amount || Number.isNaN(amount)) continue;\n\n    if (type === 'deposit') {\n      income += amount;\n      countIncome++;\n    }\n\n    if (type === 'withdrawal') {\n      expenses += amount;\n      countExpenses++;\n    }\n  }\n}\n\nconst balance = income - expenses;\n\nconst line = `firefly_month,month=${config.month} income=${income.toFixed(2)},expenses=${expenses.toFixed(2)},balance=${balance.toFixed(2)},count_income=${countIncome},count_expenses=${countExpenses}`;\n\nreturn [\n  {\n    json: {\n      ...config,\n      income,\n      expenses,\n      balance,\n      count_income: countIncome,\n      count_expenses: countExpenses,\n      influx_line: line\n    }\n  }\n];"
+      },
+      "id": "a160b724-c6e5-49f9-847a-6b0ed2391e8d",
+      "name": "Monatssaldo berechnen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.influx_url }}/api/v2/write?org={{ $json.influx_org }}&bucket={{ $json.influx_bucket }}&precision=s",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Token {{ $json.influx_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "text/plain"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/plain",
+        "body": "={{ $json.influx_line }}",
+        "options": {}
+      },
+      "id": "a6ab6d63-b7ec-4ce8-82fb-7a54bdb6c290",
+      "name": "InfluxDB - Monatswert schreiben",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        928,
+        -208
+      ]
+    }
+  ],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-04-26T21:24:29.461Z",
+      "createdAt": "2026-04-26T21:24:29.461Z",
+      "role": "workflow:owner",
+      "workflowId": "4gwxPSSQjPLgV8EC",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-04-26T21:26:05.256Z",
+  "versionId": "791c79b6-d8d1-4168-bc5a-e603f944c724"
+}
