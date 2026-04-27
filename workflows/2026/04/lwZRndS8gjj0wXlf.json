@@ -1,0 +1,540 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-04-26T22:58:31.000Z",
+    "createdAt": "2026-04-26T22:58:30.341Z",
+    "versionId": "0cfa4fb3-8959-4299-af68-2022be649fd2",
+    "workflowId": "lwZRndS8gjj0wXlf",
+    "nodes": [
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "a9ebe2c5-2d8f-4539-8a2b-0ce76b63d5b6",
+        "name": "IMAP Trigger",
+        "type": "n8n-nodes-base.emailReadImap",
+        "typeVersion": 1,
+        "position": [
+          -928,
+          -64
+        ],
+        "credentials": {
+          "imap": {
+            "id": "ePxlcawqlUoNKC5W",
+            "name": "IMAP account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return {\n  json: {\n    from: $json.from,\n    subject: $json.subject,\n    text: $json.text || $json.html || '',\n    date: $json.date\n  }\n};"
+        },
+        "id": "c67a5e7e-2215-4b7a-9c14-a2e6271c935a",
+        "name": "Prepare Mail",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -720,
+          -64
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  let text =\n    item.json.output?.[0]?.content?.[0]?.text ||\n    item.json.message?.content ||\n    item.json.choices?.[0]?.message?.content ||\n    item.json.text ||\n    item.json.content ||\n    '';\n\n  text = String(text)\n    .replace(/```json/g, '')\n    .replace(/```/g, '')\n    .trim();\n\n  if (!text) {\n    throw new Error('Kein KI-Text gefunden. Prüfe den Output vom OpenAI Node.');\n  }\n\n  const match = text.match(/\\{[\\s\\S]*\\}/);\n\n  if (!match) {\n    throw new Error('Kein JSON im KI-Output gefunden: ' + text);\n  }\n\n  const ai = JSON.parse(match[0]);\n\n  return {\n    json: {\n      ...item.json,\n      ai\n    }\n  };\n});"
+        },
+        "id": "4696755e-53c8-492b-ad03-9320814730f6",
+        "name": "Parse AI",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -208,
+          -64
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{$json.ai.priority}}",
+                "value2": "kritisch"
+              }
+            ]
+          }
+        },
+        "id": "ad8aa54a-3e20-49ad-a3db-62647fd70720",
+        "name": "IF Critical",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 1,
+        "position": [
+          240,
+          -64
+        ]
+      },
+      {
+        "parameters": {
+          "userKey": "uv1265uon69b2871uey6x8ba94t9dy",
+          "message": "🚨 Kritische Mail\n\nVon: {{$json.from}}\nBetreff: {{$json.subject}}\n\n{{$json.ai.summary}}\n\nAufgabe:\n{{$json.ai.task}}",
+          "priority": 1,
+          "additionalFields": {}
+        },
+        "id": "af406e56-52fb-4406-a470-70c324d29384",
+        "name": "Send Pushover",
+        "type": "n8n-nodes-base.pushover",
+        "typeVersion": 1,
+        "position": [
+          448,
+          -160
+        ],
+        "credentials": {
+          "pushoverApi": {
+            "id": "1VD3iZZtoihGdzBM",
+            "name": "Pushover account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "boolean": [
+              {
+                "value1": "={{$json.ai.needs_reply}}"
+              }
+            ]
+          }
+        },
+        "id": "e6c047a3-87aa-4235-bd03-1124491194d0",
+        "name": "IF Reply Needed",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 1,
+        "position": [
+          240,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "fromEmail": "={{ $('IMAP Trigger').item.json.metadata['delivered-to'] }}",
+          "toEmail": "={{ $('IMAP Trigger').item.json.from }}",
+          "subject": "Re: {{$json.subject}}",
+          "text": "={{ $json.ai.suggested_reply }}",
+          "options": {}
+        },
+        "id": "72b8bb83-e399-4717-a6f4-53aa1580c52c",
+        "name": "Create Draft",
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2,
+        "position": [
+          480,
+          80
+        ],
+        "webhookId": "e2d9eb8f-c978-4945-bc52-a7973f1b5481",
+        "credentials": {
+          "smtp": {
+            "id": "X7DQ7int6ak0mBA4",
+            "name": "SMTP account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.4-nano-2026-03-17",
+            "mode": "list",
+            "cachedResultName": "GPT-5.4-NANO-2026-03-17"
+          },
+          "responses": {
+            "values": [
+              {
+                "content": "=Du bist ein hochintelligenter E-Mail-Assistent für automatische Verarbeitung in n8n.\n\nDeine Aufgabe:\nAnalysiere eingehende E-Mails und entscheide strukturiert, was zu tun ist.\n\nWICHTIG:\n- Antworte AUSSCHLIESSLICH mit gültigem JSON\n- KEIN Text außerhalb des JSON\n- KEINE Erklärungen\n- KEINE Markdown Blöcke\n\n---\n\nE-Mail:\n\nVon: {{$json.from}}\nBetreff: {{$json.subject}}\n\nInhalt:\n{{$json.text}}\n\n---\n\nGib folgendes JSON zurück:\n\n{\n  \"category\": \"\",\n  \"priority\": \"\",\n  \"needs_reply\": false,\n  \"needs_action\": false,\n  \"deadline\": null,\n  \"summary\": \"\",\n  \"task\": null,\n  \"suggested_reply\": null,\n  \"archive_folder\": \"\",\n  \"notify_user\": false\n}\n\n---\n\nREGELN:\n\nKATEGORIEN (nur eine auswählen):\n- Rechnung\n- Kunde\n- Support\n- Termin\n- Newsletter\n- Privat\n- Spam\n- Vertrag\n- Bank\n- Versicherung\n- Behörde\n- ToDo\n\nPRIORITÄT:\n- niedrig → Newsletter, Werbung\n- normal → Standard Kommunikation\n- hoch → Fristen, Kunden, Rechnungen\n- kritisch → Mahnungen, Kündigungen, Sicherheit, Behörden\n\nneeds_reply:\ntrue → wenn eine Antwort erwartet wird\nfalse → wenn nur Info\n\nneeds_action:\ntrue → wenn du etwas aktiv tun musst (zahlen, reagieren, prüfen)\nfalse → wenn nicht\n\ndeadline:\n- extrahiere Datum wenn vorhanden\n- Format: YYYY-MM-DD\n- sonst: null\n\nsummary:\n- max. 2 Sätze\n- klar und konkret\n\ntask:\n- konkrete Aufgabe formulieren\n- Beispiel: \"Rechnung bezahlen\", \"Antwort an Kunden senden\"\n- sonst: null\n\nsuggested_reply:\n- nur wenn needs_reply = true\n- kurz, professionell, direkt nutzbar\n- keine Platzhalter wie [Name]\n\narchive_folder:\nStruktur:\n<category>/<YYYY-MM>\n\nBeispiel:\nRechnung/2026-04\n\nnotify_user:\ntrue wenn:\n- priority = hoch oder kritisch\n- oder deadline vorhanden\n- oder wichtige Aufgabe\n\nfalse wenn:\n- Newsletter\n- Spam\n- unwichtige Info\n\n---\n\nSONDERREGELN:\n\n- Newsletter IMMER:\n  priority = niedrig\n  notify_user = false\n\n- Rechnungen:\n  needs_action = true\n\n- Behörden / Bank:\n  mindestens priority = hoch\n\n- Wenn unsicher:\n  priority = normal\n\n---\n\nGIB NUR DAS JSON ZURÜCK."
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          -512,
+          -64
+        ],
+        "id": "fd919d3a-0494-4026-9781-497b873fc3d9",
+        "name": "Message a model",
+        "credentials": {
+          "openAiApi": {
+            "id": "EVf6W0jyq4ACcS36",
+            "name": "OpenAI account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "IMAP Trigger": {
+        "main": [
+          [
+            {
+              "node": "Prepare Mail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Mail": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse AI": {
+        "main": [
+          [
+            {
+              "node": "IF Critical",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "IF Reply Needed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Critical": {
+        "main": [
+          [
+            {
+              "node": "Send Pushover",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF Reply Needed": {
+        "main": [
+          []
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Parse AI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": "Version 0cfa4fb3",
+    "description": "",
+    "autosaved": false
+  },
+  "activeVersionId": "0cfa4fb3-8959-4299-af68-2022be649fd2",
+  "connections": {
+    "IMAP Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Mail": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI": {
+      "main": [
+        [
+          {
+            "node": "IF Critical",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF Reply Needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Critical": {
+      "main": [
+        [
+          {
+            "node": "Send Pushover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Reply Needed": {
+      "main": [
+        [
+          {
+            "node": "Send Pushover1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parse AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-04-26T22:05:27.145Z",
+  "id": "lwZRndS8gjj0wXlf",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "AI Mail Butler",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a9ebe2c5-2d8f-4539-8a2b-0ce76b63d5b6",
+      "name": "IMAP Trigger",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        -64
+      ],
+      "credentials": {
+        "imap": {
+          "id": "ePxlcawqlUoNKC5W",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    from: $json.from,\n    subject: $json.subject,\n    text: $json.text || $json.html || '',\n    date: $json.date\n  }\n};"
+      },
+      "id": "c67a5e7e-2215-4b7a-9c14-a2e6271c935a",
+      "name": "Prepare Mail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  let text =\n    item.json.output?.[0]?.content?.[0]?.text ||\n    item.json.message?.content ||\n    item.json.choices?.[0]?.message?.content ||\n    item.json.text ||\n    item.json.content ||\n    '';\n\n  text = String(text)\n    .replace(/```json/g, '')\n    .replace(/```/g, '')\n    .trim();\n\n  if (!text) {\n    throw new Error('Kein KI-Text gefunden. Prüfe den Output vom OpenAI Node.');\n  }\n\n  const match = text.match(/\\{[\\s\\S]*\\}/);\n\n  if (!match) {\n    throw new Error('Kein JSON im KI-Output gefunden: ' + text);\n  }\n\n  const ai = JSON.parse(match[0]);\n\n  return {\n    json: {\n      ...item.json,\n      ai\n    }\n  };\n});"
+      },
+      "id": "4696755e-53c8-492b-ad03-9320814730f6",
+      "name": "Parse AI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.ai.priority}}",
+              "value2": "kritisch"
+            }
+          ]
+        }
+      },
+      "id": "ad8aa54a-3e20-49ad-a3db-62647fd70720",
+      "name": "IF Critical",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "userKey": "uv1265uon69b2871uey6x8ba94t9dy",
+        "message": "🚨 Kritische Mail\n\nVon: {{$json.from}}\nBetreff: {{$json.subject}}\n\n{{$json.ai.summary}}\n\nAufgabe:\n{{$json.ai.task}}",
+        "priority": 1,
+        "additionalFields": {}
+      },
+      "id": "af406e56-52fb-4406-a470-70c324d29384",
+      "name": "Send Pushover",
+      "type": "n8n-nodes-base.pushover",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -160
+      ],
+      "credentials": {
+        "pushoverApi": {
+          "id": "1VD3iZZtoihGdzBM",
+          "name": "Pushover account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.ai.needs_reply}}"
+            }
+          ]
+        }
+      },
+      "id": "e6c047a3-87aa-4235-bd03-1124491194d0",
+      "name": "IF Reply Needed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        240,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $('IMAP Trigger').item.json.metadata['delivered-to'] }}",
+        "toEmail": "={{ $('IMAP Trigger').item.json.from }}",
+        "subject": "={{ $('IMAP Trigger').item.json.subject }}",
+        "text": "={{ $json.ai.suggested_reply }}",
+        "options": {}
+      },
+      "id": "72b8bb83-e399-4717-a6f4-53aa1580c52c",
+      "name": "Create Draft",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        112,
+        512
+      ],
+      "webhookId": "e2d9eb8f-c978-4945-bc52-a7973f1b5481",
+      "credentials": {
+        "smtp": {
+          "id": "X7DQ7int6ak0mBA4",
+          "name": "SMTP account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4-nano-2026-03-17",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4-NANO-2026-03-17"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Du bist ein hochintelligenter E-Mail-Assistent für automatische Verarbeitung in n8n.\n\nDeine Aufgabe:\nAnalysiere eingehende E-Mails und entscheide strukturiert, was zu tun ist.\n\nWICHTIG:\n- Antworte AUSSCHLIESSLICH mit gültigem JSON\n- KEIN Text außerhalb des JSON\n- KEINE Erklärungen\n- KEINE Markdown Blöcke\n\n---\n\nE-Mail:\n\nVon: {{$json.from}}\nBetreff: {{$json.subject}}\n\nInhalt:\n{{$json.text}}\n\n---\n\nGib folgendes JSON zurück:\n\n{\n  \"category\": \"\",\n  \"priority\": \"\",\n  \"needs_reply\": false,\n  \"needs_action\": false,\n  \"deadline\": null,\n  \"summary\": \"\",\n  \"task\": null,\n  \"suggested_reply\": null,\n  \"archive_folder\": \"\",\n  \"notify_user\": false\n}\n\n---\n\nREGELN:\n\nKATEGORIEN (nur eine auswählen):\n- Rechnung\n- Kunde\n- Support\n- Termin\n- Newsletter\n- Privat\n- Spam\n- Vertrag\n- Bank\n- Versicherung\n- Behörde\n- ToDo\n\nPRIORITÄT:\n- niedrig → Newsletter, Werbung\n- normal → Standard Kommunikation\n- hoch → Fristen, Kunden, Rechnungen\n- kritisch → Mahnungen, Kündigungen, Sicherheit, Behörden\n\nneeds_reply:\ntrue → wenn eine Antwort erwartet wird\nfalse → wenn nur Info\n\nneeds_action:\ntrue → wenn du etwas aktiv tun musst (zahlen, reagieren, prüfen)\nfalse → wenn nicht\n\ndeadline:\n- extrahiere Datum wenn vorhanden\n- Format: YYYY-MM-DD\n- sonst: null\n\nsummary:\n- max. 2 Sätze\n- klar und konkret\n\ntask:\n- konkrete Aufgabe formulieren\n- Beispiel: \"Rechnung bezahlen\", \"Antwort an Kunden senden\"\n- sonst: null\n\nsuggested_reply:\n- nur wenn needs_reply = true\n- kurz, professionell, direkt nutzbar\n- keine Platzhalter wie [Name]\n\narchive_folder:\nStruktur:\n<category>/<YYYY-MM>\n\nBeispiel:\nRechnung/2026-04\n\nnotify_user:\ntrue wenn:\n- priority = hoch oder kritisch\n- oder deadline vorhanden\n- oder wichtige Aufgabe\n\nfalse wenn:\n- Newsletter\n- Spam\n- unwichtige Info\n\n---\n\nSONDERREGELN:\n\n- Newsletter IMMER:\n  priority = niedrig\n  notify_user = false\n\n- Rechnungen:\n  needs_action = true\n\n- Behörden / Bank:\n  mindestens priority = hoch\n\n- Wenn unsicher:\n  priority = normal\n\n---\n\nGIB NUR DAS JSON ZURÜCK."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -512,
+        -64
+      ],
+      "id": "fd919d3a-0494-4026-9781-497b873fc3d9",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EVf6W0jyq4ACcS36",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "userKey": "uv1265uon69b2871uey6x8ba94t9dy",
+        "message": "🚨 Kritische Mail\n\nVon: {{$json.from}}\nBetreff: {{$json.subject}}\n\n{{$json.ai.summary}}\n\nAufgabe:\n{{$json.ai.task}}",
+        "priority": 1,
+        "additionalFields": {}
+      },
+      "id": "50b1d80d-340a-4ce1-9e67-10ac3f0f1228",
+      "name": "Send Pushover1",
+      "type": "n8n-nodes-base.pushover",
+      "typeVersion": 1,
+      "position": [
+        576,
+        64
+      ],
+      "credentials": {
+        "pushoverApi": {
+          "id": "1VD3iZZtoihGdzBM",
+          "name": "Pushover account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-04-26T22:05:27.147Z",
+      "createdAt": "2026-04-26T22:05:27.147Z",
+      "role": "workflow:owner",
+      "workflowId": "lwZRndS8gjj0wXlf",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:IMAP Trigger": {
+      "lastMessageUid": 800
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-04-26T23:02:50.981Z",
+  "versionId": "3479b729-650c-4a26-baf4-9ac36d01a539"
+}
