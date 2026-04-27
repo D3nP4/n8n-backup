@@ -1,7 +1,466 @@
 {
-  "active": false,
-  "activeVersion": null,
-  "activeVersionId": null,
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-04-26T21:16:16.000Z",
+    "createdAt": "2026-04-26T21:15:41.954Z",
+    "versionId": "2bcea0dc-1ddf-47dd-8b43-f62896080099",
+    "workflowId": "23988aC6JmZYvDVs",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "months"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          2080,
+          48
+        ],
+        "id": "e86b9e2b-8472-4238-98eb-42f9c06aaddb",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "name": "firefly_url",
+                "value": "http://192.168.178.42:8051",
+                "type": "string",
+                "id": "c2409aed-ad51-4d10-86d7-3b65ba221a79"
+              },
+              {
+                "name": "firefly_token",
+                "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIwMTlkY2I1Ni05MGNlLTcxY2QtYjRjOC02MzJmODliOTQ5M2IiLCJqdGkiOiJkYjk1NmI0ZDc3ZThhYjBmZGM1NWNkNjQ2ZTE4NmM3NTAyNGRmZDkzY2M1YmEwOTA0OTAyMGIwZTRkMDY1MjA5MDNhMDRhYTFkNmQ1ZTliNCIsImlhdCI6MTc3NzIzMjk1MS4yNTAzNTUsIm5iZiI6MTc3NzIzMjk1MS4yNTAzNTgsImV4cCI6MTgwODc2ODk1MS4xMjY4NzUsInN1YiI6IjEiLCJzY29wZXMiOltdfQ.HCWPie_V7ghnLSKw8O0KXImm6JvL5jx0G7t78_pfKJX_mYnsIllLE_95lfkUh8qrxQXpk-2hFFq-zXBhTox-utF5LsVnwH5OJcfDj9k5pe7MbhYVoSnuLygVl1X0bAdha0idZOb6FfM47xdKtrl0-KGIF2IhT0qUEVDOEOKk9FUBdJ9ODNUZOiEAUeLielqhpO9SaWH3dm0b4lZDmk-dbII6EY0I_ItUc4qDevi6pOWsDfSES7pHy84vzE8QXMqwkIGx0TDAI7Pq8RlZ_86b099QnlKWSA7Hdu0Ze6JB_XEOq7OyOzvnGHYeHyKAEVahQI11VkUJOuMvD4SlfyWK0xcJrIqXFvRDVJ513QBAVPM-eF-eqJ17zXh8fJvhes1a-Z-orcg1xE-8VpDJWetOZNGMeWXhLgV9mClK5Sja5AEERwh1WGUofIpjBw8RkLoTn50Rf7_cNVPbQzaqF-l19-lb1RAibG4Bnt-EkvC8q64W9nqz2klKEG1P_0PmO_uSZs2hnzznnJPYwI-wGd8AuhTdLNb04ZxBXXA_ls_euRyapAXRFrUu53D52St6MQPv1qDLB_3oiKc4ZFlV37ez9uHpIGa0yEUjh7Z0QRzO2pxAzRjUVVWdh0_VAm-z_fK-UOo8ip5cwC5uGPDgffTT3IiASi9-J_72mKmIhI3yfjo",
+                "type": "string",
+                "id": "cca8c3b0-22f4-4ed4-96c0-860b45e8aeb1"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "c6e264ab-b9da-4f48-b305-5444c5615b0b",
+        "name": "Konfiguration",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2304,
+          48
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const now = new Date();\n\nconst start = new Date(now);\nstart.setDate(start.getDate() - 30);\n\nconst end = new Date(now);\n\nfunction fmt(d) {\n  return d.toISOString().slice(0, 10);\n}\n\nreturn [{\n  json: {\n    ...$json,\n    start_date: fmt(start),\n    end_date: fmt(end),\n    month_label: `last_30_days_${fmt(start)}_bis_${fmt(end)}`\n  }\n}];"
+        },
+        "id": "56ebf547-85f9-474b-9a4f-79ee05dcd881",
+        "name": "Letzten Monat berechnen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2528,
+          48
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.firefly_url }}/api/v1/transactions",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "start",
+                "value": "={{ $json.start_date }}"
+              },
+              {
+                "name": "end",
+                "value": "={{ $json.end_date }}"
+              },
+              {
+                "name": "limit",
+                "value": "1000"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $json.firefly_token }}"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "2b79e9ae-6cca-44bd-a44b-b59e607d7c63",
+        "name": "Firefly - Transaktionen holen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2768,
+          160
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\n\nconst categories = item.categories || [];\nconst transactions = item.transactions || item.expenses || [];\nconst totalExpenses = Number(item.total_expenses || item.total || 0);\nconst totalIncome = Number(item.total_income || item.income || 0);\nconst balance = totalIncome - totalExpenses;\n\nconst catText = categories.length\n  ? categories.map(c => `- ${c.category}: ${c.amount} €`).join('\\n')\n  : 'Keine Kategorien vorhanden';\n\nconst txText = transactions.length\n  ? transactions.map(t =>\n      `- ${t.date || ''} | ${t.description || ''} | ${t.amount || 0} € | ${t.category || t.new_category || 'Unkategorisiert'}`\n    ).join('\\n')\n  : 'Keine Einzeltransaktionen vorhanden';\n\nreturn [\n  {\n    json: {\n      prompt: `\nAnalysiere meine Firefly-III-Monatsdaten sehr genau.\n\nEinnahmen: ${totalIncome.toFixed(2)} €\nAusgaben: ${totalExpenses.toFixed(2)} €\nMonatsbilanz: ${balance.toFixed(2)} €\n\nKategorien:\n${catText}\n\nEinzeltransaktionen:\n${txText}\n\nWichtig:\n- Es gibt keine Kategorie \"Sonstiges\".\n- Jede Ausgabe ist bereits einer konkreten Kategorie zugeordnet.\n- Prüfe trotzdem, ob Kategorien unpassend wirken und nenne Verbesserungsvorschläge.\n- Erkenne unnötige Ausgaben, Impulskäufe und vermeidbare Kosten.\n- Unterscheide Fixkosten, variable Kosten, Abos und Einmalkosten.\n- Bewerte, ob der Monat finanziell gut oder schlecht war.\n- Nenne konkrete Spartipps mit geschätztem Sparpotenzial.\n- Kompakt für Pushover.\n\nFormat:\n\n🔥 Firefly Monatsanalyse\n\n📈 Monatsbilanz:\nEinnahmen: ... €\nAusgaben: ... €\nBilanz: ... €\nBewertung: + / - / neutral\n\n📊 Größte Kostenblöcke:\n...\n\n🔁 Fixkosten & Abos:\n...\n\n⚠️ Unnötige / vermeidbare Ausgaben:\n- Ausgabe:\n- Warum vermeidbar:\n- Sparpotenzial:\n\n🧠 Kategorie-Qualität:\n- Unpassende Kategorien:\n- Bessere Kategorie:\n\n💡 Konkrete Spartipps:\n...\n\n✅ Fazit:\n...\n`\n    }\n  }\n];"
+        },
+        "id": "d4b8e836-cd59-471a-bc25-bdeaa50b4379",
+        "name": "KI Prompt bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3200,
+          -48
+        ]
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.4-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-5.4-MINI"
+          },
+          "responses": {
+            "values": [
+              {
+                "content": "={{ $json.prompt }}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          3408,
+          -176
+        ],
+        "id": "6efc5d60-a8a6-4e3e-ada2-226a2992b7ba",
+        "name": "Message a model1",
+        "credentials": {
+          "openAiApi": {
+            "id": "EVf6W0jyq4ACcS36",
+            "name": "OpenAI account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.4-mini",
+            "mode": "list",
+            "cachedResultName": "GPT-5.4-MINI"
+          },
+          "responses": {
+            "values": [
+              {
+                "content": "={{ $json.prompt }}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          3424,
+          144
+        ],
+        "id": "658849ef-15e4-4f89-a221-6afa8b593f61",
+        "name": "Message a model",
+        "credentials": {
+          "openAiApi": {
+            "id": "EVf6W0jyq4ACcS36",
+            "name": "OpenAI account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $json;\n\nreturn [\n  {\n    json: {\n      month: data.month,\n      total_expenses: data.total_expenses,\n      transaction_count: data.transaction_count,\n      prompt: `\nDu bist ein Firefly-III-Kategorisierungsassistent.\n\nAufgabe:\nOrdne JEDE Transaktion genau einer konkreten Kategorie zu.\n\nWICHTIG:\n- Verwende \"Sonstiges\" nur im absoluten Ausnahmefall.\n- Maximal 1 Transaktion darf \"Sonstiges\" sein.\n- Wenn möglich, leite aus Beschreibung, Empfänger, Betrag und Quelle eine passendere Kategorie ab.\n- Keine Oberkategorie wählen, wenn eine genauere Kategorie möglich ist.\n- Antworte ausschließlich als valides JSON Array.\n- Kein Markdown.\n- Kein Text davor oder danach.\n\nErlaubte Kategorien:\n- Lebensmittel\n- Drogerie\n- Wohnen\n- Strom\n- Internet & Telefon\n- Versicherungen\n- Mobilität\n- Auto\n- ÖPNV\n- Gesundheit\n- Apotheke\n- Abos & Streaming\n- Freizeit\n- Restaurant & Lieferdienst\n- Shopping\n- Kleidung\n- Technik\n- Haushalt\n- Geschenke\n- Bildung\n- Gebühren\n- Steuern\n- Bargeld\n- Urlaub & Reisen\n- Haustiere\n- Rückzahlungen\n- Bank & Finanzen\n- Sonstiges\n\nRegeln:\n- REWE, Lidl, Aldi, Edeka, Kaufland, Netto, Penny → Lebensmittel\n- dm, Rossmann, Müller → Drogerie\n- Netflix, Spotify, Disney, Amazon Prime, YouTube, Apple, Google, Microsoft → Abos & Streaming oder Technik\n- Miete, Nebenkosten, GEZ, Rundfunk → Wohnen\n- Stadtwerke, Stromanbieter, Gas → Strom\n- Telekom, Vodafone, O2, 1&1 → Internet & Telefon\n- ARAG, HUK, Allianz, Debeka, Versicherung → Versicherungen\n- Tankstelle, Shell, Aral, Esso → Auto\n- DB, BVG, ÖPNV, Deutschlandticket → ÖPNV\n- PayPal/Amazon: anhand Beschreibung genauer entscheiden, nicht automatisch Shopping\n- Restaurants, Lieferando, McDonalds, Burger King, Döner, Bäcker, Café → Restaurant & Lieferdienst\n- Apotheke, Arzt, Zahnarzt → Gesundheit oder Apotheke\n- Kontoführungsgebühren, Bankgebühren → Gebühren\n- Barabhebung/Geldautomat → Bargeld\n\nOutput-Format:\n[\n  {\n    \"id\": \"123\",\n    \"journal_id\": \"456\",\n    \"description\": \"REWE Einkauf\",\n    \"old_category\": \"Unkategorisiert\",\n    \"new_category\": \"Lebensmittel\"\n  }\n]\n\nTransaktionen:\n${JSON.stringify(data.expenses, null, 2)}\n`\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3200,
+          144
+        ],
+        "id": "48df42b8-42b0-4341-a055-81fde1660bb5",
+        "name": "Prompt Kategorien"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nlet raw = items[0].json.data ?? items[0].json;\n\nif (typeof raw === 'string') {\n  raw = JSON.parse(raw);\n}\n\nif (raw.data && Array.isArray(raw.data)) {\n  raw = raw.data;\n}\n\nif (!Array.isArray(raw)) {\n  raw = [raw];\n}\n\nconst expenses = [];\n\nfor (const entry of raw) {\n  const attr = entry.attributes || {};\n  const splits = attr.transactions || [];\n\n  for (const tx of splits) {\n    const amount = Number(tx.amount || 0);\n    const txType = tx.type || attr.type || '';\n\n    if (txType === 'withdrawal' || amount < 0) {\n      expenses.push({\n        id: entry.id,\n        journal_id: tx.transaction_journal_id,\n\n        date: tx.date || attr.date || attr.created_at || '',\n        description: tx.description || attr.description || '',\n\n        amount: Math.abs(amount),\n        currency: tx.currency_code || attr.currency_code || 'EUR',\n\n        source_id: tx.source_id || '',\n        source: tx.source_name || '',\n        destination_id: tx.destination_id || '',\n        destination: tx.destination_name || '',\n\n        category: tx.category_name || 'Unkategorisiert',\n        type: txType\n      });\n    }\n  }\n}\n\nconst total = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);\n\nlet month = 'Unbekannt';\n\ntry {\n  month =\n    $('Letzten Monat berechnen').first().json.month ||\n    expenses[0]?.date?.slice(0, 7) ||\n    'Unbekannt';\n} catch (e) {\n  month = expenses[0]?.date?.slice(0, 7) || 'Unbekannt';\n}\n\nreturn [\n  {\n    json: {\n      month,\n      total_expenses: total.toFixed(2),\n      transaction_count: expenses.length,\n      expenses\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2976,
+          144
+        ],
+        "id": "9b939fa4-f8e6-43d2-8685-87a85f10817e",
+        "name": "Ausgaben kategorisieren"
+      },
+      {
+        "parameters": {
+          "jsCode": "let text =\n  $json.output?.[0]?.content?.[0]?.text ||\n  $json.text ||\n  $json.message ||\n  $json.content ||\n  '';\n\ntext = String(text)\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\nconst parsed = JSON.parse(text);\n\n// Originaldaten aus dem Kategorien-Prompt holen\nconst original = $('Ausgaben kategorisieren').first().json.expenses || [];\n\nreturn parsed.map(t => {\n  const old = original.find(o => String(o.id) === String(t.id) && String(o.journal_id) === String(t.journal_id)) || {};\n\n  return {\n    json: {\n      id: t.id,\n      journal_id: t.journal_id,\n\n      description: old.description || t.description,\n      amount: old.amount,\n      date: old.date,\n      type: old.type,\n\n      source_id: old.source_id,\n      source_name: old.source,\n      destination_id: old.destination_id,\n      destination_name: old.destination,\n\n      old_category: old.category || 'Unkategorisiert',\n      new_category: t.new_category || t.category || 'Sonstiges'\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3776,
+          144
+        ],
+        "id": "38f45c30-4c35-45cc-aa44-1c145f1eb24a",
+        "name": "Ki antwort Parsne"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "={{ $('Konfiguration').first().json.firefly_url }}/api/v1/transactions/{{ $json.id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Konfiguration').first().json.firefly_token }}"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"apply_rules\": false,\n  \"fire_webhooks\": false,\n  \"transactions\": [\n    {\n      \"transaction_journal_id\": \"{{ $json.journal_id }}\",\n      \"type\": \"{{ $json.type }}\",\n      \"date\": \"{{ $json.date }}\",\n      \"amount\": \"{{ $json.amount }}\",\n      \"description\": \"{{ $json.description }}\",\n      \"source_id\": \"{{ $json.source_id }}\",\n      \"destination_id\": \"{{ $json.destination_id }}\",\n      \"category_name\": \"{{ $json.new_category }}\"\n    }\n  ]\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          4000,
+          144
+        ],
+        "id": "48cf213b-fe8a-4c8f-bafa-1fefeeae8eb5",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.firefly_url }}/api/v1/transactions",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "start",
+                "value": "={{ $json.start_date }}"
+              },
+              {
+                "name": "end",
+                "value": "={{ $json.end_date }}"
+              },
+              {
+                "name": "limit",
+                "value": "1000"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $json.firefly_token }}"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "2f4251a5-3dad-4d05-93ce-1fa3eb8b3a61",
+        "name": "Firefly - Transaktionen holen1",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2752,
+          -48
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nlet raw = items[0].json.data ?? items[0].json;\n\n// String → JSON\nif (typeof raw === 'string') {\n  raw = JSON.parse(raw);\n}\n\nif (raw.data && Array.isArray(raw.data)) {\n  raw = raw.data;\n}\n\nif (!Array.isArray(raw)) {\n  raw = [raw];\n}\n\nconst categories = {};\nlet total = 0;\n\nfor (const entry of raw) {\n  const attr = entry.attributes || {};\n  const splits = attr.transactions || [];\n\n  for (const tx of splits) {\n    const amount = Number(tx.amount || 0);\n    const category = tx.category_name || 'Unkategorisiert';\n\n    if (amount < 0 || tx.type === 'withdrawal') {\n      const abs = Math.abs(amount);\n\n      total += abs;\n      categories[category] = (categories[category] || 0) + abs;\n    }\n  }\n}\n\n// Sortieren\nconst sorted = Object.entries(categories)\n  .sort((a, b) => b[1] - a[1])\n  .map(([cat, val]) => ({\n    category: cat,\n    amount: val.toFixed(2)\n  }));\n\nreturn [\n  {\n    json: {\n      total: total.toFixed(2),\n      categories: sorted\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2976,
+          -48
+        ],
+        "id": "08dad0b8-e8b4-45d3-a61b-ddf8185f0eda",
+        "name": "Code in JavaScript"
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Konfiguration": {
+        "main": [
+          [
+            {
+              "node": "Letzten Monat berechnen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Letzten Monat berechnen": {
+        "main": [
+          [
+            {
+              "node": "Firefly - Transaktionen holen",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Firefly - Transaktionen holen1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Firefly - Transaktionen holen": {
+        "main": [
+          [
+            {
+              "node": "Ausgaben kategorisieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "KI Prompt bauen": {
+        "main": [
+          [
+            {
+              "node": "Message a model1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model1": {
+        "main": [
+          []
+        ]
+      },
+      "Prompt Kategorien": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ausgaben kategorisieren": {
+        "main": [
+          [
+            {
+              "node": "Prompt Kategorien",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Ki antwort Parsne",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ki antwort Parsne": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Firefly - Transaktionen holen1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "KI Prompt bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": "1",
+    "description": "",
+    "autosaved": false
+  },
+  "activeVersionId": "2bcea0dc-1ddf-47dd-8b43-f62896080099",
   "connections": {
     "Schedule Trigger": {
       "main": [
@@ -32,6 +491,11 @@
             "node": "Firefly - Transaktionen holen",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Firefly - Transaktionen holen1",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -40,7 +504,7 @@
       "main": [
         [
           {
-            "node": "KI Prompt bauen",
+            "node": "Ausgaben kategorisieren",
             "type": "main",
             "index": 0
           }
@@ -57,6 +521,77 @@
           }
         ]
       ]
+    },
+    "Message a model1": {
+      "main": [
+        []
+      ]
+    },
+    "Prompt Kategorien": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ausgaben kategorisieren": {
+      "main": [
+        [
+          {
+            "node": "Prompt Kategorien",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Ki antwort Parsne",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ki antwort Parsne": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firefly - Transaktionen holen1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "KI Prompt bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "createdAt": "2026-04-26T19:22:27.071Z",
@@ -65,7 +600,7 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "name": "Firefly → ChatGPT → Grafana",
+  "name": "InfluxDB Import",
   "nodes": [
     {
       "parameters": {
@@ -81,7 +616,7 @@
       "typeVersion": 1.3,
       "position": [
         2080,
-        112
+        48
       ],
       "id": "e86b9e2b-8472-4238-98eb-42f9c06aaddb",
       "name": "Schedule Trigger"
@@ -111,13 +646,13 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2032,
-        320
+        2304,
+        48
       ]
     },
     {
       "parameters": {
-        "jsCode": "const now = new Date();\nconst start = new Date(now.getFullYear(), now.getMonth() - 1, 1);\nconst end = new Date(now.getFullYear(), now.getMonth(), 0);\n\nfunction fmt(d) {\n  return d.toISOString().slice(0, 10);\n}\n\nreturn [{\n  json: {\n    ...$json,\n    start_date: fmt(start),\n    end_date: fmt(end),\n    month_label: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`\n  }\n}];"
+        "jsCode": "const now = new Date();\n\nconst start = new Date(now);\nstart.setDate(start.getDate() - 30);\n\nconst end = new Date(now);\n\nfunction fmt(d) {\n  return d.toISOString().slice(0, 10);\n}\n\nreturn [{\n  json: {\n    ...$json,\n    start_date: fmt(start),\n    end_date: fmt(end),\n    month_label: `last_30_days_${fmt(start)}_bis_${fmt(end)}`\n  }\n}];"
       },
       "id": "56ebf547-85f9-474b-9a4f-79ee05dcd881",
       "name": "Letzten Monat berechnen",
@@ -125,7 +660,7 @@
       "typeVersion": 2,
       "position": [
         2528,
-        112
+        48
       ]
     },
     {
@@ -168,22 +703,21 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2752,
-        112
+        2768,
+        160
       ]
     },
     {
       "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "const data = $json.data || [];\n\nlet income = 0;\nlet expenses = 0;\nlet transfers = 0;\n\nconst categories = {};\nconst merchants = {};\nconst transactions = [];\n\nfor (const group of data) {\n  const txs = group.attributes?.transactions || [];\n\n  for (const tx of txs) {\n    const amount = Number(tx.amount || 0);\n    const type = tx.type || 'unknown';\n    const category = tx.category_name || 'Ohne Kategorie';\n    const description = tx.description || 'Ohne Beschreibung';\n    const destination = tx.destination_name || '';\n    const source = tx.source_name || '';\n\n    if (type === 'deposit') income += Math.abs(amount);\n    if (type === 'withdrawal') expenses += Math.abs(amount);\n    if (type === 'transfer') transfers += Math.abs(amount);\n\n    if (type === 'withdrawal') {\n      categories[category] = (categories[category] || 0) + Math.abs(amount);\n      const merchant = destination || description;\n      merchants[merchant] = (merchants[merchant] || 0) + Math.abs(amount);\n    }\n\n    transactions.push({\n      date: tx.date,\n      type,\n      amount,\n      description,\n      category,\n      source,\n      destination\n    });\n  }\n}\n\nconst top_categories = Object.entries(categories)\n  .sort((a, b) => b[1] - a[1])\n  .slice(0, 10)\n  .map(([name, amount]) => ({ name, amount: amount.toFixed(2) }));\n\nconst top_merchants = Object.entries(merchants)\n  .sort((a, b) => b[1] - a[1])\n  .slice(0, 10)\n  .map(([name, amount]) => ({ name, amount: amount.toFixed(2) }));\n\nconst config = $('Konfiguration').first().json;\nconst dates = $('Letzten Monat berechnen').first().json;\n\nconst summary = {\n  month: dates.month_label,\n  start_date: dates.start_date,\n  end_date: dates.end_date,\n  transaction_count: transactions.length,\n  income: income.toFixed(2),\n  expenses: expenses.toFixed(2),\n  transfers: transfers.toFixed(2),\n  balance: (income - expenses).toFixed(2),\n  top_categories,\n  top_merchants,\n  transactions\n};\n\nconst systemPrompt = `Du bist ein Finanzanalyst für private Haushalte.\\nAnalysiere Firefly-III-Monatsdaten klar, ehrlich und hilfreich.\\nAntworte auf Deutsch.\\nKeine erfundenen Zahlen. Nutze nur die gelieferten Daten.`;\n\nconst userPrompt = `Analysiere den folgenden Firefly-III-Monat.\\n\\nGib mir:\\n1. Kurzfazit\\n2. Einnahmen, Ausgaben und Bilanz\\n3. Größte Kostentreiber\\n4. Auffällige Buchungen\\n5. Sparpotenzial\\n6. Konkrete Empfehlungen für den nächsten Monat\\n7. Kurze Zusammenfassung als Monatsbericht\\n\\nDaten:\\n${JSON.stringify(summary, null, 2)}`;\n\nreturn {\n  json: {\n    firefly_url: config.firefly_url,\n    firefly_token: config.firefly_token,\n    ...summary,\n    systemPrompt,\n    userPrompt\n  }\n};"
+        "jsCode": "const item = $input.first().json;\n\nconst categories = item.categories || [];\nconst transactions = item.transactions || item.expenses || [];\nconst totalExpenses = Number(item.total_expenses || item.total || 0);\nconst totalIncome = Number(item.total_income || item.income || 0);\nconst balance = totalIncome - totalExpenses;\n\nconst catText = categories.length\n  ? categories.map(c => `- ${c.category}: ${c.amount} €`).join('\\n')\n  : 'Keine Kategorien vorhanden';\n\nconst txText = transactions.length\n  ? transactions.map(t =>\n      `- ${t.date || ''} | ${t.description || ''} | ${t.amount || 0} € | ${t.category || t.new_category || 'Unkategorisiert'}`\n    ).join('\\n')\n  : 'Keine Einzeltransaktionen vorhanden';\n\nreturn [\n  {\n    json: {\n      prompt: `\nAnalysiere meine Firefly-III-Monatsdaten sehr genau.\n\nEinnahmen: ${totalIncome.toFixed(2)} €\nAusgaben: ${totalExpenses.toFixed(2)} €\nMonatsbilanz: ${balance.toFixed(2)} €\n\nKategorien:\n${catText}\n\nEinzeltransaktionen:\n${txText}\n\nWichtig:\n- Es gibt keine Kategorie \"Sonstiges\".\n- Jede Ausgabe ist bereits einer konkreten Kategorie zugeordnet.\n- Prüfe trotzdem, ob Kategorien unpassend wirken und nenne Verbesserungsvorschläge.\n- Erkenne unnötige Ausgaben, Impulskäufe und vermeidbare Kosten.\n- Unterscheide Fixkosten, variable Kosten, Abos und Einmalkosten.\n- Bewerte, ob der Monat finanziell gut oder schlecht war.\n- Nenne konkrete Spartipps mit geschätztem Sparpotenzial.\n- Kompakt für Pushover.\n\nFormat:\n\n🔥 Firefly Monatsanalyse\n\n📈 Monatsbilanz:\nEinnahmen: ... €\nAusgaben: ... €\nBilanz: ... €\nBewertung: + / - / neutral\n\n📊 Größte Kostenblöcke:\n...\n\n🔁 Fixkosten & Abos:\n...\n\n⚠️ Unnötige / vermeidbare Ausgaben:\n- Ausgabe:\n- Warum vermeidbar:\n- Sparpotenzial:\n\n🧠 Kategorie-Qualität:\n- Unpassende Kategorien:\n- Bessere Kategorie:\n\n💡 Konkrete Spartipps:\n...\n\n✅ Fazit:\n...\n`\n    }\n  }\n];"
       },
       "id": "d4b8e836-cd59-471a-bc25-bdeaa50b4379",
       "name": "KI Prompt bauen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2976,
-        112
+        3200,
+        -48
       ]
     },
     {
@@ -197,11 +731,7 @@
         "responses": {
           "values": [
             {
-              "content": "={{$json.userPrompt}}"
-            },
-            {
-              "role": "system",
-              "content": "={{$json.systemPrompt}}"
+              "content": "={{ $json.prompt }}"
             }
           ]
         },
@@ -211,8 +741,8 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        3312,
-        112
+        3408,
+        -176
       ],
       "id": "6efc5d60-a8a6-4e3e-ada2-226a2992b7ba",
       "name": "Message a model1",
@@ -222,6 +752,170 @@
           "name": "OpenAI account"
         }
       }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        3424,
+        144
+      ],
+      "id": "658849ef-15e4-4f89-a221-6afa8b593f61",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EVf6W0jyq4ACcS36",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nreturn [\n  {\n    json: {\n      month: data.month,\n      total_expenses: data.total_expenses,\n      transaction_count: data.transaction_count,\n      prompt: `\nDu bist ein Firefly-III-Kategorisierungsassistent.\n\nAufgabe:\nOrdne JEDE Transaktion genau einer konkreten Kategorie zu.\n\nWICHTIG:\n- Verwende \"Sonstiges\" nur im absoluten Ausnahmefall.\n- Maximal 1 Transaktion darf \"Sonstiges\" sein.\n- Wenn möglich, leite aus Beschreibung, Empfänger, Betrag und Quelle eine passendere Kategorie ab.\n- Keine Oberkategorie wählen, wenn eine genauere Kategorie möglich ist.\n- Antworte ausschließlich als valides JSON Array.\n- Kein Markdown.\n- Kein Text davor oder danach.\n\nErlaubte Kategorien:\n- Lebensmittel\n- Drogerie\n- Wohnen\n- Strom\n- Internet & Telefon\n- Versicherungen\n- Mobilität\n- Auto\n- ÖPNV\n- Gesundheit\n- Apotheke\n- Abos & Streaming\n- Freizeit\n- Restaurant & Lieferdienst\n- Shopping\n- Kleidung\n- Technik\n- Haushalt\n- Geschenke\n- Bildung\n- Gebühren\n- Steuern\n- Bargeld\n- Urlaub & Reisen\n- Haustiere\n- Rückzahlungen\n- Bank & Finanzen\n- Sonstiges\n\nRegeln:\n- REWE, Lidl, Aldi, Edeka, Kaufland, Netto, Penny → Lebensmittel\n- dm, Rossmann, Müller → Drogerie\n- Netflix, Spotify, Disney, Amazon Prime, YouTube, Apple, Google, Microsoft → Abos & Streaming oder Technik\n- Miete, Nebenkosten, GEZ, Rundfunk → Wohnen\n- Stadtwerke, Stromanbieter, Gas → Strom\n- Telekom, Vodafone, O2, 1&1 → Internet & Telefon\n- ARAG, HUK, Allianz, Debeka, Versicherung → Versicherungen\n- Tankstelle, Shell, Aral, Esso → Auto\n- DB, BVG, ÖPNV, Deutschlandticket → ÖPNV\n- PayPal/Amazon: anhand Beschreibung genauer entscheiden, nicht automatisch Shopping\n- Restaurants, Lieferando, McDonalds, Burger King, Döner, Bäcker, Café → Restaurant & Lieferdienst\n- Apotheke, Arzt, Zahnarzt → Gesundheit oder Apotheke\n- Kontoführungsgebühren, Bankgebühren → Gebühren\n- Barabhebung/Geldautomat → Bargeld\n\nOutput-Format:\n[\n  {\n    \"id\": \"123\",\n    \"journal_id\": \"456\",\n    \"description\": \"REWE Einkauf\",\n    \"old_category\": \"Unkategorisiert\",\n    \"new_category\": \"Lebensmittel\"\n  }\n]\n\nTransaktionen:\n${JSON.stringify(data.expenses, null, 2)}\n`\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3200,
+        144
+      ],
+      "id": "48df42b8-42b0-4341-a055-81fde1660bb5",
+      "name": "Prompt Kategorien"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nlet raw = items[0].json.data ?? items[0].json;\n\nif (typeof raw === 'string') {\n  raw = JSON.parse(raw);\n}\n\nif (raw.data && Array.isArray(raw.data)) {\n  raw = raw.data;\n}\n\nif (!Array.isArray(raw)) {\n  raw = [raw];\n}\n\nconst expenses = [];\n\nfor (const entry of raw) {\n  const attr = entry.attributes || {};\n  const splits = attr.transactions || [];\n\n  for (const tx of splits) {\n    const amount = Number(tx.amount || 0);\n    const txType = tx.type || attr.type || '';\n\n    if (txType === 'withdrawal' || amount < 0) {\n      expenses.push({\n        id: entry.id,\n        journal_id: tx.transaction_journal_id,\n\n        date: tx.date || attr.date || attr.created_at || '',\n        description: tx.description || attr.description || '',\n\n        amount: Math.abs(amount),\n        currency: tx.currency_code || attr.currency_code || 'EUR',\n\n        source_id: tx.source_id || '',\n        source: tx.source_name || '',\n        destination_id: tx.destination_id || '',\n        destination: tx.destination_name || '',\n\n        category: tx.category_name || 'Unkategorisiert',\n        type: txType\n      });\n    }\n  }\n}\n\nconst total = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);\n\nlet month = 'Unbekannt';\n\ntry {\n  month =\n    $('Letzten Monat berechnen').first().json.month ||\n    expenses[0]?.date?.slice(0, 7) ||\n    'Unbekannt';\n} catch (e) {\n  month = expenses[0]?.date?.slice(0, 7) || 'Unbekannt';\n}\n\nreturn [\n  {\n    json: {\n      month,\n      total_expenses: total.toFixed(2),\n      transaction_count: expenses.length,\n      expenses\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2976,
+        144
+      ],
+      "id": "9b939fa4-f8e6-43d2-8685-87a85f10817e",
+      "name": "Ausgaben kategorisieren"
+    },
+    {
+      "parameters": {
+        "jsCode": "let text =\n  $json.output?.[0]?.content?.[0]?.text ||\n  $json.text ||\n  $json.message ||\n  $json.content ||\n  '';\n\ntext = String(text)\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\nconst parsed = JSON.parse(text);\n\n// Originaldaten aus dem Kategorien-Prompt holen\nconst original = $('Ausgaben kategorisieren').first().json.expenses || [];\n\nreturn parsed.map(t => {\n  const old = original.find(o => String(o.id) === String(t.id) && String(o.journal_id) === String(t.journal_id)) || {};\n\n  return {\n    json: {\n      id: t.id,\n      journal_id: t.journal_id,\n\n      description: old.description || t.description,\n      amount: old.amount,\n      date: old.date,\n      type: old.type,\n\n      source_id: old.source_id,\n      source_name: old.source,\n      destination_id: old.destination_id,\n      destination_name: old.destination,\n\n      old_category: old.category || 'Unkategorisiert',\n      new_category: t.new_category || t.category || 'Sonstiges'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3776,
+        144
+      ],
+      "id": "38f45c30-4c35-45cc-aa44-1c145f1eb24a",
+      "name": "Ki antwort Parsne"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Konfiguration').first().json.firefly_url }}/api/v1/transactions/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Konfiguration').first().json.firefly_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"apply_rules\": false,\n  \"fire_webhooks\": false,\n  \"transactions\": [\n    {\n      \"transaction_journal_id\": \"{{ $json.journal_id }}\",\n      \"type\": \"{{ $json.type }}\",\n      \"date\": \"{{ $json.date }}\",\n      \"amount\": \"{{ $json.amount }}\",\n      \"description\": \"{{ $json.description }}\",\n      \"source_id\": \"{{ $json.source_id }}\",\n      \"destination_id\": \"{{ $json.destination_id }}\",\n      \"category_name\": \"{{ $json.new_category }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4000,
+        144
+      ],
+      "id": "48cf213b-fe8a-4c8f-bafa-1fefeeae8eb5",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.firefly_url }}/api/v1/transactions",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "start",
+              "value": "={{ $json.start_date }}"
+            },
+            {
+              "name": "end",
+              "value": "={{ $json.end_date }}"
+            },
+            {
+              "name": "limit",
+              "value": "1000"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.firefly_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2f4251a5-3dad-4d05-93ce-1fa3eb8b3a61",
+      "name": "Firefly - Transaktionen holen1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2752,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nlet raw = items[0].json.data ?? items[0].json;\n\n// String → JSON\nif (typeof raw === 'string') {\n  raw = JSON.parse(raw);\n}\n\nif (raw.data && Array.isArray(raw.data)) {\n  raw = raw.data;\n}\n\nif (!Array.isArray(raw)) {\n  raw = [raw];\n}\n\nconst categories = {};\nlet total = 0;\n\nfor (const entry of raw) {\n  const attr = entry.attributes || {};\n  const splits = attr.transactions || [];\n\n  for (const tx of splits) {\n    const amount = Number(tx.amount || 0);\n    const category = tx.category_name || 'Unkategorisiert';\n\n    if (amount < 0 || tx.type === 'withdrawal') {\n      const abs = Math.abs(amount);\n\n      total += abs;\n      categories[category] = (categories[category] || 0) + abs;\n    }\n  }\n}\n\n// Sortieren\nconst sorted = Object.entries(categories)\n  .sort((a, b) => b[1] - a[1])\n  .map(([cat, val]) => ({\n    category: cat,\n    amount: val.toFixed(2)\n  }));\n\nreturn [\n  {\n    json: {\n      total: total.toFixed(2),\n      categories: sorted\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2976,
+        -48
+      ],
+      "id": "08dad0b8-e8b4-45d3-a61b-ddf8185f0eda",
+      "name": "Code in JavaScript"
     }
   ],
   "pinData": {},
@@ -241,9 +935,13 @@
       "projectId": "Iyrtd5xOBA8QCG1f"
     }
   ],
-  "staticData": null,
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
   "tags": [],
-  "triggerCount": 0,
-  "updatedAt": "2026-04-26T20:02:46.856Z",
-  "versionId": "65308ece-42f8-4ee1-8e50-dbf3c2668363"
+  "triggerCount": 1,
+  "updatedAt": "2026-04-26T21:15:42.983Z",
+  "versionId": "2bcea0dc-1ddf-47dd-8b43-f62896080099"
 }
