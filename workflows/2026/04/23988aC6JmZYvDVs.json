@@ -600,7 +600,7 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "name": "InfluxDB Import",
+  "name": "Firefly Kategorien",
   "nodes": [
     {
       "parameters": {
@@ -942,6 +942,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-04-26T21:15:42.983Z",
+  "updatedAt": "2026-04-27T17:08:31.097Z",
   "versionId": "2bcea0dc-1ddf-47dd-8b43-f62896080099"
 }
