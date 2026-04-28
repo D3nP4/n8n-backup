@@ -1,0 +1,387 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Täglich 08:00": {
+      "main": [
+        [
+          {
+            "node": "Konfiguration1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unbezahlte Rechnungen aufteilen": {
+      "main": [
+        [
+          {
+            "node": "Dokumentdetails holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dokumentdetails holen": {
+      "main": [
+        [
+          {
+            "node": "Fälligkeit erkennen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fälligkeit erkennen": {
+      "main": [
+        [
+          {
+            "node": "Pushover Nachricht bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pushover Nachricht bauen": {
+      "main": [
+        [
+          {
+            "node": "Benachrichtigung nötig?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Benachrichtigung nötig?": {
+      "main": [
+        [
+          {
+            "node": "Pushover senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Konfiguration1": {
+      "main": [
+        [
+          {
+            "node": "Paperless Tags holen1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paperless Tags holen1": {
+      "main": [
+        [
+          {
+            "node": "Tag IDs ermitteln1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag IDs ermitteln1": {
+      "main": [
+        [
+          {
+            "node": "Paperless Rechnungen holen1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paperless Rechnungen holen1": {
+      "main": [
+        [
+          {
+            "node": "Unbezahlte Rechnungen aufteilen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-04-27T19:26:19.689Z",
+  "id": "yWHtxtEMWMKwmdof",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "Paperless fällige Rechnungen per Pushover melden",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "415be097-9c48-4313-9b78-dc9e0ec192a0",
+      "name": "Täglich 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2512,
+        1136
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = $('Tag IDs ermitteln1').first().json;\nconst docs = $json.results || [];\n\nconst unpaidInvoices = docs.filter(doc => {\n  const tags = doc.tags || [];\n  return !tags.includes(config.paid_tag_id);\n});\n\nreturn unpaidInvoices.map(doc => ({\n  json: {\n    ...config,\n    doc_id: doc.id,\n    doc_title: doc.title,\n    doc_created: doc.created,\n    doc_document_date: doc.document_date,\n    doc_tags: doc.tags || []\n  }\n}));"
+      },
+      "id": "fc9f8fde-7c92-4b1b-8ec7-c199b8438c37",
+      "name": "Unbezahlte Rechnungen aufteilen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1280,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.paperless_url}}/api/documents/{{$json.doc_id}}/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Token {{$json.paperless_token}}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "20591ef0-8ddf-4066-8db8-4da6b70280fc",
+      "name": "Dokumentdetails holen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1040,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $input.all();\nconst metaItems = $('Unbezahlte Rechnungen aufteilen').all();\n\nfunction parseGermanDate(raw) {\n  if (!raw) return null;\n  const s = String(raw).trim();\n\n  let m = s.match(/(\\d{1,2})\\.(\\d{1,2})\\.(\\d{2,4})/);\n  if (m) {\n    let year = Number(m[3]);\n    if (year < 100) year += 2000;\n    const month = Number(m[2]);\n    const day = Number(m[1]);\n    const d = new Date(Date.UTC(year, month - 1, day));\n    if (!isNaN(d)) return d.toISOString().slice(0, 10);\n  }\n\n  m = s.match(/(\\d{4})-(\\d{2})-(\\d{2})/);\n  if (m) {\n    const d = new Date(`${m[1]}-${m[2]}-${m[3]}T00:00:00Z`);\n    if (!isNaN(d)) return d.toISOString().slice(0, 10);\n  }\n\n  return null;\n}\n\nfunction addDays(dateString, days) {\n  const d = new Date(`${dateString}T00:00:00Z`);\n  d.setUTCDate(d.getUTCDate() + days);\n  return d.toISOString().slice(0, 10);\n}\n\nfunction daysBetween(fromDate, toDate) {\n  const a = new Date(`${fromDate}T00:00:00Z`);\n  const b = new Date(`${toDate}T00:00:00Z`);\n  return Math.round((b - a) / 86400000);\n}\n\nfunction toNumberGerman(value) {\n  if (!value) return null;\n  let s = String(value)\n    .replace(/\\s/g, '')\n    .replace(/EUR/gi, '')\n    .replace(/€/g, '')\n    .trim();\n\n  if (s.includes(',') && s.includes('.')) {\n    s = s.replace(/\\./g, '').replace(',', '.');\n  } else if (s.includes(',')) {\n    s = s.replace(',', '.');\n  }\n\n  const n = Number(s.replace(/[^0-9.-]/g, ''));\n  return Number.isFinite(n) ? Math.abs(n) : null;\n}\n\nfunction findAmount(text) {\n  const input = String(text || '');\n\n  const patterns = [\n    /(?:gesamtbetrag|gesamt\\s*betrag|betrag\\s*gesamt|zu\\s*zahlen|zahlbetrag|rechnungsbetrag|endsumme|summe|total|offener\\s*betrag|fälliger\\s*betrag)\\D{0,60}(\\d{1,6}(?:\\.\\d{3})*,\\d{2})\\s?(?:€|eur)?/i,\n    /(\\d{1,6}(?:\\.\\d{3})*,\\d{2})\\s?(?:€|eur)\\D{0,40}(?:gesamtbetrag|gesamt|zu\\s*zahlen|zahlbetrag|rechnungsbetrag|summe|total)/i\n  ];\n\n  for (const p of patterns) {\n    const m = input.match(p);\n    if (m?.[1]) {\n      const n = toNumberGerman(m[1]);\n      if (n && n > 0) return n;\n    }\n  }\n\n  const matches = input.match(/\\d{1,6}(?:\\.\\d{3})*,\\d{2}\\s?(?:€|EUR)?/gi) || [];\n  const amounts = matches\n    .map(toNumberGerman)\n    .filter(n => n && n > 0)\n    .sort((a, b) => b - a);\n\n  return amounts[0] || null;\n}\n\nfunction findDueDate(text, invoiceDate) {\n  const input = String(text || '').replace(/\\s+/g, ' ');\n\n  const directPatterns = [\n    /(?:fällig(?:keit)?(?:\\s*am|\\s*zum)?|zahlbar\\s*bis|zu\\s*zahlen\\s*bis|bitte\\s*(?:zahlen|überweisen)\\s*bis|zahlung\\s*bis|überweisen\\s*bis|spätestens\\s*bis|zahlungsziel)\\D{0,80}(\\d{1,2}\\.\\d{1,2}\\.\\d{2,4})/i,\n    /(?:due\\s*date|payment\\s*due|payable\\s*until)\\D{0,80}(\\d{1,2}\\.\\d{1,2}\\.\\d{2,4})/i,\n    /(?:fällig(?:keit)?(?:\\s*am|\\s*zum)?|zahlbar\\s*bis|zu\\s*zahlen\\s*bis|zahlung\\s*bis|spätestens\\s*bis|zahlungsziel)\\D{0,80}(\\d{4}-\\d{2}-\\d{2})/i\n  ];\n\n  for (const p of directPatterns) {\n    const m = input.match(p);\n    if (m?.[1]) {\n      const parsed = parseGermanDate(m[1]);\n      if (parsed) return { due_date: parsed, source: 'direktes Fälligkeitsdatum im Text' };\n    }\n  }\n\n  const relativePatterns = [\n    /(?:zahlbar|zahlung|fällig|zahlungsziel)\\D{0,80}(?:innerhalb\\s*von\\s*)?(\\d{1,3})\\s*(?:tagen|tage|kalendertagen|werktagen)/i,\n    /innerhalb\\s*von\\s*(\\d{1,3})\\s*(?:tagen|tage|kalendertagen|werktagen)/i\n  ];\n\n  for (const p of relativePatterns) {\n    const m = input.match(p);\n    if (m?.[1] && invoiceDate) {\n      const days = Number(m[1]);\n      if (Number.isFinite(days) && days > 0) {\n        return {\n          due_date: addDays(invoiceDate, days),\n          source: `relatives Zahlungsziel: ${days} Tage ab Rechnungsdatum`\n        };\n      }\n    }\n  }\n\n  return { due_date: null, source: 'kein Fälligkeitsdatum erkannt' };\n}\n\nconst today = new Date().toISOString().slice(0, 10);\n\nreturn inputItems.map((item, index) => {\n  const detail = item.json;\n  const meta = metaItems[index].json;\n\n  const text = [\n    detail.title,\n    detail.correspondent_name,\n    detail.content\n  ].filter(Boolean).join('\\n');\n\n  const invoiceDate = detail.document_date || detail.created?.slice(0, 10) || meta.doc_document_date || meta.doc_created?.slice(0, 10) || today;\n  const amount = findAmount(text);\n  const due = findDueDate(text, invoiceDate);\n\n  let dueStatus = 'unknown';\n  let daysUntilDue = null;\n  let relevant = false;\n\n  if (due.due_date) {\n    daysUntilDue = daysBetween(today, due.due_date);\n\n    if (daysUntilDue < 0) {\n      dueStatus = 'overdue';\n      relevant = true;\n    } else if (daysUntilDue <= Number(meta.due_days_ahead)) {\n      dueStatus = 'due_soon';\n      relevant = true;\n    } else {\n      dueStatus = 'later';\n    }\n  }\n\n  return {\n    json: {\n      ...meta,\n      detail,\n      title: detail.title,\n      correspondent: detail.correspondent_name || '',\n      invoice_date: invoiceDate,\n      amount,\n      due_date: due.due_date,\n      due_date_source: due.source,\n      due_status: dueStatus,\n      days_until_due: daysUntilDue,\n      relevant_for_notification: relevant\n    }\n  };\n});"
+      },
+      "id": "ea3fd00d-0c08-4035-9116-6e7a810e6fb9",
+      "name": "Fälligkeit erkennen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map(i => i.json);\nconst config = $('Tag IDs ermitteln1').first().json;\n\nconst relevant = items\n  .filter(i => i.relevant_for_notification === true)\n  .sort((a, b) => String(a.due_date).localeCompare(String(b.due_date)));\n\nconst unknownDue = items\n  .filter(i => !i.due_date)\n  .slice(0, 10);\n\nfunction formatAmount(value) {\n  if (value === null || value === undefined || value === '') return 'Betrag unbekannt';\n  return Number(value).toFixed(2).replace('.', ',') + ' €';\n}\n\nfunction statusText(item) {\n  if (item.due_status === 'overdue') {\n    return `ÜBERFÄLLIG seit ${Math.abs(item.days_until_due)} Tag(en)`;\n  }\n  if (item.days_until_due === 0) return 'HEUTE fällig';\n  if (item.days_until_due === 1) return 'MORGEN fällig';\n  return `in ${item.days_until_due} Tag(en) fällig`;\n}\n\nlet message = '';\n\nif (relevant.length === 0) {\n  message = `Keine unbezahlten Rechnungen gefunden, die überfällig sind oder in den nächsten ${config.due_days_ahead} Tagen fällig werden.`;\n} else {\n  message += `Fällige Rechnungen / nächste ${config.due_days_ahead} Tage: ${relevant.length}\\n\\n`;\n\n  for (const item of relevant) {\n    message += `• ${statusText(item)}\\n`;\n    message += `${item.title || 'Ohne Titel'}\\n`;\n    if (item.correspondent) message += `Empfänger: ${item.correspondent}\\n`;\n    message += `Fällig: ${item.due_date}\\n`;\n    message += `Betrag: ${formatAmount(item.amount)}\\n`;\n    message += `Paperless-ID: ${item.detail.id}\\n\\n`;\n  }\n}\n\nif (unknownDue.length > 0) {\n  message += `\\nHinweis: Bei ${unknownDue.length} Rechnung(en) konnte kein Fälligkeitsdatum erkannt werden. Beispiele:\\n`;\n  for (const item of unknownDue.slice(0, 5)) {\n    message += `- ${item.title || 'Ohne Titel'} / ID ${item.detail.id}\\n`;\n  }\n}\n\n// Pushover hat ein Nachrichtenlimit. Sicherheitshalber kürzen.\nif (message.length > 950) {\n  message = message.slice(0, 920) + '\\n... gekürzt. Bitte Paperless prüfen.';\n}\n\nreturn [\n  {\n    json: {\n      ...config,\n      due_count: relevant.length,\n      unknown_due_count: unknownDue.length,\n      pushover_title: relevant.length > 0 ? 'Fällige Rechnungen' : 'Rechnungsprüfung',\n      pushover_message: message,\n      should_notify: relevant.length > 0 || unknownDue.length > 0\n    }\n  }\n];"
+      },
+      "id": "8ffe3b14-a200-4cf7-ba5d-47f16d0a48c3",
+      "name": "Pushover Nachricht bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "notify",
+              "leftValue": "={{$json.should_notify}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ca416a2b-8cfa-4307-b5b2-03861a78ada3",
+      "name": "Benachrichtigung nötig?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pushover.net/1/messages.json",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{$json.pushover_app_token}}"
+            },
+            {
+              "name": "user",
+              "value": "={{$json.pushover_user_key}}"
+            },
+            {
+              "name": "title",
+              "value": "={{$json.pushover_title}}"
+            },
+            {
+              "name": "message",
+              "value": "={{$json.pushover_message}}"
+            },
+            {
+              "name": "priority",
+              "value": "={{$json.pushover_priority}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7c7cd147-1d65-4dba-823c-f73da7a370da",
+      "name": "Pushover senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        1072
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const required = [\n  'PAPERLESS_URL',\n  'PAPERLESS_TOKEN',\n  'PUSHOVER_APP_TOKEN',\n  'PUSHOVER_USER_KEY'\n];\n\nfor (const key of required) {\n  if (!$vars[key]) {\n    throw new Error(`n8n Variable fehlt: ${key}`);\n  }\n}\n\nreturn [\n  {\n    json: {\n      paperless_url: String($vars.PAPERLESS_URL).replace(/\\/$/, ''),\n      paperless_token: $vars.PAPERLESS_TOKEN,\n\n      pushover_app_token: $vars.PUSHOVER_APP_TOKEN,\n      pushover_user_key: $vars.PUSHOVER_USER_KEY,\n\n      invoice_tag_name: $vars.PAPERLESS_INVOICE_TAG || 'Rechnung',\n      paid_tag_name: $vars.PAPERLESS_PAID_TAG || 'Bezahlt',\n\n      page_size: Number($vars.PAGE_SIZE || 100),\n      due_days_ahead: Number($vars.DUE_DAYS_AHEAD || 7),\n      pushover_priority: Number($vars.PUSHOVER_PRIORITY || 0)\n    }\n  }\n];"
+      },
+      "id": "0e96f2a0-74d9-4125-b6cf-8af0f9a58051",
+      "name": "Konfiguration1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2240,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.paperless_url}}/api/tags/?page_size=500",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Token {{$json.paperless_token}}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "308d1c25-475e-4a49-a88a-3daa3a45bfbd",
+      "name": "Paperless Tags holen1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2000,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = $('Konfiguration1').first().json;\nconst tags = $json.results || [];\n\nfunction norm(value) {\n  return String(value || '').toLowerCase().trim();\n}\n\nconst invoiceTag = tags.find(t => norm(t.name) === norm(config.invoice_tag_name));\nconst paidTag = tags.find(t => norm(t.name) === norm(config.paid_tag_name));\n\nif (!invoiceTag) {\n  throw new Error(`Paperless-Tag nicht gefunden: ${config.invoice_tag_name}`);\n}\n\nif (!paidTag) {\n  throw new Error(`Paperless-Tag nicht gefunden: ${config.paid_tag_name}`);\n}\n\nreturn [\n  {\n    json: {\n      ...config,\n      invoice_tag_id: invoiceTag.id,\n      paid_tag_id: paidTag.id\n    }\n  }\n];"
+      },
+      "id": "adf57628-1b38-4084-9c42-81b4a1830b2f",
+      "name": "Tag IDs ermitteln1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.paperless_url}}/api/documents/?page_size={{$json.page_size}}&ordering=-created&tags__id__all={{$json.invoice_tag_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Token {{$json.paperless_token}}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1fd0ce00-6c10-402b-a747-67d7c06a8d67",
+      "name": "Paperless Rechnungen holen1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1520,
+        1184
+      ]
+    }
+  ],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-04-27T19:26:19.691Z",
+      "createdAt": "2026-04-27T19:26:19.691Z",
+      "role": "workflow:owner",
+      "workflowId": "yWHtxtEMWMKwmdof",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-04-27T19:56:46.128Z",
+  "versionId": "d221bca9-d24a-485f-8450-67068d6630be"
+}
