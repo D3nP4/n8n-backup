@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-04-27T19:23:26.000Z",
-    "createdAt": "2026-04-27T19:22:51.377Z",
-    "versionId": "85eaed1b-039c-42ee-ad1e-0086b7987513",
+    "updatedAt": "2026-04-28T08:28:27.000Z",
+    "createdAt": "2026-04-28T08:28:06.357Z",
+    "versionId": "4ab62782-ce62-451a-8dab-58591875ef94",
     "workflowId": "irAsYcjqWTuWkBJn",
     "nodes": [
       {
@@ -11,7 +11,8 @@
           "rule": {
             "interval": [
               {
-                "triggerAtHour": 6
+                "field": "hours",
+                "hoursInterval": 8
               }
             ]
           }
@@ -19,8 +20,8 @@
         "type": "n8n-nodes-base.scheduleTrigger",
         "typeVersion": 1.3,
         "position": [
-          0,
-          0
+          -160,
+          -64
         ],
         "id": "64d5a47b-fdda-4266-818f-fcb8847b1bd3",
         "name": "Schedule Trigger"
@@ -91,11 +92,11 @@
       }
     },
     "authors": "Dennis Paun",
-    "name": "1",
+    "name": "Version 4ab62782",
     "description": "",
-    "autosaved": false
+    "autosaved": true
   },
-  "activeVersionId": "85eaed1b-039c-42ee-ad1e-0086b7987513",
+  "activeVersionId": "4ab62782-ce62-451a-8dab-58591875ef94",
   "connections": {
     "Schedule Trigger": {
       "main": [
@@ -132,7 +133,8 @@
         "rule": {
           "interval": [
             {
-              "triggerAtHour": 6
+              "field": "hours",
+              "hoursInterval": 8
             }
           ]
         }
@@ -140,8 +142,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        0,
-        0
+        -160,
+        -64
       ],
       "id": "64d5a47b-fdda-4266-818f-fcb8847b1bd3",
       "name": "Schedule Trigger"
@@ -207,11 +209,13 @@
   ],
   "staticData": {
     "node:Schedule Trigger": {
-      "recurrenceRules": []
+      "recurrenceRules": [
+        0
+      ]
     }
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-04-27T19:23:23.715Z",
-  "versionId": "85eaed1b-039c-42ee-ad1e-0086b7987513"
+  "updatedAt": "2026-04-28T08:28:06.357Z",
+  "versionId": "4ab62782-ce62-451a-8dab-58591875ef94"
 }
