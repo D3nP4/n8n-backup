@@ -5,7 +5,7 @@
   "connections": {},
   "createdAt": "2026-04-26T14:07:18.241Z",
   "id": "irvhzKfUKsDPMsMx",
-  "isArchived": false,
+  "isArchived": true,
   "meta": {
     "templateCredsSetupCompleted": true
   },
@@ -31,6 +31,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2026-04-26T14:26:44.169Z",
-  "versionId": "b468c791-bf49-43ad-a33a-7483e61facd8"
+  "updatedAt": "2026-04-28T08:28:46.000Z",
+  "versionId": "a6b0222c-b16d-49af-9522-adacb54c2915"
 }
