@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-04-26T21:16:16.000Z",
-    "createdAt": "2026-04-26T21:15:41.954Z",
-    "versionId": "2bcea0dc-1ddf-47dd-8b43-f62896080099",
+    "updatedAt": "2026-04-30T09:55:39.000Z",
+    "createdAt": "2026-04-30T09:55:27.808Z",
+    "versionId": "3bf51469-5b3d-4a6f-9813-65bbddcf0041",
     "workflowId": "23988aC6JmZYvDVs",
     "nodes": [
       {
@@ -11,7 +11,8 @@
           "rule": {
             "interval": [
               {
-                "field": "months"
+                "field": "hours",
+                "hoursInterval": 12
               }
             ]
           }
@@ -456,11 +457,11 @@
       }
     },
     "authors": "Dennis Paun",
-    "name": "1",
+    "name": "Version 3bf51469",
     "description": "",
-    "autosaved": false
+    "autosaved": true
   },
-  "activeVersionId": "2bcea0dc-1ddf-47dd-8b43-f62896080099",
+  "activeVersionId": "3bf51469-5b3d-4a6f-9813-65bbddcf0041",
   "connections": {
     "Schedule Trigger": {
       "main": [
@@ -607,7 +608,8 @@
         "rule": {
           "interval": [
             {
-              "field": "months"
+              "field": "hours",
+              "hoursInterval": 12
             }
           ]
         }
@@ -937,11 +939,13 @@
   ],
   "staticData": {
     "node:Schedule Trigger": {
-      "recurrenceRules": []
+      "recurrenceRules": [
+        0
+      ]
     }
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-04-27T17:08:31.097Z",
-  "versionId": "2bcea0dc-1ddf-47dd-8b43-f62896080099"
+  "updatedAt": "2026-04-30T09:55:27.807Z",
+  "versionId": "3bf51469-5b3d-4a6f-9813-65bbddcf0041"
 }
