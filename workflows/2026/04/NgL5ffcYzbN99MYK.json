@@ -1,49 +1,375 @@
 {
-  "active": false,
-  "activeVersion": null,
-  "activeVersionId": null,
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-05-04T20:08:37.000Z",
+    "createdAt": "2026-05-04T20:07:33.080Z",
+    "versionId": "e9380269-1a81-4df5-a663-3039de629d9e",
+    "workflowId": "NgL5ffcYzbN99MYK",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 6
+              }
+            ]
+          }
+        },
+        "id": "4f3b3a3d-359b-4549-851c-d5f30e9886bd",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -176,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "firefly_url",
+                "name": "firefly_url",
+                "value": "http://192.168.178.42:8051",
+                "type": "string"
+              },
+              {
+                "id": "firefly_token",
+                "name": "firefly_token",
+                "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIwMTlkY2I1Ni05MGNlLTcxY2QtYjRjOC02MzJmODliOTQ5M2IiLCJqdGkiOiJkYjk1NmI0ZDc3ZThhYjBmZGM1NWNkNjQ2ZTE4NmM3NTAyNGRmZDkzY2M1YmEwOTA0OTAyMGIwZTRkMDY1MjA5MDNhMDRhYTFkNmQ1ZTliNCIsImlhdCI6MTc3NzIzMjk1MS4yNTAzNTUsIm5iZiI6MTc3NzIzMjk1MS4yNTAzNTgsImV4cCI6MTgwODc2ODk1MS4xMjY4NzUsInN1YiI6IjEiLCJzY29wZXMiOltdfQ.HCWPie_V7ghnLSKw8O0KXImm6JvL5jx0G7t78_pfKJX_mYnsIllLE_95lfkUh8qrxQXpk-2hFFq-zXBhTox-utF5LsVnwH5OJcfDj9k5pe7MbhYVoSnuLygVl1X0bAdha0idZOb6FfM47xdKtrl0-KGIF2IhT0qUEVDOEOKk9FUBdJ9ODNUZOiEAUeLielqhpO9SaWH3dm0b4lZDmk-dbII6EY0I_ItUc4qDevi6pOWsDfSES7pHy84vzE8QXMqwkIGx0TDAI7Pq8RlZ_86b099QnlKWSA7Hdu0Ze6JB_XEOq7OyOzvnGHYeHyKAEVahQI11VkUJOuMvD4SlfyWK0xcJrIqXFvRDVJ513QBAVPM-eF-eqJ17zXh8fJvhes1a-Z-orcg1xE-8VpDJWetOZNGMeWXhLgV9mClK5Sja5AEERwh1WGUofIpjBw8RkLoTn50Rf7_cNVPbQzaqF-l19-lb1RAibG4Bnt-EkvC8q64W9nqz2klKEG1P_0PmO_uSZs2hnzznnJPYwI-wGd8AuhTdLNb04ZxBXXA_ls_euRyapAXRFrUu53D52St6MQPv1qDLB_3oiKc4ZFlV37ez9uHpIGa0yEUjh7Z0QRzO2pxAzRjUVVWdh0_VAm-z_fK-UOo8ip5cwC5uGPDgffTT3IiASi9-J_72mKmIhI3yfjo",
+                "type": "string"
+              },
+              {
+                "id": "firefly_account_id",
+                "name": "firefly_account_id",
+                "value": "112",
+                "type": "string"
+              },
+              {
+                "id": "influx_url",
+                "name": "influx_url",
+                "value": "http://192.168.178.42:8086",
+                "type": "string"
+              },
+              {
+                "id": "influx_org",
+                "name": "influx_org",
+                "value": "home",
+                "type": "string"
+              },
+              {
+                "id": "influx_bucket",
+                "name": "influx_bucket",
+                "value": "firefly",
+                "type": "string"
+              },
+              {
+                "id": "influx_token",
+                "name": "influx_token",
+                "value": "bitte-aendern-token",
+                "type": "string"
+              },
+              {
+                "id": "days_back",
+                "name": "days_back",
+                "value": 400,
+                "type": "number"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "5c630b6a-6560-49ad-a512-54076eb78ee3",
+        "name": "Konfiguration",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          48,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Konfiguration').first().json.firefly_url + '/api/v1/accounts/' + $('Konfiguration').first().json.firefly_account_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ 'Bearer ' + $('Konfiguration').first().json.firefly_token }}"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "id": "a540dcdb-b1ef-4308-81cc-70a1af6e61ac",
+        "name": "Firefly Konto holen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          272,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Konfiguration').first().json.firefly_url + '/api/v1/transactions' }}",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "start",
+                "value": "={{ new Date(Date.now() - ($('Konfiguration').first().json.days_back * 24 * 60 * 60 * 1000)).toISOString().slice(0,10) }}"
+              },
+              {
+                "name": "end",
+                "value": "={{ new Date().toISOString().slice(0,10) }}"
+              },
+              {
+                "name": "limit",
+                "value": "500"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ 'Bearer ' + $('Konfiguration').first().json.firefly_token }}"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "id": "da65a83f-4698-4829-aa90-4a610441a2ae",
+        "name": "Firefly Transaktionen holen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          496,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $('Konfiguration').first().json.influx_url + '/api/v2/write' }}",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "org",
+                "value": "={{ $('Konfiguration').first().json.influx_org }}"
+              },
+              {
+                "name": "bucket",
+                "value": "={{ $('Konfiguration').first().json.influx_bucket }}"
+              },
+              {
+                "name": "precision",
+                "value": "ns"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ 'Token ' + $('Konfiguration').first().json.influx_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "text/plain"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "text/plain",
+          "body": "={{ $json.lineProtocol }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "text"
+              }
+            }
+          }
+        },
+        "id": "07512afb-dd56-42c6-ba48-d6cd8119a92e",
+        "name": "InfluxDB schreiben",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1152,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $input.first().json;\n\n// Firefly API liefert data[] = transaction groups.\n// Darin liegen echte Buchungen meistens unter attributes.transactions[].\nconst rawData = input.data || input.transactions || [];\nconst transactions = [];\n\nfor (const item of rawData) {\n  const attr = item.attributes || item;\n\n  if (Array.isArray(attr.transactions)) {\n    for (const tx of attr.transactions) {\n      transactions.push({\n        ...tx,\n        group_id: item.id || tx.group_id || '',\n      });\n    }\n  } else {\n    transactions.push({\n      ...attr,\n      id: item.id || attr.id || '',\n    });\n  }\n}\n\n// Konto optional aus dem vorherigen Node holen\nlet accountBalance = 0;\nlet accountName = 'Volksbank';\nlet accountId = $('Konfiguration').first().json.firefly_account_id || '112';\n\ntry {\n  const accountRaw = $('Firefly Konto holen').first().json;\n  const accountAttr = accountRaw.data?.attributes || {};\n\n  accountBalance = Number(\n    accountAttr.current_balance ??\n    accountAttr.virtual_balance ??\n    0\n  );\n\n  accountName = accountAttr.name || 'Volksbank';\n  accountId = accountRaw.data?.id || accountId;\n} catch (e) {\n  // Wenn Konto nicht verfügbar ist, trotzdem weitermachen.\n}\n\nfunction escTag(v) {\n  return String(v ?? 'Unbekannt')\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/ /g, '\\\\ ')\n    .replace(/,/g, '\\\\,')\n    .replace(/=/g, '\\\\=')\n    .replace(/:/g, '\\\\:');\n}\n\nfunction escString(v) {\n  return String(v ?? '')\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/\"/g, '\\\\\"')\n    .replace(/\\n/g, ' ')\n    .replace(/\\r/g, ' ');\n}\n\nfunction num(v) {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n}\n\nfunction tsFromDate(dateValue) {\n  const d = new Date(dateValue);\n  if (Number.isNaN(d.getTime())) {\n    return Date.now() * 1000000;\n  }\n  return d.getTime() * 1000000;\n}\n\nconst lines = [];\n\n// Aktueller Kontostand\nlines.push(\n  `firefly_account,account=${escTag(accountName)},account_id=${escTag(accountId)} balance=${accountBalance} ${Date.now() * 1000000}`\n);\n\n// Firefly-Transaktionen 1:1 schreiben\nfor (const t of transactions) {\n  const id =\n    t.transaction_journal_id ||\n    t.id ||\n    t.internal_reference ||\n    `${t.date || 'nodate'}-${t.amount || 0}-${t.description || 'nodesc'}`;\n\n  const type = String(t.type || 'unknown').toLowerCase();\n\n  const amount = Math.abs(num(t.amount));\n\n  let signedAmount = amount;\n  if (type === 'withdrawal') signedAmount = -amount;\n  if (type === 'deposit') signedAmount = amount;\n  if (type === 'transfer') signedAmount = amount;\n\n  const date = t.date || new Date().toISOString();\n  const month = String(date).slice(0, 7);\n  const day = String(date).slice(0, 10);\n\n  const category = t.category_name || t.category || 'Ohne Kategorie';\n  const source = t.source_name || t.source || 'Unbekannt';\n  const destination = t.destination_name || t.destination || 'Unbekannt';\n  const description = t.description || 'Keine Beschreibung';\n\n  const ts = tsFromDate(date);\n\n  lines.push(\n    `firefly_transaction,transaction_id=${escTag(id)},type=${escTag(type)},month=${escTag(month)},day=${escTag(day)},category=${escTag(category)},source=${escTag(source)},destination=${escTag(destination)} amount=${amount},signed_amount=${signedAmount},description=\"${escString(description)}\" ${ts}`\n  );\n}\n\nreturn [\n  {\n    json: {\n      lineProtocol: lines.join('\\n'),\n      debug_lines: lines.length,\n      debug_transactions: transactions.length,\n      debug_account_balance: accountBalance,\n      debug_bucket: $('Konfiguration').first().json.influx_bucket\n    }\n  }\n];"
+        },
+        "id": "80dfc525-7872-413f-8b9d-eb08042ac3ae",
+        "name": "Influx Line Protocol bauen1",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          720,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const cfg = $('Konfiguration').first().json;\n\nconst lineProtocol = $json.lineProtocol;\n\nif (!lineProtocol || typeof lineProtocol !== 'string') {\n  throw new Error('Kein lineProtocol im Input gefunden.');\n}\n\nconst influxUrl = String(cfg.influx_url || '').replace(/\\/$/, '');\nconst org = encodeURIComponent(cfg.influx_org);\nconst bucket = encodeURIComponent(cfg.influx_bucket || 'firefly');\nconst token = cfg.influx_token;\n\nconst url = `${influxUrl}/api/v2/write?org=${org}&bucket=${bucket}&precision=ns`;\n\nlet responseText = '';\n\ntry {\n  responseText = await this.helpers.httpRequest({\n    method: 'POST',\n    url,\n    headers: {\n      Authorization: `Token ${token}`,\n      'Content-Type': 'text/plain',\n      Accept: 'text/plain',\n    },\n    body: lineProtocol,\n    json: false,\n    returnFullResponse: false,\n  });\n} catch (error) {\n  const status =\n    error.response?.statusCode ||\n    error.response?.status ||\n    error.statusCode ||\n    error.status ||\n    'unknown';\n\n  const body =\n    error.response?.body ||\n    error.message ||\n    JSON.stringify(error);\n\n  throw new Error(`InfluxDB Write fehlgeschlagen. HTTP ${status}: ${body}`);\n}\n\nreturn [\n  {\n    json: {\n      success: true,\n      written_lines: lineProtocol.split('\\n').filter(Boolean).length,\n      bucket: cfg.influx_bucket,\n      org: cfg.influx_org,\n      response: responseText || 'No Content',\n    },\n  },\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          928,
+          144
+        ],
+        "id": "485672d0-d5fc-498a-8d7e-7fcf00794c9a",
+        "name": "Code in JavaScript"
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Konfiguration": {
+        "main": [
+          [
+            {
+              "node": "Firefly Konto holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Firefly Konto holen": {
+        "main": [
+          [
+            {
+              "node": "Firefly Transaktionen holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Firefly Transaktionen holen": {
+        "main": [
+          [
+            {
+              "node": "Influx Line Protocol bauen1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Influx Line Protocol bauen1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": "Version e9380269",
+    "description": "",
+    "autosaved": true
+  },
+  "activeVersionId": "e9380269-1a81-4df5-a663-3039de629d9e",
   "connections": {
-    "Schedule": {
+    "Schedule Trigger": {
       "main": [
         [
           {
-            "node": "Zeitraum berechnen",
+            "node": "Konfiguration",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Zeitraum berechnen": {
+    "Konfiguration": {
       "main": [
         [
           {
-            "node": "Firefly Daten holen",
+            "node": "Firefly Konto holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firefly Konto holen": {
+      "main": [
+        [
+          {
+            "node": "Firefly Transaktionen holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firefly Transaktionen holen": {
+      "main": [
+        [
+          {
+            "node": "Influx Line Protocol bauen1",
             "type": "main",
             "index": 0
           },
-          {
-            "node": "Firefly Daten holen1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Firefly Daten holen": {
-      "main": [
-        [
-          {
-            "node": "Daten vorbereiten",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Daten vorbereiten": {
-      "main": [
-        [
           {
             "node": "Message a model",
             "type": "main",
@@ -52,48 +378,20 @@
         ]
       ]
     },
-    "Ergebnis parsen": {
+    "Influx Line Protocol bauen1": {
       "main": [
         [
           {
-            "node": "Influx Line Protocol bauen",
+            "node": "Code in JavaScript",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Message a model": {
+    "Code in JavaScript": {
       "main": [
-        [
-          {
-            "node": "Ergebnis parsen",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Influx Line Protocol bauen": {
-      "main": [
-        [
-          {
-            "node": "InfluxDB - Monatswert schreiben",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Firefly Daten holen1": {
-      "main": [
-        [
-          {
-            "node": "Daten vorbereiten",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     }
   },
@@ -103,54 +401,139 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "name": "Firefly Influx DB Schreiben",
+  "name": "Firefly III to InfluxDB - ChatGPT Salary Period",
   "nodes": [
     {
       "parameters": {
         "rule": {
           "interval": [
             {
-              "field": "cronExpression",
-              "expression": "0 8 1 * *"
+              "field": "hours",
+              "hoursInterval": 6
             }
           ]
         }
       },
-      "id": "11d64b90-b99a-4b16-a38e-8522c4bc3eb2",
-      "name": "Schedule",
+      "id": "4f3b3a3d-359b-4549-851c-d5f30e9886bd",
+      "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.2,
       "position": [
-        -288,
-        -16
+        -176,
+        144
       ]
     },
     {
       "parameters": {
-        "jsCode": "const now = new Date();\n\nconst start = new Date(now.getFullYear(), now.getMonth() - 1, 1);\nconst end = new Date(now.getFullYear(), now.getMonth(), 0);\n\nfunction fmt(d) {\n  return d.toISOString().slice(0, 10);\n}\n\nreturn [\n  {\n    json: {\n      start: fmt(start),\n      end: fmt(end)\n    }\n  }\n];"
+        "assignments": {
+          "assignments": [
+            {
+              "id": "firefly_url",
+              "name": "firefly_url",
+              "value": "http://192.168.178.42:8051",
+              "type": "string"
+            },
+            {
+              "id": "firefly_token",
+              "name": "firefly_token",
+              "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIwMTlkY2I1Ni05MGNlLTcxY2QtYjRjOC02MzJmODliOTQ5M2IiLCJqdGkiOiJkYjk1NmI0ZDc3ZThhYjBmZGM1NWNkNjQ2ZTE4NmM3NTAyNGRmZDkzY2M1YmEwOTA0OTAyMGIwZTRkMDY1MjA5MDNhMDRhYTFkNmQ1ZTliNCIsImlhdCI6MTc3NzIzMjk1MS4yNTAzNTUsIm5iZiI6MTc3NzIzMjk1MS4yNTAzNTgsImV4cCI6MTgwODc2ODk1MS4xMjY4NzUsInN1YiI6IjEiLCJzY29wZXMiOltdfQ.HCWPie_V7ghnLSKw8O0KXImm6JvL5jx0G7t78_pfKJX_mYnsIllLE_95lfkUh8qrxQXpk-2hFFq-zXBhTox-utF5LsVnwH5OJcfDj9k5pe7MbhYVoSnuLygVl1X0bAdha0idZOb6FfM47xdKtrl0-KGIF2IhT0qUEVDOEOKk9FUBdJ9ODNUZOiEAUeLielqhpO9SaWH3dm0b4lZDmk-dbII6EY0I_ItUc4qDevi6pOWsDfSES7pHy84vzE8QXMqwkIGx0TDAI7Pq8RlZ_86b099QnlKWSA7Hdu0Ze6JB_XEOq7OyOzvnGHYeHyKAEVahQI11VkUJOuMvD4SlfyWK0xcJrIqXFvRDVJ513QBAVPM-eF-eqJ17zXh8fJvhes1a-Z-orcg1xE-8VpDJWetOZNGMeWXhLgV9mClK5Sja5AEERwh1WGUofIpjBw8RkLoTn50Rf7_cNVPbQzaqF-l19-lb1RAibG4Bnt-EkvC8q64W9nqz2klKEG1P_0PmO_uSZs2hnzznnJPYwI-wGd8AuhTdLNb04ZxBXXA_ls_euRyapAXRFrUu53D52St6MQPv1qDLB_3oiKc4ZFlV37ez9uHpIGa0yEUjh7Z0QRzO2pxAzRjUVVWdh0_VAm-z_fK-UOo8ip5cwC5uGPDgffTT3IiASi9-J_72mKmIhI3yfjo",
+              "type": "string"
+            },
+            {
+              "id": "firefly_account_id",
+              "name": "firefly_account_id",
+              "value": "112",
+              "type": "string"
+            },
+            {
+              "id": "influx_url",
+              "name": "influx_url",
+              "value": "http://192.168.178.42:8086",
+              "type": "string"
+            },
+            {
+              "id": "influx_org",
+              "name": "influx_org",
+              "value": "home",
+              "type": "string"
+            },
+            {
+              "id": "influx_bucket",
+              "name": "influx_bucket",
+              "value": "firefly",
+              "type": "string"
+            },
+            {
+              "id": "influx_token",
+              "name": "influx_token",
+              "value": "bitte-aendern-token",
+              "type": "string"
+            },
+            {
+              "id": "days_back",
+              "name": "days_back",
+              "value": 400,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
       },
-      "id": "07bbbd44-ef82-4b1c-838f-9bed21f71aa3",
-      "name": "Zeitraum berechnen",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "id": "5c630b6a-6560-49ad-a512-54076eb78ee3",
+      "name": "Konfiguration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         48,
-        -16
+        144
       ]
     },
     {
       "parameters": {
-        "url": "http://192.168.178.42:8051/api/v1/transactions",
+        "url": "={{ $('Konfiguration').first().json.firefly_url + '/api/v1/accounts/' + $('Konfiguration').first().json.firefly_account_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $('Konfiguration').first().json.firefly_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a540dcdb-b1ef-4308-81cc-70a1af6e61ac",
+      "name": "Firefly Konto holen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        272,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Konfiguration').first().json.firefly_url + '/api/v1/transactions' }}",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             {
               "name": "start",
-              "value": "={{$json.start}}"
+              "value": "={{ new Date(Date.now() - ($('Konfiguration').first().json.days_back * 24 * 60 * 60 * 1000)).toISOString().slice(0,10) }}"
             },
             {
               "name": "end",
-              "value": "={{$json.end}}"
+              "value": "={{ new Date().toISOString().slice(0,10) }}"
             },
             {
               "name": "limit",
@@ -163,7 +546,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIwMTlkY2I1Ni05MGNlLTcxY2QtYjRjOC02MzJmODliOTQ5M2IiLCJqdGkiOiJkYjk1NmI0ZDc3ZThhYjBmZGM1NWNkNjQ2ZTE4NmM3NTAyNGRmZDkzY2M1YmEwOTA0OTAyMGIwZTRkMDY1MjA5MDNhMDRhYTFkNmQ1ZTliNCIsImlhdCI6MTc3NzIzMjk1MS4yNTAzNTUsIm5iZiI6MTc3NzIzMjk1MS4yNTAzNTgsImV4cCI6MTgwODc2ODk1MS4xMjY4NzUsInN1YiI6IjEiLCJzY29wZXMiOltdfQ.HCWPie_V7ghnLSKw8O0KXImm6JvL5jx0G7t78_pfKJX_mYnsIllLE_95lfkUh8qrxQXpk-2hFFq-zXBhTox-utF5LsVnwH5OJcfDj9k5pe7MbhYVoSnuLygVl1X0bAdha0idZOb6FfM47xdKtrl0-KGIF2IhT0qUEVDOEOKk9FUBdJ9ODNUZOiEAUeLielqhpO9SaWH3dm0b4lZDmk-dbII6EY0I_ItUc4qDevi6pOWsDfSES7pHy84vzE8QXMqwkIGx0TDAI7Pq8RlZ_86b099QnlKWSA7Hdu0Ze6JB_XEOq7OyOzvnGHYeHyKAEVahQI11VkUJOuMvD4SlfyWK0xcJrIqXFvRDVJ513QBAVPM-eF-eqJ17zXh8fJvhes1a-Z-orcg1xE-8VpDJWetOZNGMeWXhLgV9mClK5Sja5AEERwh1WGUofIpjBw8RkLoTn50Rf7_cNVPbQzaqF-l19-lb1RAibG4Bnt-EkvC8q64W9nqz2klKEG1P_0PmO_uSZs2hnzznnJPYwI-wGd8AuhTdLNb04ZxBXXA_ls_euRyapAXRFrUu53D52St6MQPv1qDLB_3oiKc4ZFlV37ez9uHpIGa0yEUjh7Z0QRzO2pxAzRjUVVWdh0_VAm-z_fK-UOo8ip5cwC5uGPDgffTT3IiASi9-J_72mKmIhI3yfjo"
+              "value": "={{ 'Bearer ' + $('Konfiguration').first().json.firefly_token }}"
             },
             {
               "name": "Accept",
@@ -179,53 +562,116 @@
           }
         }
       },
-      "id": "57b3356d-bca0-41ac-920a-eeb243c196df",
-      "name": "Firefly Daten holen",
+      "id": "da65a83f-4698-4829-aa90-4a610441a2ae",
+      "name": "Firefly Transaktionen holen",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
+      "typeVersion": 4.2,
       "position": [
-        304,
-        -144
+        496,
+        144
       ]
     },
     {
       "parameters": {
-        "jsCode": "let data = $json.data;\n\n// Falls HTTP Node JSON als String liefert\nif (typeof data === 'string') {\n  try {\n    const parsed = JSON.parse(data);\n    data = parsed.data || parsed;\n  } catch (e) {\n    data = [];\n  }\n}\n\n// Falls kompletter Firefly-Response direkt im Item liegt\nif (!data && $json.attributes) {\n  data = [$json];\n}\n\n// Falls data ein einzelnes Objekt ist\nif (data && !Array.isArray(data)) {\n  data = [data];\n}\n\n// Fallback\nif (!Array.isArray(data)) {\n  data = [];\n}\n\nconst transactions = [];\n\nfor (const entry of data) {\n  const splits = entry.attributes?.transactions || [];\n\n  for (const t of splits) {\n    transactions.push({\n      date: t.date || '',\n      description: t.description || '',\n      amount: Math.abs(parseFloat(t.amount || 0)),\n      category: t.category_name || 'Ohne Kategorie',\n      budget: t.budget_name || '',\n      source: t.source_name || '',\n      destination: t.destination_name || '',\n      type: t.type || ''\n    });\n  }\n}\n\nreturn [\n  {\n    json: {\n      transaction_count: transactions.length,\n      transactions,\n      prompt: `\nAnalysiere diese Firefly-III-Transaktionen des aktuellen Monats.\n\nErkenne Fixkosten, regelmäßige Ausgaben und wahrscheinliche Abos.\n\nIgnoriere:\n- einmalige Einkäufe\n- Lebensmittel\n- Bargeldabhebungen\n- interne Umbuchungen\n\nAntworte NUR als gültiges JSON ohne Markdown.\n\nFormat:\n{\n  \"fixkosten_gesamt\": 0,\n  \"anzahl_fixkosten\": 0,\n  \"fixkosten\": [\n    {\n      \"name\": \"\",\n      \"betrag\": 0,\n      \"kategorie\": \"\",\n      \"sicherheit\": \"hoch|mittel|niedrig\",\n      \"begruendung\": \"\"\n    }\n  ],\n  \"vermutliche_abos\": [],\n  \"auffaelligkeiten\": [],\n  \"zusammenfassung\": \"\"\n}\n\nTransaktionen:\n${JSON.stringify(transactions, null, 2)}\n`\n    }\n  }\n];"
+        "method": "POST",
+        "url": "={{ $('Konfiguration').first().json.influx_url + '/api/v2/write' }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "org",
+              "value": "={{ $('Konfiguration').first().json.influx_org }}"
+            },
+            {
+              "name": "bucket",
+              "value": "={{ $('Konfiguration').first().json.influx_bucket }}"
+            },
+            {
+              "name": "precision",
+              "value": "ns"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Token ' + $('Konfiguration').first().json.influx_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "text/plain"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/plain",
+        "body": "={{ $json.lineProtocol }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
       },
-      "id": "862687d1-0fa8-43f6-9b9c-ba1a51ddd546",
-      "name": "Daten vorbereiten",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "id": "07512afb-dd56-42c6-ba48-d6cd8119a92e",
+      "name": "InfluxDB schreiben",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
-        608,
-        0
+        1152,
+        144
       ]
     },
     {
       "parameters": {
-        "jsCode": "let raw =\n  $json.output ||\n  $json.text ||\n  $json.message ||\n  $json.content ||\n  $json.choices?.[0]?.message?.content ||\n  $json;\n\nlet parsed;\n\nif (typeof raw === 'object') {\n  parsed = raw;\n} else {\n  raw = String(raw)\n    .replace(/```json/g, '')\n    .replace(/```/g, '')\n    .trim();\n\n  parsed = JSON.parse(raw);\n}\n\n// Falls OpenAI Node das Ergebnis in output als Array liefert\nif (Array.isArray(parsed)) {\n  parsed = parsed[0];\n}\n\nreturn [\n  {\n    json: parsed\n  }\n];"
+        "jsCode": "const input = $input.first().json;\n\n// Firefly API liefert data[] = transaction groups.\n// Darin liegen echte Buchungen meistens unter attributes.transactions[].\nconst rawData = input.data || input.transactions || [];\nconst transactions = [];\n\nfor (const item of rawData) {\n  const attr = item.attributes || item;\n\n  if (Array.isArray(attr.transactions)) {\n    for (const tx of attr.transactions) {\n      transactions.push({\n        ...tx,\n        group_id: item.id || tx.group_id || '',\n      });\n    }\n  } else {\n    transactions.push({\n      ...attr,\n      id: item.id || attr.id || '',\n    });\n  }\n}\n\n// Konto optional aus dem vorherigen Node holen\nlet accountBalance = 0;\nlet accountName = 'Volksbank';\nlet accountId = $('Konfiguration').first().json.firefly_account_id || '112';\n\ntry {\n  const accountRaw = $('Firefly Konto holen').first().json;\n  const accountAttr = accountRaw.data?.attributes || {};\n\n  accountBalance = Number(\n    accountAttr.current_balance ??\n    accountAttr.virtual_balance ??\n    0\n  );\n\n  accountName = accountAttr.name || 'Volksbank';\n  accountId = accountRaw.data?.id || accountId;\n} catch (e) {\n  // Wenn Konto nicht verfügbar ist, trotzdem weitermachen.\n}\n\nfunction escTag(v) {\n  return String(v ?? 'Unbekannt')\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/ /g, '\\\\ ')\n    .replace(/,/g, '\\\\,')\n    .replace(/=/g, '\\\\=')\n    .replace(/:/g, '\\\\:');\n}\n\nfunction escString(v) {\n  return String(v ?? '')\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/\"/g, '\\\\\"')\n    .replace(/\\n/g, ' ')\n    .replace(/\\r/g, ' ');\n}\n\nfunction num(v) {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n}\n\nfunction tsFromDate(dateValue) {\n  const d = new Date(dateValue);\n  if (Number.isNaN(d.getTime())) {\n    return Date.now() * 1000000;\n  }\n  return d.getTime() * 1000000;\n}\n\nconst lines = [];\n\n// Aktueller Kontostand\nlines.push(\n  `firefly_account,account=${escTag(accountName)},account_id=${escTag(accountId)} balance=${accountBalance} ${Date.now() * 1000000}`\n);\n\n// Firefly-Transaktionen 1:1 schreiben\nfor (const t of transactions) {\n  const id =\n    t.transaction_journal_id ||\n    t.id ||\n    t.internal_reference ||\n    `${t.date || 'nodate'}-${t.amount || 0}-${t.description || 'nodesc'}`;\n\n  const type = String(t.type || 'unknown').toLowerCase();\n\n  const amount = Math.abs(num(t.amount));\n\n  let signedAmount = amount;\n  if (type === 'withdrawal') signedAmount = -amount;\n  if (type === 'deposit') signedAmount = amount;\n  if (type === 'transfer') signedAmount = amount;\n\n  const date = t.date || new Date().toISOString();\n  const month = String(date).slice(0, 7);\n  const day = String(date).slice(0, 10);\n\n  const category = t.category_name || t.category || 'Ohne Kategorie';\n  const source = t.source_name || t.source || 'Unbekannt';\n  const destination = t.destination_name || t.destination || 'Unbekannt';\n  const description = t.description || 'Keine Beschreibung';\n\n  const ts = tsFromDate(date);\n\n  lines.push(\n    `firefly_transaction,transaction_id=${escTag(id)},type=${escTag(type)},month=${escTag(month)},day=${escTag(day)},category=${escTag(category)},source=${escTag(source)},destination=${escTag(destination)} amount=${amount},signed_amount=${signedAmount},description=\"${escString(description)}\" ${ts}`\n  );\n}\n\nreturn [\n  {\n    json: {\n      lineProtocol: lines.join('\\n'),\n      debug_lines: lines.length,\n      debug_transactions: transactions.length,\n      debug_account_balance: accountBalance,\n      debug_bucket: $('Konfiguration').first().json.influx_bucket\n    }\n  }\n];"
       },
-      "id": "60de4a7f-4b00-465e-8ae1-3a5a61fc657c",
-      "name": "Ergebnis parsen",
+      "id": "80dfc525-7872-413f-8b9d-eb08042ac3ae",
+      "name": "Influx Line Protocol bauen1",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1104,
-        -240
+        720,
+        144
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Konfiguration').first().json;\n\nconst lineProtocol = $json.lineProtocol;\n\nif (!lineProtocol || typeof lineProtocol !== 'string') {\n  throw new Error('Kein lineProtocol im Input gefunden.');\n}\n\nconst influxUrl = String(cfg.influx_url || '').replace(/\\/$/, '');\nconst org = encodeURIComponent(cfg.influx_org);\nconst bucket = encodeURIComponent(cfg.influx_bucket || 'firefly');\nconst token = cfg.influx_token;\n\nconst url = `${influxUrl}/api/v2/write?org=${org}&bucket=${bucket}&precision=ns`;\n\nlet responseText = '';\n\ntry {\n  responseText = await this.helpers.httpRequest({\n    method: 'POST',\n    url,\n    headers: {\n      Authorization: `Token ${token}`,\n      'Content-Type': 'text/plain',\n      Accept: 'text/plain',\n    },\n    body: lineProtocol,\n    json: false,\n    returnFullResponse: false,\n  });\n} catch (error) {\n  const status =\n    error.response?.statusCode ||\n    error.response?.status ||\n    error.statusCode ||\n    error.status ||\n    'unknown';\n\n  const body =\n    error.response?.body ||\n    error.message ||\n    JSON.stringify(error);\n\n  throw new Error(`InfluxDB Write fehlgeschlagen. HTTP ${status}: ${body}`);\n}\n\nreturn [\n  {\n    json: {\n      success: true,\n      written_lines: lineProtocol.split('\\n').filter(Boolean).length,\n      bucket: cfg.influx_bucket,\n      org: cfg.influx_org,\n      response: responseText || 'No Content',\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        144
+      ],
+      "id": "485672d0-d5fc-498a-8d7e-7fcf00794c9a",
+      "name": "Code in JavaScript"
     },
     {
       "parameters": {
         "modelId": {
           "__rl": true,
-          "value": "gpt-5.5",
+          "value": "gpt-5.4-nano",
           "mode": "list",
-          "cachedResultName": "GPT-5.5"
+          "cachedResultName": "GPT-5.4-NANO"
         },
         "responses": {
           "values": [
             {
-              "content": "={{ $json.prompt }}"
+              "content": "=Hier sind die Buchungen: {{ $json.data }}"
+            },
+            {
+              "role": "system",
+              "content": "Suche die letze Buchung von Mandala und gib das dartum als json aus"
             }
           ]
         },
@@ -235,10 +681,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        816,
-        0
+        336,
+        368
       ],
-      "id": "3a6c36fd-7557-426c-981d-2feec8604c20",
+      "id": "3f83880d-716d-4d9d-a60e-a0fc3600364a",
       "name": "Message a model",
       "credentials": {
         "openAiApi": {
@@ -246,90 +692,6 @@
           "name": "OpenAI account"
         }
       }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=http://192.168.178.42:8086/api/v2/write?org=home&bucket=firefly&precision=ns",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Token bitte-aendern-token"
-            },
-            {
-              "name": "Content-Type",
-              "value": "text/plain"
-            }
-          ]
-        },
-        "sendBody": true,
-        "contentType": "raw",
-        "rawContentType": "raw",
-        "body": "={{$json.lineProtocol}}",
-        "options": {}
-      },
-      "id": "cb8c4bcf-e953-4796-9bb1-9faa71141990",
-      "name": "InfluxDB - Monatswert schreiben",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        1600,
-        -160
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const transactions = $input.first().json.transactions || [];\n\n// Echtes Firefly Konto 112\nconst accountRaw = $('Firefly Konto holen').first().json;\nconst accountAttr = accountRaw.data?.attributes || {};\n\nconst realAccountBalance = Number(\n  accountAttr.current_balance ??\n  accountAttr.virtual_balance ??\n  0\n);\n\nconst accountName = accountAttr.name || 'Volksbank';\n\nlet raw =\n  $json.content?.[0]?.text ||\n  $json.output_text ||\n  $json.output ||\n  $json.text ||\n  $json;\n\nlet ai;\n\nif (typeof raw === 'object') {\n  ai = raw;\n} else {\n  raw = String(raw)\n    .replace(/```json/g, '')\n    .replace(/```/g, '')\n    .trim();\n\n  ai = JSON.parse(raw);\n}\n\nfunction escTag(v) {\n  return String(v || 'Unbekannt')\n    .replace(/ /g, '\\\\ ')\n    .replace(/,/g, '\\\\,')\n    .replace(/=/g, '\\\\=')\n    .replace(/:/g, '\\\\:');\n}\n\nfunction num(v) {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n}\n\nconst now = new Date();\nconst month = now.toISOString().slice(0, 7);\nconst ts = Date.now() * 1000000;\n\nlet income = 0;\nlet expenses = 0;\nlet transfer = 0;\n\nlet countIncome = 0;\nlet countExpenses = 0;\n\nconst byCategory = {};\nconst byMerchant = {};\nconst byDay = {};\n\nfor (const t of transactions) {\n  const amount = num(t.amount);\n  const type = String(t.type || '').toLowerCase();\n\n  const category = t.category || 'Ohne Kategorie';\n  const merchant = t.destination || t.source || t.description || 'Unbekannt';\n  const day = String(t.date || '').slice(0, 10);\n\n  if (type === 'deposit') {\n    income += amount;\n    countIncome++;\n  }\n\n  if (type === 'withdrawal') {\n    expenses += amount;\n    countExpenses++;\n\n    byCategory[category] = (byCategory[category] || 0) + amount;\n    byMerchant[merchant] = (byMerchant[merchant] || 0) + amount;\n    byDay[day] = (byDay[day] || 0) + amount;\n  }\n\n  if (type === 'transfer') {\n    transfer += amount;\n  }\n}\n\nconst monthBalance = income - expenses;\n\nconst fixkostenGesamt = num(ai.fixkosten_gesamt);\nconst fixkostenCount = num(ai.anzahl_fixkosten || (ai.fixkosten || []).length);\nconst fixkostenQuote = expenses > 0 ? (fixkostenGesamt / expenses) * 100 : 0;\n\nconst variableExpenses = Math.max(expenses - fixkostenGesamt, 0);\n\nconst lines = [];\n\n// Echtes Konto\nlines.push(\n  `firefly_account,account=${escTag(accountName)},account_id=112 balance=${realAccountBalance} ${ts}`\n);\n\n// Monatsübersicht\nlines.push(\n  `firefly_month,month=${escTag(month)} income=${income},expenses=${expenses},month_balance=${monthBalance},account_balance=${realAccountBalance},fixkosten_gesamt=${fixkostenGesamt},fixkosten_quote=${fixkostenQuote},variable_expenses=${variableExpenses},count_income=${countIncome},count_expenses=${countExpenses} ${ts}`\n);\n\n// Kategorien\nfor (const [category, value] of Object.entries(byCategory)) {\n  lines.push(\n    `firefly_category,month=${escTag(month)},category=${escTag(category)} expenses=${value} ${ts}`\n  );\n}\n\n// Top Händler\nfor (const [merchant, value] of Object.entries(byMerchant)) {\n  lines.push(\n    `firefly_merchant,month=${escTag(month)},merchant=${escTag(merchant)} expenses=${value} ${ts}`\n  );\n}\n\n// Tagesausgaben\nfor (const [day, value] of Object.entries(byDay)) {\n  const dayTs = new Date(day + 'T12:00:00').getTime() * 1000000;\n  lines.push(\n    `firefly_daily,month=${escTag(month)},day=${escTag(day)} expenses=${value} ${dayTs}`\n  );\n}\n\n// KI-Fixkosten\nlines.push(\n  `firefly_fixkosten,type=summary,month=${escTag(month)} fixkosten_gesamt=${fixkostenGesamt},anzahl_fixkosten=${fixkostenCount} ${ts}`\n);\n\nfor (const f of (ai.fixkosten || [])) {\n  const name = escTag(f.name || f.empfaenger || f.beschreibung || 'Unbekannt');\n  const betrag = num(f.betrag);\n\n  lines.push(\n    `firefly_fixkosten_detail,month=${escTag(month)},name=${name} betrag=${betrag} ${ts}`\n  );\n}\n\nreturn [\n  {\n    json: {\n      lineProtocol: lines.join('\\n'),\n\n      debug_account_balance: realAccountBalance,\n      debug_month_balance: monthBalance,\n      debug_income: income,\n      debug_expenses: expenses,\n      debug_fixkosten: fixkostenGesamt,\n      debug_variable_expenses: variableExpenses,\n      debug_lines: lines.length,\n\n      summary: ai.zusammenfassung || ai.kurze_zusammenfassung || ''\n    }\n  }\n];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1312,
-        -240
-      ],
-      "id": "0d5b8c2f-50c4-4d3d-8f4f-e020272c053b",
-      "name": "Influx Line Protocol bauen"
-    },
-    {
-      "parameters": {
-        "url": "http://192.168.178.42:8051/api/v1/accounts/112",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {}
-          ]
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIwMTlkY2I1Ni05MGNlLTcxY2QtYjRjOC02MzJmODliOTQ5M2IiLCJqdGkiOiJkYjk1NmI0ZDc3ZThhYjBmZGM1NWNkNjQ2ZTE4NmM3NTAyNGRmZDkzY2M1YmEwOTA0OTAyMGIwZTRkMDY1MjA5MDNhMDRhYTFkNmQ1ZTliNCIsImlhdCI6MTc3NzIzMjk1MS4yNTAzNTUsIm5iZiI6MTc3NzIzMjk1MS4yNTAzNTgsImV4cCI6MTgwODc2ODk1MS4xMjY4NzUsInN1YiI6IjEiLCJzY29wZXMiOltdfQ.HCWPie_V7ghnLSKw8O0KXImm6JvL5jx0G7t78_pfKJX_mYnsIllLE_95lfkUh8qrxQXpk-2hFFq-zXBhTox-utF5LsVnwH5OJcfDj9k5pe7MbhYVoSnuLygVl1X0bAdha0idZOb6FfM47xdKtrl0-KGIF2IhT0qUEVDOEOKk9FUBdJ9ODNUZOiEAUeLielqhpO9SaWH3dm0b4lZDmk-dbII6EY0I_ItUc4qDevi6pOWsDfSES7pHy84vzE8QXMqwkIGx0TDAI7Pq8RlZ_86b099QnlKWSA7Hdu0Ze6JB_XEOq7OyOzvnGHYeHyKAEVahQI11VkUJOuMvD4SlfyWK0xcJrIqXFvRDVJ513QBAVPM-eF-eqJ17zXh8fJvhes1a-Z-orcg1xE-8VpDJWetOZNGMeWXhLgV9mClK5Sja5AEERwh1WGUofIpjBw8RkLoTn50Rf7_cNVPbQzaqF-l19-lb1RAibG4Bnt-EkvC8q64W9nqz2klKEG1P_0PmO_uSZs2hnzznnJPYwI-wGd8AuhTdLNb04ZxBXXA_ls_euRyapAXRFrUu53D52St6MQPv1qDLB_3oiKc4ZFlV37ez9uHpIGa0yEUjh7Z0QRzO2pxAzRjUVVWdh0_VAm-z_fK-UOo8ip5cwC5uGPDgffTT3IiASi9-J_72mKmIhI3yfjo"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "id": "9d4057f4-619e-4d39-8486-aeec36fb4ab0",
-      "name": "Firefly Daten holen1",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [
-        320,
-        128
-      ]
     }
   ],
   "pinData": {},
@@ -349,9 +711,13 @@
       "projectId": "Iyrtd5xOBA8QCG1f"
     }
   ],
-  "staticData": null,
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
   "tags": [],
-  "triggerCount": 0,
-  "updatedAt": "2026-05-03T18:59:18.137Z",
-  "versionId": "7c577f08-8ec7-4794-86c1-248b4a6b2c0b"
+  "triggerCount": 1,
+  "updatedAt": "2026-05-04T20:28:53.009Z",
+  "versionId": "74a020cd-6165-4333-b740-2f94e40be327"
 }
