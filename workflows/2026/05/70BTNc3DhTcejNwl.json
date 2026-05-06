@@ -1,0 +1,1489 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-05-05T21:35:43.000Z",
+    "createdAt": "2026-05-05T21:35:26.648Z",
+    "versionId": "cac6a83b-f882-4f64-b585-0148847c2e52",
+    "workflowId": "70BTNc3DhTcejNwl",
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "86267f21-94b1-4810-996b-18098fd655fe",
+        "name": "Manual Trigger",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -3920,
+          224
+        ]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 8 * * *"
+              }
+            ]
+          }
+        },
+        "id": "07c44d37-931e-454c-b9c2-f30e2c7bb82a",
+        "name": "Täglich 08:00",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -3920,
+          32
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "paperless_url",
+                "name": "paperless_url",
+                "value": "http://192.168.178.42:8000",
+                "type": "string"
+              },
+              {
+                "id": "paperless_token",
+                "name": "paperless_token",
+                "value": "54f69347ba18315b156062cf21e1012d7e55c84f",
+                "type": "string"
+              },
+              {
+                "id": "firefly_url",
+                "name": "firefly_url",
+                "value": "http://192.168.178.42:8051",
+                "type": "string"
+              },
+              {
+                "id": "firefly_token",
+                "name": "firefly_token",
+                "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIwMTlkY2I1Ni05MGNlLTcxY2QtYjRjOC02MzJmODliOTQ5M2IiLCJqdGkiOiJkYjk1NmI0ZDc3ZThhYjBmZGM1NWNkNjQ2ZTE4NmM3NTAyNGRmZDkzY2M1YmEwOTA0OTAyMGIwZTRkMDY1MjA5MDNhMDRhYTFkNmQ1ZTliNCIsImlhdCI6MTc3NzIzMjk1MS4yNTAzNTUsIm5iZiI6MTc3NzIzMjk1MS4yNTAzNTgsImV4cCI6MTgwODc2ODk1MS4xMjY4NzUsInN1YiI6IjEiLCJzY29wZXMiOltdfQ.HCWPie_V7ghnLSKw8O0KXImm6JvL5jx0G7t78_pfKJX_mYnsIllLE_95lfkUh8qrxQXpk-2hFFq-zXBhTox-utF5LsVnwH5OJcfDj9k5pe7MbhYVoSnuLygVl1X0bAdha0idZOb6FfM47xdKtrl0-KGIF2IhT0qUEVDOEOKk9FUBdJ9ODNUZOiEAUeLielqhpO9SaWH3dm0b4lZDmk-dbII6EY0I_ItUc4qDevi6pOWsDfSES7pHy84vzE8QXMqwkIGx0TDAI7Pq8RlZ_86b099QnlKWSA7Hdu0Ze6JB_XEOq7OyOzvnGHYeHyKAEVahQI11VkUJOuMvD4SlfyWK0xcJrIqXFvRDVJ513QBAVPM-eF-eqJ17zXh8fJvhes1a-Z-orcg1xE-8VpDJWetOZNGMeWXhLgV9mClK5Sja5AEERwh1WGUofIpjBw8RkLoTn50Rf7_cNVPbQzaqF-l19-lb1RAibG4Bnt-EkvC8q64W9nqz2klKEG1P_0PmO_uSZs2hnzznnJPYwI-wGd8AuhTdLNb04ZxBXXA_ls_euRyapAXRFrUu53D52St6MQPv1qDLB_3oiKc4ZFlV37ez9uHpIGa0yEUjh7Z0QRzO2pxAzRjUVVWdh0_VAm-z_fK-UOo8ip5cwC5uGPDgffTT3IiASi9-J_72mKmIhI3yfjo",
+                "type": "string"
+              },
+              {
+                "id": "paperless_invoice_tag_id",
+                "name": "paperless_invoice_tag_id",
+                "value": 3,
+                "type": "number"
+              },
+              {
+                "id": "paperless_paid_tag_id",
+                "name": "paperless_paid_tag_id",
+                "value": 11,
+                "type": "number"
+              },
+              {
+                "id": "paperless_unsure_tag_id",
+                "name": "paperless_unsure_tag_id",
+                "value": 12,
+                "type": "number"
+              },
+              {
+                "id": "paperless_ai_checked_tag_id",
+                "name": "paperless_ai_checked_tag_id",
+                "value": 1,
+                "type": "number"
+              },
+              {
+                "id": "lookback_days",
+                "name": "lookback_days",
+                "value": 120,
+                "type": "number"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "a8011dd9-af63-4927-b255-b372713cf77e",
+        "name": "Konfiguration",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -3664,
+          128
+        ],
+        "notesInFlow": true,
+        "notes": "Hier deine URLs, Tokens und Paperless-Tag-IDs eintragen. Home Assistant und Telegram können leer bleiben."
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Konfiguration').first().json.paperless_url }}/api/documents/",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "page_size",
+                "value": "50"
+              },
+              {
+                "name": "ordering",
+                "value": "-created"
+              },
+              {
+                "name": "tags__id__all",
+                "value": "={{ $('Konfiguration').first().json.paperless_invoice_tag_id }}"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Token {{ $('Konfiguration').first().json.paperless_token }}"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "bcc21f83-0b08-489a-b2ee-0c4f0f9dd72d",
+        "name": "Paperless - Rechnungen holen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -3392,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const cfg = $('Konfiguration').first().json;\nconst docs = $json.results || [];\n\nfunction tagIds(tags) {\n  return (tags || [])\n    .map(t => {\n      if (typeof t === 'number') return t;\n      if (typeof t === 'string') return Number(t);\n      if (typeof t === 'object' && t !== null) return Number(t.id ?? t.pk);\n      return null;\n    })\n    .filter(Boolean);\n}\n\nconst filtered = docs.filter(doc => {\n  const tags = tagIds(doc.tags);\n\n  // NICHT verarbeiten, wenn bereits bezahlt\n  if (tags.includes(Number(cfg.paperless_paid_tag_id))) {\n    return false;\n  }\n\n  // Verarbeiten, wenn Rechnung und Zahlung unsicher\n  if (tags.includes(Number(cfg.paperless_unsure_tag_id))) {\n    return true;\n  }\n\n  // Optional: auch noch offene Zahlungen verarbeiten\n  if (tags.includes(Number(cfg.paperless_open_tag_id))) {\n    return true;\n  }\n\n  // Neue Rechnungen ohne Bezahlt-Tag auch verarbeiten\n  return true;\n});\n\nreturn filtered.map(doc => ({ json: doc }));"
+        },
+        "id": "1200054a-d038-4711-8557-4fb56e7fbe17",
+        "name": "Dokumente filtern und aufteilen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3136,
+          128
+        ],
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "f0c6811f-f0d0-4f74-81c1-f0494d581562",
+        "name": "Loop Over Items",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -2880,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Konfiguration').first().json.paperless_url }}/api/documents/{{ $json.id }}/",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Token {{ $('Konfiguration').first().json.paperless_token }}"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "4c895909-a847-4869-af71-45f1c73f4805",
+        "name": "Paperless - Dokumentdetails holen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -2592,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst doc = $json;\n\nreturn [{\n  json: {\n    paperless_id: doc.id,\n    paperless_title: doc.title || '',\n    original_filename: doc.original_filename || '',\n    created: doc.created || null,\n    added: doc.added || null,\n    content: doc.content || '',\n    existing_tags: doc.tags || [],\n    correspondent: doc.correspondent || null,\n    document_type: doc.document_type || null\n  }\n}];\n"
+        },
+        "id": "93782b31-b2f8-4de3-ace9-e1c01fcc3eed",
+        "name": "Rechnungstext vorbereiten",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2384,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const base = $('Rechnungstext vorbereiten').first().json;\n\nlet raw =\n  $json.output?.[0]?.content?.[0]?.text ||\n  $json.output_text ||\n  $json.output ||\n  $json.text ||\n  $json.message?.content ||\n  $json.choices?.[0]?.message?.content ||\n  '{}';\n\n// Falls output ein Array/Objekt ist\nif (Array.isArray(raw)) {\n  raw = raw?.[0]?.content?.[0]?.text || JSON.stringify(raw);\n}\n\nif (typeof raw !== 'string') {\n  raw = JSON.stringify(raw);\n}\n\nraw = raw\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\nlet parsed;\n\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = {\n    is_invoice: false,\n    creditor_name: null,\n    invoice_number: null,\n    customer_number: null,\n    amount_total: null,\n    currency: \"EUR\",\n    due_date: null,\n    invoice_date: null,\n    iban: null,\n    bic: null,\n    payment_reference: null,\n    suggested_firefly_search_terms: [],\n    confidence: 0,\n    reason: \"ChatGPT-Antwort konnte nicht als JSON gelesen werden. Raw: \" + raw.slice(0, 500)\n  };\n}\n\nparsed.paperless_id = base.paperless_id;\nparsed.paperless_title = base.paperless_title;\nparsed.original_filename = base.original_filename;\nparsed.existing_tags = base.existing_tags || [];\n\nreturn [\n  {\n    json: parsed\n  }\n];"
+        },
+        "id": "31752c24-333d-410d-bbb4-4d637e816de1",
+        "name": "KI Ergebnis normalisieren",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1856,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const invoice = $json;\n\nconst terms = [];\n\n// Sehr gute Suchbegriffe einzeln sammeln\nif (invoice.creditor_name) terms.push(invoice.creditor_name);\nif (invoice.invoice_number) terms.push(invoice.invoice_number);\nif (invoice.customer_number) terms.push(invoice.customer_number);\nif (invoice.iban) terms.push(invoice.iban);\nif (invoice.bic) terms.push(invoice.bic);\nif (invoice.payment_reference) terms.push(invoice.payment_reference);\n\nif (Array.isArray(invoice.suggested_firefly_search_terms)) {\n  terms.push(...invoice.suggested_firefly_search_terms);\n}\n\n// Begriffe bereinigen\nconst clean = [...new Set(\n  terms\n    .filter(Boolean)\n    .map(t => String(t).trim())\n    .filter(t => t.length >= 3)\n)];\n\n// Smarte Firefly-Suchen bauen\nconst queries = [];\n\n// 1. Rechnungsnummer einzeln\nif (invoice.invoice_number) queries.push(String(invoice.invoice_number));\n\n// 2. Verwendungszweck einzeln\nif (invoice.payment_reference) queries.push(String(invoice.payment_reference));\n\n// 3. IBAN einzeln\nif (invoice.iban) queries.push(String(invoice.iban).replace(/\\s+/g, ''));\n\n// 4. Empfänger gekürzt\nif (invoice.creditor_name) {\n  const shortCreditor = String(invoice.creditor_name)\n    .replace(/GmbH|Co\\. KG|KG|UG|AG|Ltd|&/gi, '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\n  queries.push(shortCreditor);\n}\n\n// 5. Suggested Terms einzeln\nfor (const t of clean) {\n  queries.push(t);\n}\n\n// 6. Kombi: Empfänger + Rechnungsnummer\nif (invoice.creditor_name && invoice.invoice_number) {\n  queries.push(`${invoice.creditor_name} ${invoice.invoice_number}`);\n}\n\n// 7. Kombi: Empfänger + Verwendungszweck\nif (invoice.creditor_name && invoice.payment_reference) {\n  queries.push(`${invoice.creditor_name} ${invoice.payment_reference}`);\n}\n\n// Duplikate entfernen, max. 8 Suchläufe\nconst finalQueries = [...new Set(\n  queries\n    .map(q => String(q).trim())\n    .filter(q => q.length >= 3)\n)].slice(0, 8);\n\n// Wenn gar nichts da ist, mindestens Titel nutzen\nif (finalQueries.length === 0 && invoice.paperless_title) {\n  finalQueries.push(invoice.paperless_title);\n}\n\n// Aus 1 Rechnung mehrere Items machen\nreturn finalQueries.map(query => ({\n  json: {\n    ...invoice,\n    firefly_query: query\n  }\n}));"
+        },
+        "id": "8acae8d4-a867-4409-be67-abc906eae45d",
+        "name": "Firefly Suchparameter bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1600,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $('Konfiguration').first().json.firefly_url }}/api/v1/search/transactions",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "query",
+                "value": "={{ $json.firefly_query }}"
+              },
+              {
+                "name": "limit",
+                "value": "25"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('Konfiguration').first().json.firefly_token }}"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "7ea25af1-6178-4baa-b1c4-e407b3e685df",
+        "name": "Firefly - Transaktionen suchen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1344,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Original-Rechnung aus dem ersten Suchparameter-Item\nconst invoice = $('Firefly Suchparameter bauen').first().json;\n\n// Alle Firefly-Node-Items lesen\nconst items = $input.all();\n\nconst allCandidates = [];\n\nfor (const item of items) {\n  let fireflyRaw = item.json;\n\n  // Bei dir kommt data teilweise als JSON-String\n  if (typeof item.json.data === 'string') {\n    try {\n      fireflyRaw = JSON.parse(item.json.data);\n    } catch (e) {\n      fireflyRaw = {\n        data: [],\n        parse_error: e.message,\n        raw: item.json.data\n      };\n    }\n  }\n\n  const transactionsRaw = Array.isArray(fireflyRaw.data)\n    ? fireflyRaw.data\n    : [];\n\n  for (const txItem of transactionsRaw) {\n    const attr = txItem.attributes || {};\n    const txs = attr.transactions || [];\n\n    for (const tx of txs) {\n      allCandidates.push({\n        transaction_id: txItem.id,\n        date: tx.date || null,\n        description: tx.description || '',\n        amount: tx.amount || null,\n        currency: tx.currency_code || tx.currency_symbol || null,\n        source_name: tx.source_name || '',\n        destination_name: tx.destination_name || '',\n        category_name: tx.category_name || '',\n        notes: tx.notes || '',\n        tags: tx.tags || [],\n        search_query_used: item.json.firefly_query || invoice.firefly_query || ''\n      });\n    }\n  }\n}\n\n// Duplikate anhand transaction_id + amount + date entfernen\nconst seen = new Set();\nconst candidates = allCandidates.filter(c => {\n  const key = `${c.transaction_id}|${c.date}|${c.amount}|${c.description}`;\n  if (seen.has(key)) return false;\n  seen.add(key);\n  return true;\n});\n\nreturn [\n  {\n    json: {\n      invoice,\n      candidates,\n      firefly_result_count: candidates.length,\n      firefly_searches_used: items.map(i => i.json.firefly_query).filter(Boolean)\n    }\n  }\n];"
+        },
+        "id": "3f696ab0-b322-4347-8be5-4a451573ece7",
+        "name": "Matching Daten bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1088,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// ChatGPT-Text holen\nconst raw = $json.output?.[0]?.content?.[0]?.text;\n\nif (!raw) {\n  throw new Error('Kein ChatGPT output[0].content[0].text gefunden');\n}\n\n// JSON aus ChatGPT parsen\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (error) {\n  throw new Error('ChatGPT-Antwort ist kein gültiges JSON: ' + raw);\n}\n\n// Status normalisieren\nconst status = String(parsed.status || '').trim().toLowerCase();\n\n// Bezahlt-Logik\nconst is_paid = status === 'bezahlt';\n\n// Optional: Rechnung aus vorherigem Node holen\nconst invoice = $('KI Ergebnis normalisieren').first().json.invoice || {};\n\n// Ergebnis sauber zurückgeben\nreturn [\n  {\n    json: {\n      ...$json,\n\n      status,\n      is_paid,\n\n      confidence: parsed.confidence ?? 0,\n      matched_transaction_id: parsed.matched_transaction_id ?? null,\n      matched_date: parsed.matched_date ?? null,\n      matched_amount: parsed.matched_amount ?? null,\n      reason: parsed.reason ?? '',\n\n      todo_title: parsed.todo_title || '',\n      todo_description: parsed.todo_description || '',\n      telegram_message: parsed.telegram_message || '',\n\n      invoice,\n\n      parsed_result: parsed\n    }\n  }\n];"
+        },
+        "id": "4e06392c-1aef-4482-a246-4629c389ce81",
+        "name": "Zahlungsstatus normalisieren",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -544,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "is_paid",
+                "leftValue": "={{ $json.is_paid }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "92924f15-7e61-49aa-bebc-1f43cd832fcc",
+        "name": "IF - Bezahlt?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -288,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ $('Konfiguration').first().json.paperless_url }}/api/documents/{{ $('Paperless - Dokumentdetails holen').first().json.id }}/",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Token {{ $('Konfiguration').first().json.paperless_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ tags: $json.paperless_tags_to_set }) }}",
+          "options": {}
+        },
+        "id": "671580f5-aed8-4b1f-a94d-1bbd5a32d27c",
+        "name": "Paperless - Als bezahlt markieren",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -48,
+          -160
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "={{ $('Konfiguration').first().json.paperless_url }}/api/documents/{{ $json.invoice.paperless_id }}/",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Token {{ $('Konfiguration').first().json.paperless_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ tags: $json.paperless_tags_to_set }) }}",
+          "options": {}
+        },
+        "id": "4b662153-2d14-4600-91fc-81c2406fa14f",
+        "name": "Paperless - Offen oder unsicher markieren",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          0,
+          272
+        ]
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.4-nano-2026-03-17",
+            "mode": "list",
+            "cachedResultName": "GPT-5.4-NANO-2026-03-17"
+          },
+          "responses": {
+            "values": [
+              {
+                "role": "system",
+                "content": "Wichtige Regeln für amount_total:\n\nDu darfst amount_total NICHT rechnerisch herleiten oder aus anderen Feldern berechnen.\n\n1. Höchste Priorität hat der tatsächlich zu zahlende aktuelle Betrag.\n   Dazu zählen Textstellen mit:\n   - \"offener Betrag\"\n   - \"noch offener Betrag\"\n   - \"noch zu zahlen\"\n   - \"Zahlbetrag\"\n   - \"Überweisungsbetrag\"\n   - \"Gesamtforderung\"\n   - \"Forderungsbetrag\"\n   - \"Bitte überweisen Sie\"\n\n2. Wenn einer dieser Begriffe im OCR-Text vorkommt, MUSS der Betrag direkt in derselben logischen Zahlungssektion eindeutig lesbar sein.\n   Beispiele gültig:\n   - \"offener Betrag EUR 147,21\"\n   - \"noch zu zahlen: 147,21 EUR\"\n   - \"Überweisungsbetrag 147,21\"\n   - \"Bitte überweisen Sie 147,21 EUR\"\n\n3. Wenn \"offener Betrag\" oder ein ähnlicher Begriff vorkommt, aber daneben kein eindeutiger Betrag lesbar ist:\n   - amount_total = null\n   - amount_source_text = \"offener Betrag erwähnt, aber Betrag im OCR-Text nicht eindeutig lesbar\"\n   - confidence maximal 0.35\n   - reason = \"Der aktuelle Zahlbetrag wird erwähnt, ist aber im OCR-Text nicht eindeutig lesbar.\"\n   - Verwende NICHT den Rechnungsbetrag.\n   - Verwende NICHT bezahlt 0,00 zur Berechnung.\n   - Verwende NICHT Zwischensumme.\n   - Verwende NICHT Mahnkosten, Einzelpositionen oder Tabellenwerte.\n   - Rechne NICHT Rechnungsbetrag minus bezahlt.\n   - Rechne NICHT Rechnungsbetrag plus Gebühren.\n\n4. \"Rechnungsbetrag\" darf nur verwendet werden, wenn KEIN Hinweis auf einen separaten aktuellen Zahlbetrag/offenen Betrag/Forderungsbetrag im Dokument vorkommt.\n\n5. Bei Mahnungen:\n   - Mahnung bedeutet: Es kann einen anderen aktuellen offenen Betrag geben.\n   - Nutze nur den ausdrücklich lesbaren offenen Betrag/Zahlbetrag/Gesamtforderung.\n   - Wenn dieser nicht lesbar ist, setze amount_total = null.\n   - Ziehe keine Schlüsse aus \"bezahlt: EUR 0,00\".\n\n6. Gib im Feld amount_source_text immer exakt die Textstelle an, aus der amount_total direkt entnommen wurde. Wenn amount_total null ist, erkläre warum."
+              },
+              {
+                "content": "=Analysiere diese Rechnung aus Paperless.\n\nDokument-ID: {{ $json.paperless_id }}\nTitel: {{ $json.paperless_title }}\nDateiname: {{ $json.original_filename }}\n\nOCR-Text:\n{{ $json.content }}\n\nGib exakt dieses JSON zurück:\n\n{\n  \"is_invoice\": true,\n  \"creditor_name\": \"\",\n  \"invoice_number\": \"\",\n  \"customer_number\": \"\",\n  \"amount_total\": null,\n  \"amount_source_text\": \"\",\n  \"currency\": \"EUR\",\n  \"due_date\": \"YYYY-MM-DD\",\n  \"invoice_date\": \"YYYY-MM-DD\",\n  \"iban\": \"\",\n  \"bic\": \"\",\n  \"payment_reference\": \"\",\n  \"suggested_firefly_search_terms\": [],\n  \"confidence\": 0,\n  \"reason\": \"\"\n}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          -2176,
+          128
+        ],
+        "id": "c98e7cfe-6e2a-4f1c-b498-b499d239455f",
+        "name": "Message a model",
+        "credentials": {
+          "openAiApi": {
+            "id": "EVf6W0jyq4ACcS36",
+            "name": "OpenAI account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.4-nano-2026-03-17",
+            "mode": "list",
+            "cachedResultName": "GPT-5.4-NANO-2026-03-17"
+          },
+          "responses": {
+            "values": [
+              {
+                "role": "system",
+                "content": "Du bist ein präziser Buchhaltungsprüfer.\nDu vergleichst eine Paperless-Rechnung mit Firefly-III-Transaktionen.\nEntscheide, ob die Rechnung bezahlt wurde. \n\nRegeln:\n- Betrag muss möglichst exakt passen.\n- Empfänger, IBAN, Rechnungsnummer oder Verwendungszweck erhöhen die Sicherheit.\n- Zahlungsdatum darf vor oder nach Fälligkeit liegen.\n- Wenn keine passende Transaktion vorhanden ist: status = \"offen\".\n- Wenn teilweise passende Daten vorhanden sind: status = \"unsicher\".\n- Wenn Betrag, Empfänger oder Verwendungszweck sehr gut passen: status = \"bezahlt\" oder \"wahrscheinlich_bezahlt\".\n- Erfinde keine Zahlung.\n- Antworte ausschließlich als gültiges JSON ohne Markdown.\n\nWenn eine Firefly-Transaktion denselben eindeutigen Verwendungszweck / Zahlungsreferenz / Mandatsreferenz enthält wie die Rechnung, dann ist dies ein starker Match.\n\nWenn zusätzlich Empfängername, IBAN oder BIC übereinstimmen, ist die Rechnung als \"bezahlt\" zu bewerten, auch wenn der OCR-Betrag unsicher oder leicht abweichend ist.\n\nIn diesem Fall:\n- status = \"bezahlt\"\n- confidence mindestens 85\n- kein Todo erstellen\n- in reason erklären, dass der eindeutige Verwendungszweck stärker gewichtet wurde als die unsichere OCR-Betragserkennung\n\nNur wenn der Betrag eindeutig aus der Rechnung extrahiert wurde und deutlich von der Zahlung abweicht, darf der Status \"unsicher\" bleiben.\n\n\nWICHTIGE STATUS-REGEL:\n\nGib niemals \"wahrscheinlich_bezahlt\" aus, wenn eine Firefly-Transaktion eine eindeutige Zahlungsreferenz / Verwendungszweck / Mandatsreferenz enthält, die zur Rechnung passt.\n\nWenn mindestens eine eindeutige Zahlungsreferenz übereinstimmt UND zusätzlich Empfängername, IBAN oder BIC passen, dann gilt die Rechnung als bezahlt.\n\nAuch wenn der OCR-Betrag unsicher, leer, null oder leicht abweichend ist, muss dann ausgegeben werden:\n\n\"status\": \"bezahlt\"\n\nIn diesem Fall:\n- confidence mindestens 85\n- todo_title leer lassen\n- todo_description leer lassen\n- telegram_message optional leer lassen oder kurze Info\n- Keine Rückfrage per Telegram"
+              },
+              {
+                "content": "=Prüfe diese Rechnung gegen diese Firefly-Transaktionen.\n\nRechnung:\n{{ JSON.stringify($json.invoice, null, 2) }}\n\nFirefly-Kandidaten:\n{{ JSON.stringify($json.candidates, null, 2) }}\n\nGib exakt dieses JSON zurück:\n\n{\n  \"status\": \"bezahlt|wahrscheinlich_bezahlt|offen|unsicher\",\n  \"confidence\": 0,\n  \"matched_transaction_id\": null,\n  \"matched_date\": null,\n  \"matched_amount\": null,\n  \"reason\": \"\",\n  \"todo_title\": \"\",\n  \"todo_description\": \"\",\n  \"telegram_message\": \"\"\n}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          -880,
+          128
+        ],
+        "id": "496a9a96-ac4a-49c1-992c-460c59b28dd7",
+        "name": "Message a model1",
+        "credentials": {
+          "openAiApi": {
+            "id": "EVf6W0jyq4ACcS36",
+            "name": "OpenAI account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "taskProject": {
+            "__rl": true,
+            "value": 1,
+            "mode": "list",
+            "cachedResultName": "Inbox"
+          },
+          "taskTitle": "={{ $('Zahlungsstatus normalisieren').item.json.invoice.paperless_title }} {{ $('Paperless - Dokumentdetails holen').item.json.title }}",
+          "options": {},
+          "requestOptions": {}
+        },
+        "type": "n8n-nodes-vikunja.vikunja",
+        "typeVersion": 1,
+        "position": [
+          208,
+          272
+        ],
+        "id": "897e5c20-8f79-4694-8577-ba60b8e92628",
+        "name": "Create a task",
+        "credentials": {
+          "vikunjaApi": {
+            "id": "IsQ0AYbsFndZaCGo",
+            "name": "Vikunja account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Manual Trigger": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Täglich 08:00": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Konfiguration": {
+        "main": [
+          [
+            {
+              "node": "Paperless - Rechnungen holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Paperless - Rechnungen holen": {
+        "main": [
+          [
+            {
+              "node": "Dokumente filtern und aufteilen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Dokumente filtern und aufteilen": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Paperless - Dokumentdetails holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Paperless - Dokumentdetails holen": {
+        "main": [
+          [
+            {
+              "node": "Rechnungstext vorbereiten",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Rechnungstext vorbereiten": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "KI Ergebnis normalisieren": {
+        "main": [
+          [
+            {
+              "node": "Firefly Suchparameter bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Firefly Suchparameter bauen": {
+        "main": [
+          [
+            {
+              "node": "Firefly - Transaktionen suchen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Firefly - Transaktionen suchen": {
+        "main": [
+          [
+            {
+              "node": "Matching Daten bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Matching Daten bauen": {
+        "main": [
+          [
+            {
+              "node": "Message a model1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Zahlungsstatus normalisieren": {
+        "main": [
+          [
+            {
+              "node": "IF - Bezahlt?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Bezahlt?": {
+        "main": [
+          [
+            {
+              "node": "Paperless - Als bezahlt markieren",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Paperless - Offen oder unsicher markieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Paperless - Offen oder unsicher markieren": {
+        "main": [
+          [
+            {
+              "node": "Create a task",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "KI Ergebnis normalisieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model1": {
+        "main": [
+          [
+            {
+              "node": "Zahlungsstatus normalisieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a task": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": "Version cac6a83b",
+    "description": "",
+    "autosaved": true
+  },
+  "activeVersionId": "cac6a83b-f882-4f64-b585-0148847c2e52",
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Konfiguration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Täglich 08:00": {
+      "main": [
+        [
+          {
+            "node": "Konfiguration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Konfiguration": {
+      "main": [
+        [
+          {
+            "node": "Paperless - Rechnungen holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paperless - Rechnungen holen": {
+      "main": [
+        [
+          {
+            "node": "Dokumente filtern und aufteilen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dokumente filtern und aufteilen": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Paperless - Dokumentdetails holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paperless - Dokumentdetails holen": {
+      "main": [
+        [
+          {
+            "node": "Rechnungstext vorbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rechnungstext vorbereiten": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KI Ergebnis normalisieren": {
+      "main": [
+        [
+          {
+            "node": "Firefly Suchparameter bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firefly Suchparameter bauen": {
+      "main": [
+        [
+          {
+            "node": "Firefly - Transaktionen suchen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firefly - Transaktionen suchen": {
+      "main": [
+        [
+          {
+            "node": "Matching Daten bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Matching Daten bauen": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zahlungsstatus normalisieren": {
+      "main": [
+        [
+          {
+            "node": "IF - Bezahlt?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Bezahlt?": {
+      "main": [
+        [
+          {
+            "node": "Paperless - Als bezahlt markieren",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Paperless - Offen oder unsicher markieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paperless - Offen oder unsicher markieren": {
+      "main": [
+        [
+          {
+            "node": "Create a task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "KI Ergebnis normalisieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Zahlungsstatus normalisieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a task": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-05-05T08:52:26.985Z",
+  "id": "70BTNc3DhTcejNwl",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "Paperless + Firefly III Rechnungen mit ChatGPT prüfen",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "86267f21-94b1-4810-996b-18098fd655fe",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -3920,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "07c44d37-931e-454c-b9c2-f30e2c7bb82a",
+      "name": "Täglich 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -3920,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "paperless_url",
+              "name": "paperless_url",
+              "value": "http://192.168.178.42:8000",
+              "type": "string"
+            },
+            {
+              "id": "paperless_token",
+              "name": "paperless_token",
+              "value": "54f69347ba18315b156062cf21e1012d7e55c84f",
+              "type": "string"
+            },
+            {
+              "id": "firefly_url",
+              "name": "firefly_url",
+              "value": "http://192.168.178.42:8051",
+              "type": "string"
+            },
+            {
+              "id": "firefly_token",
+              "name": "firefly_token",
+              "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIwMTlkY2I1Ni05MGNlLTcxY2QtYjRjOC02MzJmODliOTQ5M2IiLCJqdGkiOiJkYjk1NmI0ZDc3ZThhYjBmZGM1NWNkNjQ2ZTE4NmM3NTAyNGRmZDkzY2M1YmEwOTA0OTAyMGIwZTRkMDY1MjA5MDNhMDRhYTFkNmQ1ZTliNCIsImlhdCI6MTc3NzIzMjk1MS4yNTAzNTUsIm5iZiI6MTc3NzIzMjk1MS4yNTAzNTgsImV4cCI6MTgwODc2ODk1MS4xMjY4NzUsInN1YiI6IjEiLCJzY29wZXMiOltdfQ.HCWPie_V7ghnLSKw8O0KXImm6JvL5jx0G7t78_pfKJX_mYnsIllLE_95lfkUh8qrxQXpk-2hFFq-zXBhTox-utF5LsVnwH5OJcfDj9k5pe7MbhYVoSnuLygVl1X0bAdha0idZOb6FfM47xdKtrl0-KGIF2IhT0qUEVDOEOKk9FUBdJ9ODNUZOiEAUeLielqhpO9SaWH3dm0b4lZDmk-dbII6EY0I_ItUc4qDevi6pOWsDfSES7pHy84vzE8QXMqwkIGx0TDAI7Pq8RlZ_86b099QnlKWSA7Hdu0Ze6JB_XEOq7OyOzvnGHYeHyKAEVahQI11VkUJOuMvD4SlfyWK0xcJrIqXFvRDVJ513QBAVPM-eF-eqJ17zXh8fJvhes1a-Z-orcg1xE-8VpDJWetOZNGMeWXhLgV9mClK5Sja5AEERwh1WGUofIpjBw8RkLoTn50Rf7_cNVPbQzaqF-l19-lb1RAibG4Bnt-EkvC8q64W9nqz2klKEG1P_0PmO_uSZs2hnzznnJPYwI-wGd8AuhTdLNb04ZxBXXA_ls_euRyapAXRFrUu53D52St6MQPv1qDLB_3oiKc4ZFlV37ez9uHpIGa0yEUjh7Z0QRzO2pxAzRjUVVWdh0_VAm-z_fK-UOo8ip5cwC5uGPDgffTT3IiASi9-J_72mKmIhI3yfjo",
+              "type": "string"
+            },
+            {
+              "id": "paperless_invoice_tag_id",
+              "name": "paperless_invoice_tag_id",
+              "value": 3,
+              "type": "number"
+            },
+            {
+              "id": "paperless_paid_tag_id",
+              "name": "paperless_paid_tag_id",
+              "value": 11,
+              "type": "number"
+            },
+            {
+              "id": "paperless_unsure_tag_id",
+              "name": "paperless_unsure_tag_id",
+              "value": 12,
+              "type": "number"
+            },
+            {
+              "id": "paperless_ai_checked_tag_id",
+              "name": "paperless_ai_checked_tag_id",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "lookback_days",
+              "name": "lookback_days",
+              "value": 120,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a8011dd9-af63-4927-b255-b372713cf77e",
+      "name": "Konfiguration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3664,
+        128
+      ],
+      "notesInFlow": true,
+      "notes": "Hier deine URLs, Tokens und Paperless-Tag-IDs eintragen. Home Assistant und Telegram können leer bleiben."
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Konfiguration').first().json.paperless_url }}/api/documents/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page_size",
+              "value": "50"
+            },
+            {
+              "name": "ordering",
+              "value": "-created"
+            },
+            {
+              "name": "tags__id__all",
+              "value": "={{ $('Konfiguration').first().json.paperless_invoice_tag_id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Token {{ $('Konfiguration').first().json.paperless_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bcc21f83-0b08-489a-b2ee-0c4f0f9dd72d",
+      "name": "Paperless - Rechnungen holen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3392,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Konfiguration').first().json;\nconst docs = $json.results || [];\n\nfunction tagIds(tags) {\n  return (tags || [])\n    .map(t => {\n      if (typeof t === 'number') return t;\n      if (typeof t === 'string') return Number(t);\n      if (typeof t === 'object' && t !== null) return Number(t.id ?? t.pk);\n      return null;\n    })\n    .filter(Boolean);\n}\n\nconst filtered = docs.filter(doc => {\n  const tags = tagIds(doc.tags);\n\n  // NICHT verarbeiten, wenn bereits bezahlt\n  if (tags.includes(Number(cfg.paperless_paid_tag_id))) {\n    return false;\n  }\n\n  // Verarbeiten, wenn Rechnung und Zahlung unsicher\n  if (tags.includes(Number(cfg.paperless_unsure_tag_id))) {\n    return true;\n  }\n\n  // Optional: auch noch offene Zahlungen verarbeiten\n  if (tags.includes(Number(cfg.paperless_open_tag_id))) {\n    return true;\n  }\n\n  // Neue Rechnungen ohne Bezahlt-Tag auch verarbeiten\n  return true;\n});\n\nreturn filtered.map(doc => ({ json: doc }));"
+      },
+      "id": "1200054a-d038-4711-8557-4fb56e7fbe17",
+      "name": "Dokumente filtern und aufteilen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3136,
+        128
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f0c6811f-f0d0-4f74-81c1-f0494d581562",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -2880,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Konfiguration').first().json.paperless_url }}/api/documents/{{ $json.id }}/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Token {{ $('Konfiguration').first().json.paperless_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4c895909-a847-4869-af71-45f1c73f4805",
+      "name": "Paperless - Dokumentdetails holen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2592,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst doc = $json;\n\nreturn [{\n  json: {\n    paperless_id: doc.id,\n    paperless_title: doc.title || '',\n    original_filename: doc.original_filename || '',\n    created: doc.created || null,\n    added: doc.added || null,\n    content: doc.content || '',\n    existing_tags: doc.tags || [],\n    correspondent: doc.correspondent || null,\n    document_type: doc.document_type || null\n  }\n}];\n"
+      },
+      "id": "93782b31-b2f8-4de3-ace9-e1c01fcc3eed",
+      "name": "Rechnungstext vorbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2384,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Rechnungstext vorbereiten').first().json;\n\nlet raw =\n  $json.output?.[0]?.content?.[0]?.text ||\n  $json.output_text ||\n  $json.output ||\n  $json.text ||\n  $json.message?.content ||\n  $json.choices?.[0]?.message?.content ||\n  '{}';\n\n// Falls output ein Array/Objekt ist\nif (Array.isArray(raw)) {\n  raw = raw?.[0]?.content?.[0]?.text || JSON.stringify(raw);\n}\n\nif (typeof raw !== 'string') {\n  raw = JSON.stringify(raw);\n}\n\nraw = raw\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\nlet parsed;\n\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = {\n    is_invoice: false,\n    creditor_name: null,\n    invoice_number: null,\n    customer_number: null,\n    amount_total: null,\n    currency: \"EUR\",\n    due_date: null,\n    invoice_date: null,\n    iban: null,\n    bic: null,\n    payment_reference: null,\n    suggested_firefly_search_terms: [],\n    confidence: 0,\n    reason: \"ChatGPT-Antwort konnte nicht als JSON gelesen werden. Raw: \" + raw.slice(0, 500)\n  };\n}\n\nparsed.paperless_id = base.paperless_id;\nparsed.paperless_title = base.paperless_title;\nparsed.original_filename = base.original_filename;\nparsed.existing_tags = base.existing_tags || [];\n\nreturn [\n  {\n    json: parsed\n  }\n];"
+      },
+      "id": "31752c24-333d-410d-bbb4-4d637e816de1",
+      "name": "KI Ergebnis normalisieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1856,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const invoice = $json;\n\nconst terms = [];\n\n// Sehr gute Suchbegriffe einzeln sammeln\nif (invoice.creditor_name) terms.push(invoice.creditor_name);\nif (invoice.invoice_number) terms.push(invoice.invoice_number);\nif (invoice.customer_number) terms.push(invoice.customer_number);\nif (invoice.iban) terms.push(invoice.iban);\nif (invoice.bic) terms.push(invoice.bic);\nif (invoice.payment_reference) terms.push(invoice.payment_reference);\n\nif (Array.isArray(invoice.suggested_firefly_search_terms)) {\n  terms.push(...invoice.suggested_firefly_search_terms);\n}\n\n// Begriffe bereinigen\nconst clean = [...new Set(\n  terms\n    .filter(Boolean)\n    .map(t => String(t).trim())\n    .filter(t => t.length >= 3)\n)];\n\n// Smarte Firefly-Suchen bauen\nconst queries = [];\n\n// 1. Rechnungsnummer einzeln\nif (invoice.invoice_number) queries.push(String(invoice.invoice_number));\n\n// 2. Verwendungszweck einzeln\nif (invoice.payment_reference) queries.push(String(invoice.payment_reference));\n\n// 3. IBAN einzeln\nif (invoice.iban) queries.push(String(invoice.iban).replace(/\\s+/g, ''));\n\n// 4. Empfänger gekürzt\nif (invoice.creditor_name) {\n  const shortCreditor = String(invoice.creditor_name)\n    .replace(/GmbH|Co\\. KG|KG|UG|AG|Ltd|&/gi, '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\n  queries.push(shortCreditor);\n}\n\n// 5. Suggested Terms einzeln\nfor (const t of clean) {\n  queries.push(t);\n}\n\n// 6. Kombi: Empfänger + Rechnungsnummer\nif (invoice.creditor_name && invoice.invoice_number) {\n  queries.push(`${invoice.creditor_name} ${invoice.invoice_number}`);\n}\n\n// 7. Kombi: Empfänger + Verwendungszweck\nif (invoice.creditor_name && invoice.payment_reference) {\n  queries.push(`${invoice.creditor_name} ${invoice.payment_reference}`);\n}\n\n// Duplikate entfernen, max. 8 Suchläufe\nconst finalQueries = [...new Set(\n  queries\n    .map(q => String(q).trim())\n    .filter(q => q.length >= 3)\n)].slice(0, 8);\n\n// Wenn gar nichts da ist, mindestens Titel nutzen\nif (finalQueries.length === 0 && invoice.paperless_title) {\n  finalQueries.push(invoice.paperless_title);\n}\n\n// Aus 1 Rechnung mehrere Items machen\nreturn finalQueries.map(query => ({\n  json: {\n    ...invoice,\n    firefly_query: query\n  }\n}));"
+      },
+      "id": "8acae8d4-a867-4409-be67-abc906eae45d",
+      "name": "Firefly Suchparameter bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1600,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Konfiguration').first().json.firefly_url }}/api/v1/search/transactions",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.firefly_query }}"
+            },
+            {
+              "name": "limit",
+              "value": "25"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Konfiguration').first().json.firefly_token }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7ea25af1-6178-4baa-b1c4-e407b3e685df",
+      "name": "Firefly - Transaktionen suchen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1344,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Original-Rechnung aus dem ersten Suchparameter-Item\nconst invoice = $('Firefly Suchparameter bauen').first().json;\n\n// Alle Firefly-Node-Items lesen\nconst items = $input.all();\n\nconst allCandidates = [];\n\nfor (const item of items) {\n  let fireflyRaw = item.json;\n\n  // Bei dir kommt data teilweise als JSON-String\n  if (typeof item.json.data === 'string') {\n    try {\n      fireflyRaw = JSON.parse(item.json.data);\n    } catch (e) {\n      fireflyRaw = {\n        data: [],\n        parse_error: e.message,\n        raw: item.json.data\n      };\n    }\n  }\n\n  const transactionsRaw = Array.isArray(fireflyRaw.data)\n    ? fireflyRaw.data\n    : [];\n\n  for (const txItem of transactionsRaw) {\n    const attr = txItem.attributes || {};\n    const txs = attr.transactions || [];\n\n    for (const tx of txs) {\n      allCandidates.push({\n        transaction_id: txItem.id,\n        date: tx.date || null,\n        description: tx.description || '',\n        amount: tx.amount || null,\n        currency: tx.currency_code || tx.currency_symbol || null,\n        source_name: tx.source_name || '',\n        destination_name: tx.destination_name || '',\n        category_name: tx.category_name || '',\n        notes: tx.notes || '',\n        tags: tx.tags || [],\n        search_query_used: item.json.firefly_query || invoice.firefly_query || ''\n      });\n    }\n  }\n}\n\n// Duplikate anhand transaction_id + amount + date entfernen\nconst seen = new Set();\nconst candidates = allCandidates.filter(c => {\n  const key = `${c.transaction_id}|${c.date}|${c.amount}|${c.description}`;\n  if (seen.has(key)) return false;\n  seen.add(key);\n  return true;\n});\n\nreturn [\n  {\n    json: {\n      invoice,\n      candidates,\n      firefly_result_count: candidates.length,\n      firefly_searches_used: items.map(i => i.json.firefly_query).filter(Boolean)\n    }\n  }\n];"
+      },
+      "id": "3f696ab0-b322-4347-8be5-4a451573ece7",
+      "name": "Matching Daten bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ChatGPT-Text holen\nconst raw = $json.output?.[0]?.content?.[0]?.text;\n\nif (!raw) {\n  throw new Error('Kein ChatGPT output[0].content[0].text gefunden');\n}\n\n// JSON aus ChatGPT parsen\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (error) {\n  throw new Error('ChatGPT-Antwort ist kein gültiges JSON: ' + raw);\n}\n\n// Status normalisieren\nconst status = String(parsed.status || '').trim().toLowerCase();\n\n// Bezahlt-Logik\nconst is_paid = status === 'bezahlt';\n\n// Optional: Rechnung aus vorherigem Node holen\nconst invoice = $('KI Ergebnis normalisieren').first().json.invoice || {};\n\n// Ergebnis sauber zurückgeben\nreturn [\n  {\n    json: {\n      ...$json,\n\n      status,\n      is_paid,\n\n      confidence: parsed.confidence ?? 0,\n      matched_transaction_id: parsed.matched_transaction_id ?? null,\n      matched_date: parsed.matched_date ?? null,\n      matched_amount: parsed.matched_amount ?? null,\n      reason: parsed.reason ?? '',\n\n      todo_title: parsed.todo_title || '',\n      todo_description: parsed.todo_description || '',\n      telegram_message: parsed.telegram_message || '',\n\n      invoice,\n\n      parsed_result: parsed\n    }\n  }\n];"
+      },
+      "id": "4e06392c-1aef-4482-a246-4629c389ce81",
+      "name": "Zahlungsstatus normalisieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is_paid",
+              "leftValue": "={{ $json.is_paid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "92924f15-7e61-49aa-bebc-1f43cd832fcc",
+      "name": "IF - Bezahlt?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Konfiguration').first().json.paperless_url }}/api/documents/{{ $('Paperless - Dokumentdetails holen').first().json.id }}/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Token {{ $('Konfiguration').first().json.paperless_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: $json.paperless_tags_to_set }) }}",
+        "options": {}
+      },
+      "id": "671580f5-aed8-4b1f-a94d-1bbd5a32d27c",
+      "name": "Paperless - Als bezahlt markieren",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -48,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Konfiguration').first().json.paperless_url }}/api/documents/{{ $json.invoice.paperless_id }}/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Token {{ $('Konfiguration').first().json.paperless_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ tags: $json.paperless_tags_to_set }) }}",
+        "options": {}
+      },
+      "id": "4b662153-2d14-4600-91fc-81c2406fa14f",
+      "name": "Paperless - Offen oder unsicher markieren",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4-nano-2026-03-17",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4-NANO-2026-03-17"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Wichtige Regeln für amount_total:\n\nDu darfst amount_total NICHT rechnerisch herleiten oder aus anderen Feldern berechnen.\n\n1. Höchste Priorität hat der tatsächlich zu zahlende aktuelle Betrag.\n   Dazu zählen Textstellen mit:\n   - \"offener Betrag\"\n   - \"noch offener Betrag\"\n   - \"noch zu zahlen\"\n   - \"Zahlbetrag\"\n   - \"Überweisungsbetrag\"\n   - \"Gesamtforderung\"\n   - \"Forderungsbetrag\"\n   - \"Bitte überweisen Sie\"\n\n2. Wenn einer dieser Begriffe im OCR-Text vorkommt, MUSS der Betrag direkt in derselben logischen Zahlungssektion eindeutig lesbar sein.\n   Beispiele gültig:\n   - \"offener Betrag EUR 147,21\"\n   - \"noch zu zahlen: 147,21 EUR\"\n   - \"Überweisungsbetrag 147,21\"\n   - \"Bitte überweisen Sie 147,21 EUR\"\n\n3. Wenn \"offener Betrag\" oder ein ähnlicher Begriff vorkommt, aber daneben kein eindeutiger Betrag lesbar ist:\n   - amount_total = null\n   - amount_source_text = \"offener Betrag erwähnt, aber Betrag im OCR-Text nicht eindeutig lesbar\"\n   - confidence maximal 0.35\n   - reason = \"Der aktuelle Zahlbetrag wird erwähnt, ist aber im OCR-Text nicht eindeutig lesbar.\"\n   - Verwende NICHT den Rechnungsbetrag.\n   - Verwende NICHT bezahlt 0,00 zur Berechnung.\n   - Verwende NICHT Zwischensumme.\n   - Verwende NICHT Mahnkosten, Einzelpositionen oder Tabellenwerte.\n   - Rechne NICHT Rechnungsbetrag minus bezahlt.\n   - Rechne NICHT Rechnungsbetrag plus Gebühren.\n\n4. \"Rechnungsbetrag\" darf nur verwendet werden, wenn KEIN Hinweis auf einen separaten aktuellen Zahlbetrag/offenen Betrag/Forderungsbetrag im Dokument vorkommt.\n\n5. Bei Mahnungen:\n   - Mahnung bedeutet: Es kann einen anderen aktuellen offenen Betrag geben.\n   - Nutze nur den ausdrücklich lesbaren offenen Betrag/Zahlbetrag/Gesamtforderung.\n   - Wenn dieser nicht lesbar ist, setze amount_total = null.\n   - Ziehe keine Schlüsse aus \"bezahlt: EUR 0,00\".\n\n6. Gib im Feld amount_source_text immer exakt die Textstelle an, aus der amount_total direkt entnommen wurde. Wenn amount_total null ist, erkläre warum."
+            },
+            {
+              "content": "=Analysiere diese Rechnung aus Paperless.\n\nDokument-ID: {{ $json.paperless_id }}\nTitel: {{ $json.paperless_title }}\nDateiname: {{ $json.original_filename }}\n\nOCR-Text:\n{{ $json.content }}\n\nGib exakt dieses JSON zurück:\n\n{\n  \"is_invoice\": true,\n  \"creditor_name\": \"\",\n  \"invoice_number\": \"\",\n  \"customer_number\": \"\",\n  \"amount_total\": null,\n  \"amount_source_text\": \"\",\n  \"currency\": \"EUR\",\n  \"due_date\": \"YYYY-MM-DD\",\n  \"invoice_date\": \"YYYY-MM-DD\",\n  \"iban\": \"\",\n  \"bic\": \"\",\n  \"payment_reference\": \"\",\n  \"suggested_firefly_search_terms\": [],\n  \"confidence\": 0,\n  \"reason\": \"\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -2176,
+        128
+      ],
+      "id": "c98e7cfe-6e2a-4f1c-b498-b499d239455f",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EVf6W0jyq4ACcS36",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4-nano-2026-03-17",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4-NANO-2026-03-17"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Du bist ein präziser Buchhaltungsprüfer.\nDu vergleichst eine Paperless-Rechnung mit Firefly-III-Transaktionen.\nEntscheide, ob die Rechnung bezahlt wurde. \n\nRegeln:\n- Betrag muss möglichst exakt passen.\n- Empfänger, IBAN, Rechnungsnummer oder Verwendungszweck erhöhen die Sicherheit.\n- Zahlungsdatum darf vor oder nach Fälligkeit liegen.\n- Wenn keine passende Transaktion vorhanden ist: status = \"offen\".\n- Wenn teilweise passende Daten vorhanden sind: status = \"unsicher\".\n- Wenn Betrag, Empfänger oder Verwendungszweck sehr gut passen: status = \"bezahlt\" oder \"wahrscheinlich_bezahlt\".\n- Erfinde keine Zahlung.\n- Antworte ausschließlich als gültiges JSON ohne Markdown.\n\nWenn eine Firefly-Transaktion denselben eindeutigen Verwendungszweck / Zahlungsreferenz / Mandatsreferenz enthält wie die Rechnung, dann ist dies ein starker Match.\n\nWenn zusätzlich Empfängername, IBAN oder BIC übereinstimmen, ist die Rechnung als \"bezahlt\" zu bewerten, auch wenn der OCR-Betrag unsicher oder leicht abweichend ist.\n\nIn diesem Fall:\n- status = \"bezahlt\"\n- confidence mindestens 85\n- kein Todo erstellen\n- in reason erklären, dass der eindeutige Verwendungszweck stärker gewichtet wurde als die unsichere OCR-Betragserkennung\n\nNur wenn der Betrag eindeutig aus der Rechnung extrahiert wurde und deutlich von der Zahlung abweicht, darf der Status \"unsicher\" bleiben.\n\n\nWICHTIGE STATUS-REGEL:\n\nGib niemals \"wahrscheinlich_bezahlt\" aus, wenn eine Firefly-Transaktion eine eindeutige Zahlungsreferenz / Verwendungszweck / Mandatsreferenz enthält, die zur Rechnung passt.\n\nWenn mindestens eine eindeutige Zahlungsreferenz übereinstimmt UND zusätzlich Empfängername, IBAN oder BIC passen, dann gilt die Rechnung als bezahlt.\n\nAuch wenn der OCR-Betrag unsicher, leer, null oder leicht abweichend ist, muss dann ausgegeben werden:\n\n\"status\": \"bezahlt\"\n\nIn diesem Fall:\n- confidence mindestens 85\n- todo_title leer lassen\n- todo_description leer lassen\n- telegram_message optional leer lassen oder kurze Info\n- Keine Rückfrage per Telegram"
+            },
+            {
+              "content": "=Prüfe diese Rechnung gegen diese Firefly-Transaktionen.\n\nRechnung:\n{{ JSON.stringify($json.invoice, null, 2) }}\n\nFirefly-Kandidaten:\n{{ JSON.stringify($json.candidates, null, 2) }}\n\nGib exakt dieses JSON zurück:\n\n{\n  \"status\": \"bezahlt|wahrscheinlich_bezahlt|offen|unsicher\",\n  \"confidence\": 0,\n  \"matched_transaction_id\": null,\n  \"matched_date\": null,\n  \"matched_amount\": null,\n  \"reason\": \"\",\n  \"todo_title\": \"\",\n  \"todo_description\": \"\",\n  \"telegram_message\": \"\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -880,
+        128
+      ],
+      "id": "496a9a96-ac4a-49c1-992c-460c59b28dd7",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "EVf6W0jyq4ACcS36",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "taskProject": {
+          "__rl": true,
+          "value": 1,
+          "mode": "list",
+          "cachedResultName": "Inbox"
+        },
+        "taskTitle": "={{ $('Zahlungsstatus normalisieren').item.json.invoice.paperless_title }} {{ $('Paperless - Dokumentdetails holen').item.json.title }}",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-vikunja.vikunja",
+      "typeVersion": 1,
+      "position": [
+        208,
+        272
+      ],
+      "id": "897e5c20-8f79-4694-8577-ba60b8e92628",
+      "name": "Create a task",
+      "credentials": {
+        "vikunjaApi": {
+          "id": "IsQ0AYbsFndZaCGo",
+          "name": "Vikunja account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-05-05T08:52:26.987Z",
+      "createdAt": "2026-05-05T08:52:26.987Z",
+      "role": "workflow:owner",
+      "workflowId": "70BTNc3DhTcejNwl",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Täglich 08:00": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-05-05T21:35:26.647Z",
+  "versionId": "cac6a83b-f882-4f64-b585-0148847c2e52"
+}
