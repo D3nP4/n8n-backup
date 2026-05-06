@@ -1,0 +1,589 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Telegram Eingang": {
+      "main": [
+        [
+          {
+            "node": "Eingang normalisieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eingang normalisieren": {
+      "main": [
+        [
+          {
+            "node": "KI - Aufgabe erkennen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KI - Aufgabe erkennen": {
+      "main": [
+        [
+          {
+            "node": "KI Ergebnis normalisieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KI Ergebnis normalisieren": {
+      "main": [
+        [
+          {
+            "node": "Ist es eine Aufgabe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ist es eine Aufgabe?": {
+      "main": [
+        [
+          {
+            "node": "Vikunja - Aufgabe erstellen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram - Keine Aufgabe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vikunja - Aufgabe erstellen": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Bestätigung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Täglich 07:30 - Tagesplan": {
+      "main": [
+        [
+          {
+            "node": "Vikunja - Aufgaben holen Morgen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vikunja - Aufgaben holen Morgen": {
+      "main": [
+        [
+          {
+            "node": "Tagesplan formatieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tagesplan formatieren": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Tagesplan senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Täglich 20:00 - Abendcheck": {
+      "main": [
+        [
+          {
+            "node": "Vikunja - Aufgaben holen Abend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vikunja - Aufgaben holen Abend": {
+      "main": [
+        [
+          {
+            "node": "Abendcheck formatieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Abendcheck formatieren": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Abendcheck senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sonntag 18:00 - Wochenplanung": {
+      "main": [
+        [
+          {
+            "node": "Vikunja - Aufgaben holen Woche",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vikunja - Aufgaben holen Woche": {
+      "main": [
+        [
+          {
+            "node": "Wochenplanung formatieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wochenplanung formatieren": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Wochenplanung senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-05-05T21:36:41.268Z",
+  "id": "EFZhNUCh6rSeqz0Z",
+  "isArchived": false,
+  "meta": null,
+  "name": "Life Organizer - Vikunja + Telegram + KI",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "b7485051-14e1-40b7-8b85-9031bf68c365",
+      "name": "Telegram Eingang",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        64
+      ],
+      "webhookId": "life-organizer-telegram"
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $json.message || {};\nconst text = msg.text || msg.caption || '';\nconst chatId = msg.chat?.id || $env.TELEGRAM_CHAT_ID;\n\nreturn [{\n  json: {\n    source: 'telegram',\n    chat_id: chatId,\n    raw_text: text.trim(),\n    received_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "3d2ec557-7916-46ca-97a1-17f1af64e640",
+      "name": "Eingang normalisieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.OPENAI_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"model\": \"gpt-4.1-mini\",\n  \"input\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Du bist ein persönlicher Organisations-Assistent. Wandle unstrukturierte Eingaben in eine konkrete Aufgabe für Vikunja um. Antworte ausschließlich als valides JSON ohne Markdown. Schema: {\\\"title\\\": string, \\\"description\\\": string, \\\"area\\\": \\\"Arbeit|Privat|Finanzen|Gesundheit|Haushalt|Auto|Sonstiges\\\", \\\"priority\\\": 1|2|3|4|5, \\\"due_date\\\": string|null, \\\"reminder_minutes_before\\\": number|null, \\\"is_task\\\": boolean}. Priorität: 5 sehr dringend, 4 wichtig, 3 normal, 2 niedrig, 1 irgendwann. Wenn kein Datum genannt ist, due_date null. Nutze Europe/Berlin.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Heute ist {{$now.setZone('Europe/Berlin').toISO()}}. Eingabe: {{$json.raw_text}}\"\n    }\n  ],\n  \"text\": {\n    \"format\": {\n      \"type\": \"json_object\"\n    }\n  }\n}\n}}",
+        "options": {}
+      },
+      "id": "11a27098-64a9-46c9-8709-f69a839cefd4",
+      "name": "KI - Aufgabe erkennen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -720,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nlet text = input.output?.[0]?.content?.[0]?.text || input.output_text || '{}';\n\nlet parsed;\ntry {\n  parsed = JSON.parse(text);\n} catch (e) {\n  parsed = {\n    title: $('Eingang normalisieren').first().json.raw_text.slice(0, 120),\n    description: 'KI konnte die Eingabe nicht sauber parsen. Original: ' + $('Eingang normalisieren').first().json.raw_text,\n    area: 'Sonstiges',\n    priority: 3,\n    due_date: null,\n    reminder_minutes_before: null,\n    is_task: true\n  };\n}\n\nconst original = $('Eingang normalisieren').first().json;\n\nif (!parsed.title || parsed.title.trim() === '') {\n  parsed.title = original.raw_text.slice(0, 120) || 'Neue Aufgabe';\n}\n\nlet dueDate = parsed.due_date || null;\n// Vikunja erwartet ISO-String oder null.\nif (dueDate && !dueDate.includes('T')) {\n  dueDate = dueDate + 'T18:00:00+02:00';\n}\n\nreturn [{\n  json: {\n    chat_id: original.chat_id,\n    original_text: original.raw_text,\n    title: parsed.title,\n    description: [\n      parsed.description || '',\n      '',\n      '---',\n      'Quelle: Telegram',\n      'Bereich: ' + (parsed.area || 'Sonstiges'),\n      'Original: ' + original.raw_text\n    ].join('\\n'),\n    area: parsed.area || 'Sonstiges',\n    priority: parsed.priority || 3,\n    due_date: dueDate,\n    reminder_minutes_before: parsed.reminder_minutes_before || null,\n    is_task: parsed.is_task !== false\n  }\n}];"
+      },
+      "id": "acc659e5-924f-4495-a245-02094438b23e",
+      "name": "KI Ergebnis normalisieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.is_task}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "044ecf19-6b03-4741-89d3-5438b8db27aa",
+      "name": "Ist es eine Aufgabe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{$env.VIKUNJA_URL}}/api/v1/projects/{{$env.VIKUNJA_INBOX_PROJECT_ID}}/tasks",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.VIKUNJA_TOKEN}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"title\": $json.title,\n  \"description\": $json.description,\n  \"due_date\": $json.due_date,\n  \"priority\": $json.priority\n}\n}}",
+        "options": {}
+      },
+      "id": "df11082d-84ff-4704-a8be-8ed2f3ccf6ab",
+      "name": "Vikunja - Aufgabe erstellen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$('KI Ergebnis normalisieren').first().json.chat_id || $env.TELEGRAM_CHAT_ID}}",
+        "text": "=✅ Aufgabe angelegt:\\n\\n*{{$('KI Ergebnis normalisieren').first().json.title}}*\\n\\nPriorität: {{$('KI Ergebnis normalisieren').first().json.priority}}\\nFällig: {{$('KI Ergebnis normalisieren').first().json.due_date || 'kein Datum'}}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "e5eeb207-e0e1-4a71-9d25-89b18771925e",
+      "name": "Telegram - Bestätigung",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        0
+      ],
+      "webhookId": "49283936-eaf8-4aa5-b0e4-77f03ec186ba"
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json.chat_id || $env.TELEGRAM_CHAT_ID}}",
+        "text": "=ℹ️ Das sah nicht wie eine Aufgabe aus.\\n\\nGesendet: {{$json.original_text}}",
+        "additionalFields": {}
+      },
+      "id": "8235ec72-6d63-4eb7-b8eb-e9492eb6046d",
+      "name": "Telegram - Keine Aufgabe",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        208
+      ],
+      "webhookId": "3af30ce0-69ba-4eed-925d-08693b507676"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "0452dd87-f8f3-489a-8cb1-3141be975a41",
+      "name": "Täglich 07:30 - Tagesplan",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 20 * * *"
+            }
+          ]
+        }
+      },
+      "id": "a849a258-4140-4712-a6a6-b649589b13b4",
+      "name": "Täglich 20:00 - Abendcheck",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 18 * * 0"
+            }
+          ]
+        }
+      },
+      "id": "dfac5d16-d821-4968-8f9f-ce88825b8c3f",
+      "name": "Sonntag 18:00 - Wochenplanung",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.VIKUNJA_URL}}/api/v1/tasks/all?page=1&per_page=100&sort_by[]=due_date&order_by[]=asc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.VIKUNJA_TOKEN}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3783e1ad-bdd5-4ce5-9359-b8be7f6d7405",
+      "name": "Vikunja - Aufgaben holen Morgen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -928,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const tasks = Array.isArray($json) ? $json : ($json.data || []);\nconst now = new Date();\nconst endToday = new Date();\nendToday.setHours(23,59,59,999);\n\nconst open = tasks.filter(t => !t.done);\nconst overdue = open.filter(t => t.due_date && new Date(t.due_date) < now);\nconst today = open.filter(t => t.due_date && new Date(t.due_date) >= now && new Date(t.due_date) <= endToday);\nconst prio = open.filter(t => !t.due_date).sort((a,b) => (b.priority || 0) - (a.priority || 0)).slice(0,5);\n\nfunction line(t) {\n  const p = t.priority ? 'P' + t.priority : 'P3';\n  const due = t.due_date ? new Date(t.due_date).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }) : 'ohne Datum';\n  return `• ${p} ${t.title} (${due})`;\n}\n\nlet text = '🌅 *Dein Tagesplan*\\n\\n';\nif (overdue.length) text += `🚨 *Überfällig*\\n${overdue.slice(0,10).map(line).join('\\n')}\\n\\n`;\nif (today.length) text += `📌 *Heute fällig*\\n${today.slice(0,10).map(line).join('\\n')}\\n\\n`;\nif (prio.length) text += `🧠 *Wichtig ohne Datum*\\n${prio.map(line).join('\\n')}\\n\\n`;\nif (!overdue.length && !today.length && !prio.length) text += 'Alles ruhig. Keine offenen Aufgaben für heute gefunden.';\n\ntext += '\\nRegel: Erledige zuerst 1 kleine Sache. Nicht alles auf einmal.';\n\nreturn [{ json: { text } }];"
+      },
+      "id": "d9aa4d9d-ae15-4bb7-8651-1c36f5c67962",
+      "name": "Tagesplan formatieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "text": "={{$json.text}}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "e8b53052-433b-4187-8ade-9cb2d7f24d89",
+      "name": "Telegram - Tagesplan senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        448
+      ],
+      "webhookId": "fadc6efe-d3c4-48b2-a68c-bb013ab738d8"
+    },
+    {
+      "parameters": {
+        "url": "={{$env.VIKUNJA_URL}}/api/v1/tasks/all?page=1&per_page=100&sort_by[]=due_date&order_by[]=asc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.VIKUNJA_TOKEN}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dc408f0e-0a3b-4f73-8889-224acfe11078",
+      "name": "Vikunja - Aufgaben holen Abend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -928,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const tasks = Array.isArray($json) ? $json : ($json.data || []);\nconst open = tasks.filter(t => !t.done);\nconst overdue = open.filter(t => t.due_date && new Date(t.due_date) < new Date());\n\nlet text = '🌙 *Abendcheck*\\n\\n';\ntext += `Offene Aufgaben gesamt: *${open.length}*\\n`;\ntext += `Überfällig: *${overdue.length}*\\n\\n`;\n\nif (overdue.length) {\n  text += '🚨 Bitte morgen zuerst diese Dinge anfassen:\\n';\n  text += overdue.slice(0,8).map(t => `• ${t.title}`).join('\\n');\n} else {\n  text += 'Keine überfälligen Aufgaben. Stark.';\n}\n\ntext += '\\n\\nSchreib mir einfach neue Dinge per Telegram, z. B.:\\n„Morgen 10 Uhr TÜV Termin machen“';\n\nreturn [{ json: { text } }];"
+      },
+      "id": "704c4395-5e6e-48b6-9031-b104df4b3e2e",
+      "name": "Abendcheck formatieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "text": "={{$json.text}}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "2ea48cae-8328-4ef2-9eeb-cf8054f51764",
+      "name": "Telegram - Abendcheck senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        704
+      ],
+      "webhookId": "1079a29e-4ae3-41a9-9f9e-1bd411817186"
+    },
+    {
+      "parameters": {
+        "url": "={{$env.VIKUNJA_URL}}/api/v1/tasks/all?page=1&per_page=200&sort_by[]=due_date&order_by[]=asc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.VIKUNJA_TOKEN}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f0872bc0-545c-471c-82f7-d9e53934c6e3",
+      "name": "Vikunja - Aufgaben holen Woche",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -928,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const tasks = Array.isArray($json) ? $json : ($json.data || []);\nconst now = new Date();\nconst week = new Date();\nweek.setDate(week.getDate() + 7);\n\nconst open = tasks.filter(t => !t.done);\nconst next7 = open.filter(t => t.due_date && new Date(t.due_date) <= week).sort((a,b) => new Date(a.due_date) - new Date(b.due_date));\nconst noDate = open.filter(t => !t.due_date).sort((a,b) => (b.priority || 0) - (a.priority || 0)).slice(0,10);\n\nfunction line(t) {\n  const due = t.due_date ? new Date(t.due_date).toLocaleDateString('de-DE') : 'ohne Datum';\n  return `• P${t.priority || 3} ${t.title} (${due})`;\n}\n\nlet text = '🗓️ *Wochenplanung*\\n\\n';\ntext += `Nächste 7 Tage: *${next7.length}* Aufgaben\\n`;\ntext += `Ohne Datum: *${open.filter(t => !t.due_date).length}* Aufgaben\\n\\n`;\n\nif (next7.length) text += `📌 *Diese Woche*\\n${next7.slice(0,15).map(line).join('\\n')}\\n\\n`;\nif (noDate.length) text += `📥 *Bitte einplanen / löschen / delegieren*\\n${noDate.map(line).join('\\n')}\\n\\n`;\n\ntext += 'Regel für Sonntag: Alles ohne Datum entweder terminieren oder löschen.';\n\nreturn [{ json: { text } }];"
+      },
+      "id": "a8e589b4-9345-49ae-a523-c29ce5fc115c",
+      "name": "Wochenplanung formatieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "text": "={{$json.text}}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "0edfc52e-0c83-4089-8189-a07bebf6ed2f",
+      "name": "Telegram - Wochenplanung senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        960
+      ],
+      "webhookId": "c90c244a-1f37-462a-b324-9da71bc8cce4"
+    }
+  ],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-05-05T21:36:41.270Z",
+      "createdAt": "2026-05-05T21:36:41.270Z",
+      "role": "workflow:owner",
+      "workflowId": "EFZhNUCh6rSeqz0Z",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-05-05T21:36:41.268Z",
+  "versionId": "c7899190-f323-4dfe-8772-8a34e550fb29"
+}
