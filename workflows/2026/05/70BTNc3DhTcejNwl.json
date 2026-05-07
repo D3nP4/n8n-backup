@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-05T21:35:43.000Z",
-    "createdAt": "2026-05-05T21:35:26.648Z",
-    "versionId": "cac6a83b-f882-4f64-b585-0148847c2e52",
+    "updatedAt": "2026-05-06T15:09:55.000Z",
+    "createdAt": "2026-05-06T15:09:53.090Z",
+    "versionId": "bb6b4215-3c6f-4c8e-92d5-b237955e4e05",
     "workflowId": "70BTNc3DhTcejNwl",
     "nodes": [
       {
@@ -383,41 +383,6 @@
       },
       {
         "parameters": {
-          "method": "PATCH",
-          "url": "={{ $('Konfiguration').first().json.paperless_url }}/api/documents/{{ $json.invoice.paperless_id }}/",
-          "sendHeaders": true,
-          "headerParameters": {
-            "parameters": [
-              {
-                "name": "Authorization",
-                "value": "=Token {{ $('Konfiguration').first().json.paperless_token }}"
-              },
-              {
-                "name": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "name": "Accept",
-                "value": "application/json"
-              }
-            ]
-          },
-          "sendBody": true,
-          "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify({ tags: $json.paperless_tags_to_set }) }}",
-          "options": {}
-        },
-        "id": "4b662153-2d14-4600-91fc-81c2406fa14f",
-        "name": "Paperless - Offen oder unsicher markieren",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.2,
-        "position": [
-          0,
-          272
-        ]
-      },
-      {
-        "parameters": {
           "modelId": {
             "__rl": true,
             "value": "gpt-5.4-nano-2026-03-17",
@@ -494,12 +459,14 @@
         "parameters": {
           "taskProject": {
             "__rl": true,
-            "value": 1,
+            "value": 9,
             "mode": "list",
-            "cachedResultName": "Inbox"
+            "cachedResultName": "PAPIERKRAM"
           },
-          "taskTitle": "={{ $('Zahlungsstatus normalisieren').item.json.invoice.paperless_title }} {{ $('Paperless - Dokumentdetails holen').item.json.title }}",
-          "options": {},
+          "taskTitle": "= Bezahlen {{ $('Paperless - Dokumentdetails holen').item.json.title }}",
+          "options": {
+            "description": "=https://paperless.paun01.de/documents/{{ $('Dokumente filtern und aufteilen').item.json.id }}/details"
+          },
           "requestOptions": {}
         },
         "type": "n8n-nodes-vikunja.vikunja",
@@ -674,17 +641,6 @@
           ],
           [
             {
-              "node": "Paperless - Offen oder unsicher markieren",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Paperless - Offen oder unsicher markieren": {
-        "main": [
-          [
-            {
               "node": "Create a task",
               "type": "main",
               "index": 0
@@ -727,11 +683,11 @@
       }
     },
     "authors": "Dennis Paun",
-    "name": "Version cac6a83b",
+    "name": "Version bb6b4215",
     "description": "",
     "autosaved": true
   },
-  "activeVersionId": "cac6a83b-f882-4f64-b585-0148847c2e52",
+  "activeVersionId": "bb6b4215-3c6f-4c8e-92d5-b237955e4e05",
   "connections": {
     "Manual Trigger": {
       "main": [
@@ -886,17 +842,6 @@
             "index": 0
           }
         ],
-        [
-          {
-            "node": "Paperless - Offen oder unsicher markieren",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Paperless - Offen oder unsicher markieren": {
-      "main": [
         [
           {
             "node": "Create a task",
@@ -1325,41 +1270,6 @@
     },
     {
       "parameters": {
-        "method": "PATCH",
-        "url": "={{ $('Konfiguration').first().json.paperless_url }}/api/documents/{{ $json.invoice.paperless_id }}/",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Token {{ $('Konfiguration').first().json.paperless_token }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ tags: $json.paperless_tags_to_set }) }}",
-        "options": {}
-      },
-      "id": "4b662153-2d14-4600-91fc-81c2406fa14f",
-      "name": "Paperless - Offen oder unsicher markieren",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        0,
-        272
-      ]
-    },
-    {
-      "parameters": {
         "modelId": {
           "__rl": true,
           "value": "gpt-5.4-nano-2026-03-17",
@@ -1436,12 +1346,14 @@
       "parameters": {
         "taskProject": {
           "__rl": true,
-          "value": 1,
+          "value": 9,
           "mode": "list",
-          "cachedResultName": "Inbox"
+          "cachedResultName": "PAPIERKRAM"
         },
-        "taskTitle": "={{ $('Zahlungsstatus normalisieren').item.json.invoice.paperless_title }} {{ $('Paperless - Dokumentdetails holen').item.json.title }}",
-        "options": {},
+        "taskTitle": "= Bezahlen {{ $('Paperless - Dokumentdetails holen').item.json.title }}",
+        "options": {
+          "description": "=https://paperless.paun01.de/documents/{{ $('Dokumente filtern und aufteilen').item.json.id }}/details"
+        },
         "requestOptions": {}
       },
       "type": "n8n-nodes-vikunja.vikunja",
@@ -1484,6 +1396,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-05-05T21:35:26.647Z",
-  "versionId": "cac6a83b-f882-4f64-b585-0148847c2e52"
+  "updatedAt": "2026-05-06T15:09:53.089Z",
+  "versionId": "bb6b4215-3c6f-4c8e-92d5-b237955e4e05"
 }
