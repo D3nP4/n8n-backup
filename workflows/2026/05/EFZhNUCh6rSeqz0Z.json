@@ -1,7 +1,1145 @@
 {
-  "active": false,
-  "activeVersion": null,
-  "activeVersionId": null,
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-05-10T21:52:19.000Z",
+    "createdAt": "2026-05-09T13:03:34.046Z",
+    "versionId": "a82362a8-c5cd-486e-bd59-4f532870c645",
+    "workflowId": "EFZhNUCh6rSeqz0Z",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "# Life Backoffice Scheduler mit Vikunja Community Node\n\nBenötigt installierten Community Node:\n\nSettings → Community Nodes → Install → `n8n-nodes-vikunja`\n\nDanach in n8n Credentials anlegen:\n\nCredentials → New → Vikunja API\n\nDort eintragen:\n- API URL: `https://DEINE-VIKUNJA-URL/api/v1`\n- API Token: dein Vikunja API Token\n\nWichtig:\n- Du musst keine `{{$env.VIKUNJA_URL}}` mehr nutzen.\n- Die Vikunja-URL und der Token kommen aus dem Vikunja Credential.\n- Projekt-IDs trägst du direkt in den Code-Nodes ein.\n\nEintragen musst du:\n1. Im Node \"Code - Masterliste prüfen und fällige Aufgaben bauen\"\n   oben bei `projects`.\n2. Im Node \"Code - Projektliste für Tagesplan\"\n   dieselben Projekt-IDs.\n3. Im Node \"Code - Projektliste für Abend-Review\"\n   dieselben Projekt-IDs.\n4. Im Node \"Code - Sport Projekt-ID\"\n   die ID vom Sport-Projekt.\n\nTelegram:\n- Bei Telegram Nodes dein Telegram Credential auswählen.\n- Chat ID entweder direkt eintragen oder `{{$env.TELEGRAM_CHAT_ID}}` ersetzen.\n\nOpenAI:\n- OPENAI_API_KEY wird aktuell noch genutzt.\n- Falls ENV bei dir blockiert ist, ersetze den Authorization Header direkt mit `Bearer DEIN_OPENAI_KEY`.\n"
+        },
+        "id": "6866ad42-d682-4bc3-a013-dbeeb1914a54",
+        "name": "README - Setup Vikunja Node",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          1728,
+          1952
+        ]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "30 5 * * *"
+              }
+            ]
+          }
+        },
+        "id": "dd6362fe-8dc5-4ab0-b6d1-c049905d482a",
+        "name": "Cron - 05:30 Backoffice-Aufgaben erzeugen",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          2160,
+          1760
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\n// ==========================================================\n// LIFE BACKOFFICE MASTER LIST\n// Diese Liste ist das Herzstück.\n// Sie erzeugt automatisch Vikunja-Aufgaben, wenn sie fällig sind.\n// ==========================================================\n\nconst cfg = $('Konfiguration').first().json;\n\nconst PROJECTS = {\n  inbox: Number(cfg.VIKUNJA_PROJECT_INBOX_ID),\n  termine: Number(cfg.VIKUNJA_PROJECT_TERMINE_ID),\n  menschen: Number(cfg.VIKUNJA_PROJECT_MENSCHEN_ID),\n  haushalt: Number(cfg.VIKUNJA_PROJECT_HAUSHALT_ID),\n  putzen: Number(cfg.VIKUNJA_PROJECT_PUTZEN_ID),\n  einkaufen: Number(cfg.VIKUNJA_PROJECT_EINKAUFEN_ID),\n  sport: Number(cfg.VIKUNJA_PROJECT_SPORT_ID),\n  finanzen: Number(cfg.VIKUNJA_PROJECT_FINANZEN_ID),\n  papierkram: Number(cfg.VIKUNJA_PROJECT_PAPIERKRAM_ID),\n  digital: Number(cfg.VIKUNJA_PROJECT_DIGITAL_ID),\n  auto: Number(cfg.VIKUNJA_PROJECT_AUTO_ID),\n  sicherheit: Number(cfg.VIKUNJA_PROJECT_SICHERHEIT_ID),\n};\nconst CONFIG = {\n  projects: PROJECTS\n};\n// Wochentage: 0=Sonntag, 1=Montag, 2=Dienstag, 3=Mittwoch, 4=Donnerstag, 5=Freitag, 6=Samstag\n// escalation: hard = nicht still verschieben, soft = sanft verschieben, none = nur Review\n// category wird in Beschreibung/Telegram genutzt\n\nconst TASKS = [\n  // ======================================================\n  // TÄGLICH\n  // ======================================================\n  {\n    id: 'daily-plan-check',\n    title: 'Tagesplan anschauen',\n    project: 'termine',\n    category: 'Organisation',\n    schedule: { type: 'daily' },\n    time: '07:30',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Kurz anschauen, was heute wirklich zählt. Maximal 5 Dinge.'\n  },\n  {\n    id: 'daily-calendar-today',\n    title: 'Kalender für heute prüfen',\n    project: 'termine',\n    category: 'Termine',\n    schedule: { type: 'daily' },\n    time: '07:35',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Prüfen, ob heute Termine, Fristen oder Fahrzeiten anstehen.'\n  },\n  {\n    id: 'daily-calendar-tomorrow',\n    title: 'Kalender für morgen prüfen',\n    project: 'termine',\n    category: 'Termine',\n    schedule: { type: 'daily' },\n    time: '20:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Morgen kurz vorbereiten: Termine, Wecker, Unterlagen, Fahrzeiten.'\n  },\n  {\n    id: 'daily-flat-reset',\n    title: '10 Minuten Wohnung resetten',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'daily' },\n    time: '18:30',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Nur 10 Minuten: herumliegende Sachen grob einsammeln. Nicht perfekt machen.'\n  },\n  {\n    id: 'daily-kitchen-rescue',\n    title: 'Küche kurz retten',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'daily' },\n    time: '19:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Geschirr in Küche/Spülmaschine, Fläche grob freimachen.'\n  },\n  {\n    id: 'daily-visible-trash',\n    title: 'Sichtbaren Müll einsammeln',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'daily' },\n    time: '19:15',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Nur sichtbaren Müll einsammeln. Kleine Aufgabe, große Wirkung.'\n  },\n  {\n    id: 'daily-evening-review',\n    title: 'Abend-Check machen',\n    project: 'termine',\n    category: 'Organisation',\n    schedule: { type: 'daily' },\n    time: '20:30',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Was ist erledigt? Was muss verschoben werden?'\n  },\n\n  // ======================================================\n  // ALLE 2-3 TAGE\n  // ======================================================\n  {\n    id: 'every2-laundry-basket',\n    title: 'Wäschekorb prüfen',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'everyDays', every: 2, anchor: '2026-05-06' },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Ist genug Wäsche da? Dann Waschgang einplanen.'\n  },\n  {\n    id: 'every2-trash-out',\n    title: 'Müll rausbringen, falls voll',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'everyDays', every: 2, anchor: '2026-05-06' },\n    time: '19:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Restmüll/Gelber Sack/Papier prüfen. Wenn voll: rausbringen.'\n  },\n  {\n    id: 'every3-kitchen-surfaces',\n    title: 'Küchenarbeitsflächen wischen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'everyDays', every: 3, anchor: '2026-05-06' },\n    time: '19:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Arbeitsflächen kurz freimachen und abwischen.'\n  },\n  {\n    id: 'every3-bath-sink',\n    title: 'Waschbecken kurz reinigen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'everyDays', every: 3, anchor: '2026-05-07' },\n    time: '19:10',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Waschbecken und Armatur kurz sauber machen.'\n  },\n  {\n    id: 'every3-shopping-list',\n    title: 'Einkaufsliste ergänzen',\n    project: 'einkaufen',\n    category: 'Einkaufen',\n    schedule: { type: 'everyDays', every: 3, anchor: '2026-05-07' },\n    time: '18:30',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Fehlende Lebensmittel, Getränke, Hygieneartikel ergänzen.'\n  },\n\n  // ======================================================\n  // SPORT 3x PRO WOCHE\n  // ======================================================\n  {\n    id: 'sport-weekly-1',\n    title: 'Sport 1/3 - 20 Minuten Bewegung',\n    project: 'sport',\n    category: 'Sport',\n    schedule: { type: 'weekly', weekdays: [1] },\n    time: '18:30',\n    priority: 3,\n    escalation: 'soft',\n    description: '20 Minuten Bewegung reichen. Wird automatisch abgehakt, wenn Strava/Hevy heute ein Workout erkennt.',\n    autoCompleteBy: ['strava', 'hevy'],\n    goalKey: 'sport-3x-week'\n  },\n  {\n    id: 'sport-weekly-2',\n    title: 'Sport 2/3 - 20 Minuten Bewegung',\n    project: 'sport',\n    category: 'Sport',\n    schedule: { type: 'weekly', weekdays: [3] },\n    time: '18:30',\n    priority: 3,\n    escalation: 'soft',\n    description: '20 Minuten Bewegung reichen. Wird automatisch abgehakt, wenn Strava/Hevy heute ein Workout erkennt.',\n    autoCompleteBy: ['strava', 'hevy'],\n    goalKey: 'sport-3x-week'\n  },\n  {\n    id: 'sport-weekly-3',\n    title: 'Sport 3/3 oder Spaziergang',\n    project: 'sport',\n    category: 'Sport',\n    schedule: { type: 'weekly', weekdays: [0] },\n    time: '16:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Dritter Sporttermin der Woche. Wenn schon 3 Workouts erkannt wurden, wird er automatisch erledigt.',\n    autoCompleteBy: ['strava', 'hevy'],\n    goalKey: 'sport-3x-week'\n  },\n\n  // ======================================================\n  // WÖCHENTLICH HAUSHALT/PUTZEN\n  // ======================================================\n  {\n    id: 'weekly-shopping-plan',\n    title: 'Wocheneinkauf planen',\n    project: 'einkaufen',\n    category: 'Einkaufen',\n    schedule: { type: 'weekly', weekdays: [4] },\n    time: '18:00',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Einkaufsliste prüfen: Lebensmittel, Getränke, Hygieneartikel, Haushalt.'\n  },\n  {\n    id: 'weekly-fridge-check',\n    title: 'Kühlschrank prüfen: Was muss weg?',\n    project: 'einkaufen',\n    category: 'Küche',\n    schedule: { type: 'weekly', weekdays: [4] },\n    time: '18:15',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Abgelaufene/angebrochene Lebensmittel prüfen. Einkaufsliste ergänzen.'\n  },\n  {\n    id: 'weekly-shopping',\n    title: 'Wocheneinkauf machen',\n    project: 'einkaufen',\n    category: 'Einkaufen',\n    schedule: { type: 'weekly', weekdays: [5] },\n    time: '16:00',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Wocheneinkauf erledigen. Wenn zu viel: nur das Wichtigste kaufen.'\n  },\n  {\n    id: 'weekly-vacuum',\n    title: 'Wohnung saugen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'weekly', weekdays: [6] },\n    time: '11:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Wohnung saugen. Wenn keine Energie: nur Flur/Küche/Wohnbereich.'\n  },\n  {\n    id: 'weekly-mop',\n    title: 'Boden wischen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'weekly', weekdays: [6] },\n    time: '11:30',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Boden wischen. Wenn zu viel: nur Küche und Bad.'\n  },\n  {\n    id: 'weekly-bathroom',\n    title: 'Bad putzen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'weekly', weekdays: [6] },\n    time: '12:00',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Bad putzen: Waschbecken, Toilette, Spiegel, Dusche grob.'\n  },\n  {\n    id: 'weekly-toilet',\n    title: 'Toilette reinigen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'weekly', weekdays: [6] },\n    time: '12:10',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Toilette gründlich reinigen.'\n  },\n  {\n    id: 'weekly-shower',\n    title: 'Dusche/Badewanne reinigen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'weekly', weekdays: [6] },\n    time: '12:20',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Dusche/Badewanne reinigen. Kalkstellen grob entfernen.'\n  },\n  {\n    id: 'weekly-kitchen-clean',\n    title: 'Küche gründlicher reinigen',\n    project: 'putzen',\n    category: 'Küche',\n    schedule: { type: 'weekly', weekdays: [6] },\n    time: '13:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Küche: Arbeitsflächen, Herd, Spüle, sichtbare Flächen.'\n  },\n  {\n    id: 'weekly-laundry-wash',\n    title: 'Wäsche waschen',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'weekly', weekdays: [6] },\n    time: '14:00',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Wäsche starten. Wenn viel: nur eine Maschine.'\n  },\n  {\n    id: 'weekly-laundry-put-away',\n    title: 'Wäsche zusammenlegen und wegräumen',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'weekly', weekdays: [0] },\n    time: '17:00',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Wäsche wegräumen. Wenn zu viel: 10 Minuten Timer.'\n  },\n  {\n    id: 'weekly-desk-clean',\n    title: 'Schreibtisch aufräumen',\n    project: 'haushalt',\n    category: 'Ordnung',\n    schedule: { type: 'weekly', weekdays: [0] },\n    time: '18:00',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Schreibtisch freimachen, Tassen weg, Papier auf einen Stapel.'\n  },\n  {\n    id: 'weekly-bag-empty',\n    title: 'Tasche/Rucksack/Jackentaschen leeren',\n    project: 'haushalt',\n    category: 'Ordnung',\n    schedule: { type: 'weekly', weekdays: [0] },\n    time: '18:15',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Müll raus, Belege sichern, wichtige Sachen zurücklegen.'\n  },\n\n  // ======================================================\n  // WÖCHENTLICH BACKOFFICE\n  // ======================================================\n  {\n    id: 'weekly-paper-post',\n    title: 'Papierpost öffnen',\n    project: 'papierkram',\n    category: 'Papierkram',\n    schedule: { type: 'weekly', weekdays: [0] },\n    time: '11:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Papierpost öffnen. Rechnungen/Fristen sofort markieren oder scannen.'\n  },\n  {\n    id: 'weekly-paperwork-15',\n    title: 'Papierkram 15 Minuten ablegen/scannen',\n    project: 'papierkram',\n    category: 'Papierkram',\n    schedule: { type: 'weekly', weekdays: [0] },\n    time: '11:30',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Nur 15 Minuten. Dokumente scannen, ablegen oder in Paperless werfen.'\n  },\n  {\n    id: 'weekly-next-week',\n    title: 'Termine nächste Woche prüfen',\n    project: 'termine',\n    category: 'Termine',\n    schedule: { type: 'weekly', weekdays: [0] },\n    time: '12:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Termine, Fristen, Geburtstage, Fahrzeiten und Vorbereitungen für nächste Woche prüfen.'\n  },\n  {\n    id: 'weekly-birthdays-30',\n    title: 'Geburtstage der nächsten 30 Tage prüfen',\n    project: 'menschen',\n    category: 'Menschen',\n    schedule: { type: 'weekly', weekdays: [0] },\n    time: '12:15',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Geburtstage prüfen. Für wichtige Personen Geschenk-Aufgaben anlegen.'\n  },\n  {\n    id: 'weekly-bills-check',\n    title: 'Rechnungen prüfen',\n    project: 'finanzen',\n    category: 'Finanzen',\n    schedule: { type: 'weekly', weekdays: [0] },\n    time: '12:30',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Offene Rechnungen, Firefly, Paperless und Fälligkeiten prüfen.'\n  },\n  {\n    id: 'weekly-firefly-check',\n    title: 'Konto/Firefly prüfen',\n    project: 'finanzen',\n    category: 'Finanzen',\n    schedule: { type: 'weekly', weekdays: [0] },\n    time: '12:45',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Neue Buchungen prüfen und Kategorien grob kontrollieren.'\n  },\n  {\n    id: 'weekly-plan',\n    title: 'Wochenplanung machen',\n    project: 'termine',\n    category: 'Organisation',\n    schedule: { type: 'weekly', weekdays: [0] },\n    time: '19:00',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Maximal 3 Ziele für die Woche setzen. Nicht übertreiben.'\n  },\n\n  // ======================================================\n  // ALLE 2 WOCHEN\n  // ======================================================\n  {\n    id: 'biweekly-towels',\n    title: 'Handtücher komplett wechseln',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'everyWeeks', every: 2, anchor: '2026-05-09' },\n    time: '10:00',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Alle Handtücher wechseln und alte in die Wäsche.'\n  },\n  {\n    id: 'biweekly-dust',\n    title: 'Staub wischen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'everyWeeks', every: 2, anchor: '2026-05-09' },\n    time: '11:30',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Staub wischen: sichtbare Flächen, Schreibtisch, Regale.'\n  },\n  {\n    id: 'biweekly-mirrors',\n    title: 'Spiegel putzen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'everyWeeks', every: 2, anchor: '2026-05-09' },\n    time: '11:45',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Badspiegel und weitere Spiegel putzen.'\n  },\n  {\n    id: 'biweekly-stove-deep',\n    title: 'Herd gründlich reinigen',\n    project: 'putzen',\n    category: 'Küche',\n    schedule: { type: 'everyWeeks', every: 2, anchor: '2026-05-09' },\n    time: '13:15',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Herd gründlicher reinigen, eingebrannte Stellen lösen.'\n  },\n  {\n    id: 'biweekly-microwave',\n    title: 'Mikrowelle reinigen',\n    project: 'putzen',\n    category: 'Küche',\n    schedule: { type: 'everyWeeks', every: 2, anchor: '2026-05-09' },\n    time: '13:30',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Mikrowelle innen auswischen.'\n  },\n  {\n    id: 'biweekly-trash-bins-clean',\n    title: 'Mülleimer auswischen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'everyWeeks', every: 2, anchor: '2026-05-09' },\n    time: '14:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Mülleimer auswischen, neuen Beutel einsetzen.'\n  },\n  {\n    id: 'biweekly-deposit-bottles',\n    title: 'Pfand wegbringen',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'everyWeeks', every: 2, anchor: '2026-05-08' },\n    time: '16:30',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Pfand sammeln und beim Einkauf mitnehmen.'\n  },\n  {\n    id: 'biweekly-supplies',\n    title: 'Vorräte prüfen',\n    project: 'einkaufen',\n    category: 'Einkaufen',\n    schedule: { type: 'everyWeeks', every: 2, anchor: '2026-05-08' },\n    time: '18:30',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Nudeln, Reis, Dosen, Getränke, Basics prüfen.'\n  },\n  {\n    id: 'biweekly-hygiene-supplies',\n    title: 'Hygieneartikel prüfen',\n    project: 'einkaufen',\n    category: 'Einkaufen',\n    schedule: { type: 'everyWeeks', every: 2, anchor: '2026-05-08' },\n    time: '18:45',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Klopapier, Zahnpasta, Duschgel, Deo, Waschmittel prüfen.'\n  },\n\n  // ======================================================\n  // ALLE 3 WOCHEN\n  // ======================================================\n  {\n    id: 'triweekly-bedsheets',\n    title: 'Bettwäsche wechseln',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'everyWeeks', every: 3, anchor: '2026-05-10' },\n    time: '10:30',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Bettwäsche abziehen, neu beziehen, alte Bettwäsche in die Wäsche. Bei starkem Schwitzen/Allergie besser alle 1-2 Wochen.'\n  },\n  {\n    id: 'triweekly-bedroom-reset',\n    title: 'Schlafzimmer gründlicher aufräumen',\n    project: 'haushalt',\n    category: 'Ordnung',\n    schedule: { type: 'everyWeeks', every: 3, anchor: '2026-05-10' },\n    time: '11:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Kleidung einsammeln, Nachttisch/Flächen freimachen, Boden frei.'\n  },\n  {\n    id: 'triweekly-sofa-vacuum',\n    title: 'Sofa/Polster absaugen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'everyWeeks', every: 3, anchor: '2026-05-10' },\n    time: '11:30',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Sofa, Polster und Ritzen absaugen.'\n  },\n  {\n    id: 'triweekly-mattress-vacuum',\n    title: 'Matratze absaugen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'everyWeeks', every: 3, anchor: '2026-05-10' },\n    time: '11:45',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Matratze absaugen, Bett kurz lüften lassen.'\n  },\n  {\n    id: 'triweekly-gift-ideas',\n    title: 'Geschenkideen-Liste prüfen',\n    project: 'menschen',\n    category: 'Menschen',\n    schedule: { type: 'everyWeeks', every: 3, anchor: '2026-05-11' },\n    time: '13:30',\n    priority: 2,\n    escalation: 'none',\n    description: 'Geschenkideen für wichtige Personen ergänzen.'\n  },\n\n  // ======================================================\n  // MONATLICH\n  // ======================================================\n  {\n    id: 'monthly-budget',\n    title: 'Budget prüfen',\n    project: 'finanzen',\n    category: 'Finanzen',\n    schedule: { type: 'monthlyDay', day: 1 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Budget, Einnahmen/Ausgaben und größere Abbuchungen prüfen.'\n  },\n  {\n    id: 'monthly-standing-orders',\n    title: 'Daueraufträge prüfen',\n    project: 'finanzen',\n    category: 'Finanzen',\n    schedule: { type: 'monthlyDay', day: 1 },\n    time: '18:15',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Daueraufträge und wiederkehrende Zahlungen prüfen.'\n  },\n  {\n    id: 'monthly-subscriptions',\n    title: 'Abos prüfen',\n    project: 'finanzen',\n    category: 'Finanzen',\n    schedule: { type: 'monthlyDay', day: 1 },\n    time: '18:30',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Streaming, Apps, Software, Versicherungen, unnötige Abos prüfen.'\n  },\n  {\n    id: 'monthly-calendar-next',\n    title: 'Kalender nächsten Monat prüfen',\n    project: 'termine',\n    category: 'Termine',\n    schedule: { type: 'monthlyDay', day: 1 },\n    time: '19:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Termine, Geburtstage, Fristen im nächsten Monat prüfen.'\n  },\n  {\n    id: 'monthly-fridge-clean',\n    title: 'Kühlschrank auswischen',\n    project: 'putzen',\n    category: 'Küche',\n    schedule: { type: 'monthlyDay', day: 7 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Kühlschrank auswischen, alte Lebensmittel entsorgen.'\n  },\n  {\n    id: 'monthly-freezer-check',\n    title: 'Gefrierfach prüfen',\n    project: 'einkaufen',\n    category: 'Küche',\n    schedule: { type: 'monthlyDay', day: 7 },\n    time: '18:30',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Gefrierfach prüfen: Was ist drin, was muss weg?'\n  },\n  {\n    id: 'monthly-kettle-coffee',\n    title: 'Wasserkocher/Kaffeemaschine entkalken',\n    project: 'putzen',\n    category: 'Küche',\n    schedule: { type: 'monthlyDay', day: 10 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Wasserkocher entkalken, Kaffeemaschine reinigen/entkalken.'\n  },\n  {\n    id: 'monthly-washing-machine-clean',\n    title: 'Waschmaschine Reinigungsprogramm starten',\n    project: 'putzen',\n    category: 'Haushalt',\n    schedule: { type: 'monthlyDay', day: 12 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Waschmaschinenreiniger oder heißes Reinigungsprogramm starten. Dichtung/Schublade prüfen.'\n  },\n  {\n    id: 'monthly-dishwasher-clean',\n    title: 'Spülmaschine Sieb/Reinigung',\n    project: 'putzen',\n    category: 'Küche',\n    schedule: { type: 'monthlyDay', day: 12 },\n    time: '18:30',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Sieb reinigen, Maschine reinigen, Salz/Klarspüler prüfen.'\n  },\n  {\n    id: 'monthly-drains',\n    title: 'Abflüsse reinigen',\n    project: 'putzen',\n    category: 'Haushalt',\n    schedule: { type: 'monthlyDay', day: 15 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Küche/Bad Abflüsse reinigen, Haare entfernen, durchspülen.'\n  },\n  {\n    id: 'monthly-shower-head',\n    title: 'Duschkopf entkalken',\n    project: 'putzen',\n    category: 'Bad',\n    schedule: { type: 'monthlyDay', day: 15 },\n    time: '18:30',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Duschkopf entkalken oder zumindest prüfen.'\n  },\n  {\n    id: 'monthly-documents-scan',\n    title: 'Dokumente scannen/ablegen',\n    project: 'papierkram',\n    category: 'Papierkram',\n    schedule: { type: 'monthlyDay', day: 16 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Papierkram in Paperless werfen, wichtige Dokumente ablegen.'\n  },\n  {\n    id: 'monthly-downloads-clean',\n    title: 'Downloads-Ordner aufräumen',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'monthlyDay', day: 18 },\n    time: '18:00',\n    priority: 2,\n    escalation: 'none',\n    description: 'Downloads löschen/sortieren. Nur 10 Minuten.'\n  },\n  {\n    id: 'monthly-mailbox-clean',\n    title: 'E-Mail-Inbox aufräumen',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'monthlyDay', day: 18 },\n    time: '18:30',\n    priority: 2,\n    escalation: 'none',\n    description: 'Newsletter löschen, wichtige Mails markieren, Inbox grob aufräumen.'\n  },\n  {\n    id: 'monthly-backups-check',\n    title: 'PC/Handy-Backups prüfen',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'monthlyDay', day: 20 },\n    time: '18:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Prüfen, ob Backups laufen. Letztes Backup-Datum kontrollieren.'\n  },\n  {\n    id: 'monthly-photos-files',\n    title: 'Fotos/Dateien sichern',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'monthlyDay', day: 20 },\n    time: '18:30',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Fotos/Dateien grob sichern oder Sync prüfen.'\n  },\n  {\n    id: 'monthly-password-2fa',\n    title: 'Passwortmanager/2FA grob prüfen',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'monthlyDay', day: 22 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Wichtige Accounts, 2FA und Recovery-Zugriff grob prüfen.'\n  },\n  {\n    id: 'monthly-auto-check',\n    title: 'Auto Reifendruck, Öl und Wischwasser prüfen',\n    project: 'auto',\n    category: 'Auto',\n    schedule: { type: 'monthlyDay', day: 24 },\n    time: '17:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Reifendruck, Ölstand und Wischwasser prüfen.'\n  },\n  {\n    id: 'monthly-bike-check',\n    title: 'Fahrrad Licht/Luft/Kette prüfen',\n    project: 'auto',\n    category: 'Mobilität',\n    schedule: { type: 'monthlyDay', day: 24 },\n    time: '17:30',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Fahrrad kurz prüfen: Luft, Licht, Kette, Bremsen.'\n  },\n  {\n    id: 'monthly-gift-supplies',\n    title: 'Geschenkpapier/Karten/Briefmarken prüfen',\n    project: 'menschen',\n    category: 'Menschen',\n    schedule: { type: 'monthlyDay', day: 25 },\n    time: '18:00',\n    priority: 2,\n    escalation: 'none',\n    description: 'Geburtstagskarten, Geschenkpapier, Klebeband, Briefmarken prüfen.'\n  },\n\n  // ======================================================\n  // ALLE 2 MONATE\n  // ======================================================\n  {\n    id: 'every2months-windows',\n    title: 'Fenster putzen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'everyMonths', every: 2, anchor: '2026-06-01', preferredDay: 6 },\n    time: '10:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Fenster innen putzen. Wenn zu viel: nur Wohnbereich/Schlafzimmer.'\n  },\n  {\n    id: 'every2months-window-sills',\n    title: 'Fensterbänke reinigen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'everyMonths', every: 2, anchor: '2026-06-01', preferredDay: 6 },\n    time: '10:45',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Fensterbänke abwischen und freiräumen.'\n  },\n  {\n    id: 'every2months-doors-handles',\n    title: 'Türen und Türklinken reinigen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'everyMonths', every: 2, anchor: '2026-06-01', preferredDay: 6 },\n    time: '11:15',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Türklinken, Türen an Griffstellen und sichtbare Flecken reinigen.'\n  },\n  {\n    id: 'every2months-light-switches',\n    title: 'Lichtschalter abwischen',\n    project: 'putzen',\n    category: 'Putzen',\n    schedule: { type: 'everyMonths', every: 2, anchor: '2026-06-01', preferredDay: 6 },\n    time: '11:30',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Lichtschalter und häufige Kontaktflächen abwischen.'\n  },\n  {\n    id: 'every2months-kitchen-cabinets-outside',\n    title: 'Küchenschränke außen abwischen',\n    project: 'putzen',\n    category: 'Küche',\n    schedule: { type: 'everyMonths', every: 2, anchor: '2026-06-01', preferredDay: 6 },\n    time: '12:00',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Küchenschränke außen und Griffe reinigen.'\n  },\n  {\n    id: 'every2months-pantry-wipe',\n    title: 'Vorratsschrank auswischen',\n    project: 'putzen',\n    category: 'Küche',\n    schedule: { type: 'everyMonths', every: 2, anchor: '2026-06-01', preferredDay: 6 },\n    time: '12:30',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Vorratsschrank grob auswischen, abgelaufene Sachen entsorgen.'\n  },\n  {\n    id: 'every2months-wardrobe-sort',\n    title: 'Kleiderschrank kurz aussortieren',\n    project: 'haushalt',\n    category: 'Ordnung',\n    schedule: { type: 'everyMonths', every: 2, anchor: '2026-06-01', preferredDay: 0 },\n    time: '16:00',\n    priority: 2,\n    escalation: 'none',\n    description: 'Kleidung prüfen: kaputt, passt nicht, nie getragen.'\n  },\n  {\n    id: 'every2months-cables-tech',\n    title: 'Kabel/Technikkram sortieren',\n    project: 'digital',\n    category: 'Ordnung',\n    schedule: { type: 'everyMonths', every: 2, anchor: '2026-06-01', preferredDay: 0 },\n    time: '17:00',\n    priority: 1,\n    escalation: 'none',\n    description: 'Kabel, Adapter, altes Zubehör sortieren.'\n  },\n  {\n    id: 'every2months-document-folder',\n    title: 'Dokumentenordner prüfen',\n    project: 'papierkram',\n    category: 'Papierkram',\n    schedule: { type: 'everyMonths', every: 2, anchor: '2026-06-01', preferredDay: 0 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Dokumentenordner und Paperless grob prüfen.'\n  },\n\n  // ======================================================\n  // ALLE 3 MONATE\n  // ======================================================\n  {\n    id: 'quarter-smoke-detectors',\n    title: 'Rauchmelder testen',\n    project: 'sicherheit',\n    category: 'Sicherheit',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 5 },\n    time: '18:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Rauchmelder Testknopf drücken. Wenn Fehler: Batterie/Gerät prüfen.'\n  },\n  {\n    id: 'quarter-first-aid',\n    title: 'Erste-Hilfe-Set prüfen',\n    project: 'sicherheit',\n    category: 'Sicherheit',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 6 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Pflaster, Desinfektion, Verbandszeug, Ablaufdaten prüfen.'\n  },\n  {\n    id: 'quarter-meds-expiry',\n    title: 'Medikamente auf Ablaufdatum prüfen',\n    project: 'sport',\n    category: 'Gesundheit',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 7 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Hausapotheke prüfen, abgelaufene Medikamente aussortieren.'\n  },\n  {\n    id: 'quarter-toothbrush',\n    title: 'Zahnbürste wechseln',\n    project: 'sport',\n    category: 'Gesundheit',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 8 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Zahnbürste oder Bürstenkopf wechseln.'\n  },\n  {\n    id: 'quarter-mattress-turn',\n    title: 'Matratze drehen/wenden',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 9 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Matratze drehen/wenden, wenn möglich.'\n  },\n  {\n    id: 'quarter-pillows-blanket',\n    title: 'Kopfkissen/Decke waschen oder lüften',\n    project: 'haushalt',\n    category: 'Haushalt',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 10 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Kopfkissen/Decke waschen oder ordentlich lüften.'\n  },\n  {\n    id: 'quarter-hood-filter',\n    title: 'Dunstabzugshaube Filter reinigen',\n    project: 'putzen',\n    category: 'Küche',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 11 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Filter reinigen/tauschen, Fett entfernen.'\n  },\n  {\n    id: 'quarter-energy-payments',\n    title: 'Strom/Gas/Wasser Abschläge prüfen',\n    project: 'finanzen',\n    category: 'Finanzen',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 12 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Abschläge und Verbrauch prüfen. Bei starken Abweichungen anpassen.'\n  },\n  {\n    id: 'quarter-tax-receipts',\n    title: 'Steuerbelege sammeln',\n    project: 'papierkram',\n    category: 'Papierkram',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 13 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Steuerrelevante Belege sammeln/ablegen.'\n  },\n  {\n    id: 'quarter-backup-restore',\n    title: 'Backup-Wiederherstellung testen',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 14 },\n    time: '18:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Mindestens eine Datei testweise aus Backup wiederherstellen.'\n  },\n  {\n    id: 'quarter-password-manager',\n    title: 'Passwortmanager aufräumen',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 15 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Duplikate, schwache Passwörter, alte Logins prüfen.'\n  },\n  {\n    id: 'quarter-device-updates',\n    title: 'Geräteupdates prüfen',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 16 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'PC, Handy, NAS, Router, Apps grob prüfen.'\n  },\n  {\n    id: 'quarter-car-interior',\n    title: 'Auto Innenraum reinigen',\n    project: 'auto',\n    category: 'Auto',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 17 },\n    time: '18:00',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Auto innen aufräumen und grob reinigen.'\n  },\n  {\n    id: 'quarter-tire-profile',\n    title: 'Reifenprofil prüfen',\n    project: 'auto',\n    category: 'Auto',\n    schedule: { type: 'quarterly', months: [1,4,7,10], day: 18 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Reifenprofil und sichtbare Schäden prüfen.'\n  },\n\n  // ======================================================\n  // ALLE 6 MONATE\n  // ======================================================\n  {\n    id: 'semi-contracts',\n    title: 'Verträge kündbar? prüfen',\n    project: 'finanzen',\n    category: 'Finanzen',\n    schedule: { type: 'specificMonths', months: [1,7], day: 15 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Handy, Internet, Strom, Versicherungen, Software, Abos prüfen.'\n  },\n  {\n    id: 'semi-tax-midyear',\n    title: 'Steuerunterlagen Zwischenstand prüfen',\n    project: 'papierkram',\n    category: 'Papierkram',\n    schedule: { type: 'specificMonths', months: [1,7], day: 16 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Steuerordner/Paperless prüfen. Fehlende Belege notieren.'\n  },\n  {\n    id: 'semi-emergency-contacts',\n    title: 'Notfallkontakte prüfen',\n    project: 'sicherheit',\n    category: 'Organisation',\n    schedule: { type: 'specificMonths', months: [1,7], day: 17 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Notfallkontakte, wichtige Telefonnummern und Zugriffsdaten prüfen.'\n  },\n  {\n    id: 'semi-digital-emergency-folder',\n    title: 'Digitale Notfallmappe prüfen',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'specificMonths', months: [1,7], day: 18 },\n    time: '18:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Notfallmappe: Zugangsdaten, Vollmachten, Kontakte, Backup-Infos.'\n  },\n  {\n    id: 'semi-2fa-codes',\n    title: '2FA-Recovery-Codes sichern',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'specificMonths', months: [1,7], day: 19 },\n    time: '18:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Recovery-Codes wichtiger Accounts sichern und auffindbar ablegen.'\n  },\n  {\n    id: 'semi-wardrobe-season',\n    title: 'Kleiderschrank Saisonwechsel',\n    project: 'haushalt',\n    category: 'Ordnung',\n    schedule: { type: 'specificMonths', months: [4,10], day: 10 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Sommer-/Winterkleidung tauschen, ungenutzte Kleidung aussortieren.'\n  },\n  {\n    id: 'semi-shoes',\n    title: 'Schuhe imprägnieren/prüfen',\n    project: 'haushalt',\n    category: 'Alltag',\n    schedule: { type: 'specificMonths', months: [4,10], day: 11 },\n    time: '18:00',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Schuhe prüfen, reinigen, imprägnieren.'\n  },\n  {\n    id: 'semi-declutter',\n    title: 'Große Entrümpelungsrunde',\n    project: 'haushalt',\n    category: 'Ordnung',\n    schedule: { type: 'specificMonths', months: [3,9], day: 20 },\n    time: '16:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Ein Bereich reicht: Schrank, Keller, Abstellkammer, Technik, Papier.'\n  },\n  {\n    id: 'semi-pantry-full',\n    title: 'Vorräte komplett sortieren',\n    project: 'einkaufen',\n    category: 'Küche',\n    schedule: { type: 'specificMonths', months: [3,9], day: 21 },\n    time: '16:00',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Vorräte komplett sortieren, abgelaufene Dinge entfernen.'\n  },\n  {\n    id: 'semi-freezer-full',\n    title: 'Gefrierfach komplett sortieren',\n    project: 'einkaufen',\n    category: 'Küche',\n    schedule: { type: 'specificMonths', months: [3,9], day: 22 },\n    time: '16:00',\n    priority: 2,\n    escalation: 'soft',\n    description: 'Gefrierfach komplett sortieren und Plan machen, was verbraucht werden soll.'\n  },\n  {\n    id: 'semi-bike-maintenance',\n    title: 'Fahrrad gründlich warten',\n    project: 'auto',\n    category: 'Mobilität',\n    schedule: { type: 'specificMonths', months: [3,9], day: 23 },\n    time: '16:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Kette, Luft, Licht, Bremsen, Schrauben prüfen.'\n  },\n  {\n    id: 'semi-tire-change-plan',\n    title: 'Reifenwechsel planen',\n    project: 'auto',\n    category: 'Auto',\n    schedule: { type: 'specificMonths', months: [3,10], day: 15 },\n    time: '17:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Reifenwechseltermin planen oder selbst wechseln vorbereiten.'\n  },\n  {\n    id: 'semi-dentist-plan',\n    title: 'Zahnarzttermin planen',\n    project: 'termine',\n    category: 'Gesundheit',\n    schedule: { type: 'specificMonths', months: [1,7], day: 21 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Zahnarztkontrolle planen. Termin in Kalender eintragen.'\n  },\n\n  // ======================================================\n  // JÄHRLICH\n  // ======================================================\n  {\n    id: 'year-tax-prepare',\n    title: 'Steuererklärung vorbereiten',\n    project: 'finanzen',\n    category: 'Finanzen',\n    schedule: { type: 'yearly', month: 3, day: 1 },\n    time: '18:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Steuerunterlagen zusammentragen, fehlende Belege notieren.'\n  },\n  {\n    id: 'year-insurances-compare',\n    title: 'Versicherungen vergleichen',\n    project: 'finanzen',\n    category: 'Finanzen',\n    schedule: { type: 'yearly', month: 10, day: 15 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Haftpflicht, Hausrat, Kfz, Rechtsschutz etc. prüfen.'\n  },\n  {\n    id: 'year-kfz-insurance',\n    title: 'Kfz-Versicherung vergleichen',\n    project: 'auto',\n    category: 'Auto',\n    schedule: { type: 'yearly', month: 10, day: 25 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Kfz-Versicherung vor Kündigungsfrist prüfen.'\n  },\n  {\n    id: 'year-electricity',\n    title: 'Stromanbieter prüfen',\n    project: 'finanzen',\n    category: 'Finanzen',\n    schedule: { type: 'yearly', month: 10, day: 20 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Stromanbieter, Verbrauch und Abschläge prüfen.'\n  },\n  {\n    id: 'year-doc-expiry',\n    title: 'Personalausweis/Reisepass/Dokumente Ablauf prüfen',\n    project: 'papierkram',\n    category: 'Dokumente',\n    schedule: { type: 'yearly', month: 1, day: 20 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Ablaufdaten von Ausweis, Reisepass, Führerschein und wichtigen Dokumenten prüfen.'\n  },\n  {\n    id: 'year-important-docs-backup',\n    title: 'Wichtige Dokumente scannen/sichern',\n    project: 'papierkram',\n    category: 'Dokumente',\n    schedule: { type: 'yearly', month: 1, day: 22 },\n    time: '18:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Wichtige Dokumente digital sichern: Ausweis, Versicherung, Verträge, Steuer.'\n  },\n  {\n    id: 'year-checkup',\n    title: 'Arzt-Checkup prüfen',\n    project: 'termine',\n    category: 'Gesundheit',\n    schedule: { type: 'yearly', month: 1, day: 25 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Prüfen, ob Checkup, Impfstatus, Augenarzt/Sehtest oder Vorsorge sinnvoll ist.'\n  },\n  {\n    id: 'year-tuv',\n    title: 'TÜV-Termin prüfen',\n    project: 'auto',\n    category: 'Auto',\n    schedule: { type: 'yearly', month: 1, day: 26 },\n    time: '18:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'TÜV-Fälligkeit prüfen und Termin planen.'\n  },\n  {\n    id: 'year-car-service',\n    title: 'Auto Inspektion prüfen',\n    project: 'auto',\n    category: 'Auto',\n    schedule: { type: 'yearly', month: 1, day: 27 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Inspektionsintervall, Ölwechsel, Service prüfen.'\n  },\n  {\n    id: 'year-apartment-deep-clean',\n    title: 'Wohnung Grundreinigung planen',\n    project: 'putzen',\n    category: 'Haushalt',\n    schedule: { type: 'yearly', month: 4, day: 1 },\n    time: '10:00',\n    priority: 3,\n    escalation: 'soft',\n    description: 'Frühjahrsputz planen. In kleine Bereiche teilen.'\n  },\n  {\n    id: 'year-old-accounts',\n    title: 'Alte Accounts löschen',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'yearly', month: 12, day: 1 },\n    time: '18:00',\n    priority: 3,\n    escalation: 'none',\n    description: 'Alte Online-Accounts prüfen und löschen, wenn unnötig.'\n  },\n  {\n    id: 'year-backup-concept',\n    title: 'Backup-Konzept prüfen',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'yearly', month: 12, day: 5 },\n    time: '18:00',\n    priority: 5,\n    escalation: 'hard',\n    description: 'Backup-Strategie prüfen: 3-2-1, Wiederherstellung, wichtige Geräte.'\n  },\n  {\n    id: 'year-privacy-check',\n    title: 'Datenschutz-/Privatsphäre-Check',\n    project: 'digital',\n    category: 'Digital',\n    schedule: { type: 'yearly', month: 12, day: 8 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'soft',\n    description: 'Privatsphäre-Einstellungen, Freigaben und App-Berechtigungen prüfen.'\n  },\n  {\n    id: 'year-xmas-list',\n    title: 'Weihnachtsgeschenke-Liste starten',\n    project: 'menschen',\n    category: 'Menschen',\n    schedule: { type: 'yearly', month: 11, day: 1 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Liste starten: Für wen Geschenk? Ideen? Budget?'\n  },\n  {\n    id: 'year-xmas-buy',\n    title: 'Weihnachtsgeschenke kaufen',\n    project: 'menschen',\n    category: 'Menschen',\n    schedule: { type: 'yearly', month: 12, day: 1 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Weihnachtsgeschenke kaufen/bestellen.'\n  },\n  {\n    id: 'year-xmas-wrap',\n    title: 'Weihnachtsgeschenke einpacken',\n    project: 'menschen',\n    category: 'Menschen',\n    schedule: { type: 'yearly', month: 12, day: 15 },\n    time: '18:00',\n    priority: 4,\n    escalation: 'hard',\n    description: 'Weihnachtsgeschenke einpacken und Karten/Nachrichten vorbereiten.'\n  }\n];\n\n// ==========================================================\n// SCHEDULER LOGIK\n// ==========================================================\n\nfunction berlinDateParts(date = new Date()) {\n  const fmt = new Intl.DateTimeFormat('en-CA', {\n    timeZone: 'Europe/Berlin',\n    year: 'numeric',\n    month: '2-digit',\n    day: '2-digit',\n    weekday: 'short'\n  });\n  const parts = Object.fromEntries(fmt.formatToParts(date).map(p => [p.type, p.value]));\n  const y = Number(parts.year);\n  const m = Number(parts.month);\n  const d = Number(parts.day);\n  const jsDate = new Date(Date.UTC(y, m - 1, d));\n  return { y, m, d, weekday: jsDate.getUTCDay(), ymd: `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}` };\n}\n\nfunction dateOnlyUTC(ymd) {\n  const [y,m,d] = ymd.split('-').map(Number);\n  return Date.UTC(y, m - 1, d);\n}\n\nfunction diffDays(aYmd, bYmd) {\n  return Math.floor((dateOnlyUTC(aYmd) - dateOnlyUTC(bYmd)) / 86400000);\n}\n\nfunction monthsDiff(currentY, currentM, anchorYmd) {\n  const [ay, am] = anchorYmd.split('-').map(Number);\n  return (currentY - ay) * 12 + (currentM - am);\n}\n\nfunction isDueToday(task, today) {\n  const s = task.schedule;\n\n  if (s.type === 'daily') return true;\n\n  if (s.type === 'everyDays') {\n    const days = diffDays(today.ymd, s.anchor);\n    return days >= 0 && days % s.every === 0;\n  }\n\n  if (s.type === 'weekly') {\n    return s.weekdays.includes(today.weekday);\n  }\n\n  if (s.type === 'everyWeeks') {\n    const days = diffDays(today.ymd, s.anchor);\n    return days >= 0 && days % (s.every * 7) === 0;\n  }\n\n  if (s.type === 'monthlyDay') {\n    return today.d === s.day;\n  }\n\n  if (s.type === 'quarterly') {\n    return s.months.includes(today.m) && today.d === s.day;\n  }\n\n  if (s.type === 'specificMonths') {\n    return s.months.includes(today.m) && today.d === s.day;\n  }\n\n  if (s.type === 'yearly') {\n    return today.m === s.month && today.d === s.day;\n  }\n\n  if (s.type === 'everyMonths') {\n    if (today.weekday !== s.preferredDay) return false;\n    const md = monthsDiff(today.y, today.m, s.anchor);\n    if (md < 0 || md % s.every !== 0) return false;\n    // Nur erste passende Woche im Monat, damit Fensterputzen nicht jeden Samstag im Monat kommt.\n    return today.d <= 7;\n  }\n\n  return false;\n}\n\nfunction dueDateIso(today, time) {\n  const [hh, mm] = time.split(':').map(Number);\n  // n8n/JS erzeugt UTC ISO. Vikunja akzeptiert ISO. Für Berlin-Uhrzeit wird +02/+01 im Titel/Description erklärt.\n  const local = `${today.ymd}T${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:00+02:00`;\n  return local;\n}\n\nfunction hasExistingMarker(existingTasks, marker) {\n  const tasks = Array.isArray(existingTasks) ? existingTasks : (existingTasks.data || existingTasks.tasks || existingTasks.results || []);\n  return tasks.some(t => {\n    const hay = `${t.title || ''}\\n${t.description || ''}`;\n    return hay.includes(marker);\n  });\n}\n\nconst today = berlinDateParts(new Date());\nconst existingTasks = []; // Duplikate werden über n8n Static Data verhindert\nconst due = [];\nconst staticData = $getWorkflowStaticData('global');\nif (!staticData.createdMarkers) staticData.createdMarkers = {};\n\nfor (const task of TASKS) {\n  if (!isDueToday(task, today)) continue;\n\n  const marker = `[AUTO:${task.id}:${today.ymd}]`;\n  if (staticData.createdMarkers[marker]) continue;\n\n  const projectId = CONFIG.projects[task.project] || CONFIG.projects.inbox;\n\n  staticData.createdMarkers[marker] = new Date().toISOString();\n\n  due.push({\n    json: {\n      task_template_id: task.id,\n      marker,\n      title: task.title,\n      project: task.project,\n      project_id: projectId,\n      category: task.category,\n      priority: task.priority,\n      due_date: dueDateIso(today, task.time),\n      escalation: task.escalation,\n      description:\n`${marker}\nBereich: ${task.category}\nEskalation: ${task.escalation}\nAutomatisch erzeugt vom Life Backoffice.\n\n${task.description}\n\nRegel: Wenn heute zu viel ist, weiche Aufgaben verschieben statt schlecht fühlen. Harte Aufgaben bitte ernst nehmen.`,\n      telegram_message: `📌 Heute fällig: ${task.title}`,\n      autoCompleteBy: task.autoCompleteBy || [],\n      goalKey: task.goalKey || null\n    }\n  });\n}\n\nreturn due;\n"
+        },
+        "id": "7afbcf09-62cd-4d5b-9678-77329abcbf58",
+        "name": "Code - Masterliste prüfen und fällige Aufgaben bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2912,
+          1872
+        ]
+      },
+      {
+        "parameters": {
+          "taskProject": {
+            "__rl": true,
+            "value": "={{ $json.project_id }}",
+            "mode": "id"
+          },
+          "taskTitle": "={{ $json.title }}",
+          "options": {
+            "description": "={{ $json.description }}",
+            "dueDateTime": "={{ $json.due_date }}"
+          },
+          "requestOptions": {}
+        },
+        "id": "bd21ebfe-858a-41f6-9d04-4e90e6db662e",
+        "name": "Vikunja - Aufgabe erstellen",
+        "type": "n8n-nodes-vikunja.vikunja",
+        "typeVersion": 1,
+        "position": [
+          3504,
+          1808
+        ],
+        "credentials": {
+          "vikunjaApi": {
+            "id": "IsQ0AYbsFndZaCGo",
+            "name": "Vikunja account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "30 7 * * *"
+              }
+            ]
+          }
+        },
+        "id": "90066cca-56d4-4ec2-9fe1-0853f191c272",
+        "name": "Cron - 07:30 Tagesplan",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          2128,
+          2160
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const cfg = $input.first().json;\n\nconst projects = [\n  { key: 'inbox', id: cfg.VIKUNJA_PROJECT_INBOX_ID },\n  { key: 'termine', id: cfg.VIKUNJA_PROJECT_TERMINE_ID },\n  { key: 'menschen', id: cfg.VIKUNJA_PROJECT_MENSCHEN_ID },\n  { key: 'haushalt', id: cfg.VIKUNJA_PROJECT_HAUSHALT_ID },\n  { key: 'putzen', id: cfg.VIKUNJA_PROJECT_PUTZEN_ID },\n  { key: 'einkaufen', id: cfg.VIKUNJA_PROJECT_EINKAUFEN_ID },\n  { key: 'sport', id: cfg.VIKUNJA_PROJECT_SPORT_ID },\n  { key: 'finanzen', id: cfg.VIKUNJA_PROJECT_FINANZEN_ID },\n  { key: 'papierkram', id: cfg.VIKUNJA_PROJECT_PAPIERKRAM_ID },\n  { key: 'digital', id: cfg.VIKUNJA_PROJECT_DIGITAL_ID },\n  { key: 'auto', id: cfg.VIKUNJA_PROJECT_AUTO_ID },\n  { key: 'sicherheit', id: cfg.VIKUNJA_PROJECT_SICHERHEIT_ID },\n];\n\nconst validProjects = projects\n  .map(p => ({\n    key: p.key,\n    project_id: Number(p.id),\n  }))\n  .filter(p => Number.isFinite(p.project_id) && p.project_id > 0);\n\nif (validProjects.length === 0) {\n  return [\n    {\n      json: {\n        status: 'FEHLER',\n        message: 'Keine gültigen Vikunja-Projekt-IDs gefunden.',\n        input: cfg,\n      },\n    },\n  ];\n}\n\nreturn validProjects.map(p => ({\n  json: p,\n}));"
+        },
+        "id": "61611941-d134-494b-8e48-d68f0b5c97b6",
+        "name": "Code - Projektliste für Tagesplan",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2608,
+          2176
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "taskProject": {
+            "__rl": true,
+            "value": "={{$json.project_id}}",
+            "mode": "id"
+          },
+          "requestOptions": {}
+        },
+        "id": "4c614838-0637-41ad-9856-aeed054f62b6",
+        "name": "Vikunja - Aufgaben je Projekt holen Tagesplan",
+        "type": "n8n-nodes-vikunja.vikunja",
+        "typeVersion": 1,
+        "position": [
+          2832,
+          2176
+        ],
+        "credentials": {
+          "vikunjaApi": {
+            "id": "IsQ0AYbsFndZaCGo",
+            "name": "Vikunja account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nconst today = new Date();\n\nconst dateString = today.toLocaleDateString('de-DE', {\n  weekday: 'long',\n  day: '2-digit',\n  month: '2-digit',\n  year: 'numeric',\n});\n\nfunction clean(value) {\n  if (value === undefined || value === null) return '';\n  return String(value).trim();\n}\n\nfunction pickTaskName(task) {\n  return clean(\n    task.title ??\n    task.name ??\n    task.text ??\n    task.task ??\n    task.content ??\n    task.summary ??\n    'Unbenannte Aufgabe'\n  );\n}\n\nfunction pickProject(task) {\n  return clean(\n    task.project_title ??\n    task.project_name ??\n    task.project ??\n    task.namespace_name ??\n    task.bucket_title ??\n    task.key ??\n    'Ohne Projekt'\n  );\n}\n\nfunction pickDueDate(task) {\n  return clean(\n    task.due_date ??\n    task.dueDate ??\n    task.due ??\n    task.due_at ??\n    ''\n  );\n}\n\nfunction pickPriority(task) {\n  return clean(\n    task.priority ??\n    task.prio ??\n    ''\n  );\n}\n\n// Diese Begriffe werden aus dem Tagesplan entfernt.\n// Ziel: Nur echte Aufgaben anzeigen, keine Checks / Routinen / Meta-Aufgaben.\nconst ignoreWords = [\n  'kalender',\n  'termin',\n  'termine prüfen',\n  'kalender prüfen',\n  'kalender für heute prüfen',\n  'kalender für morgen prüfen',\n  'heute prüfen',\n  'morgen prüfen',\n\n  'tagesplan',\n  'tagesplan prüfen',\n  'daily',\n  'daily check',\n  'daily-check',\n  'wochenplan',\n  'wochenreview',\n  'review',\n\n  'abend check',\n  'abend-check',\n  'abendroutine',\n  'abend routine',\n\n  'backup',\n  'backup status',\n  'backup-status',\n  'backup prüfen',\n  'backup check',\n  'backup-check',\n\n  'check machen',\n  'prüfen',\n  'kontrollieren',\n  'status prüfen',\n\n  'reset',\n  'wohnungs-reset',\n  'wohnung reset',\n  'kurz resetten',\n\n  'kurz saugen',\n  'bad kurz',\n  'dusche/badewanne',\n];\n\n// Optional: Projekte/Bereiche ignorieren, falls dort nur Routinen liegen.\n// Wenn du nichts nach Projekt filtern willst, leer lassen.\nconst ignoredProjects = [\n  // Beispiel:\n  // 'termine',\n];\n\nconst tasks = items\n  .map(item => item.json)\n  .filter(task => {\n    const done =\n      task.done === true ||\n      task.is_done === true ||\n      task.completed === true ||\n      task.status === 'done';\n\n    if (done) return false;\n\n    const title = pickTaskName(task).toLowerCase();\n    const project = pickProject(task).toLowerCase();\n\n    const isIgnoredByTitle = ignoreWords.some(word =>\n      title.includes(word.toLowerCase())\n    );\n\n    const isIgnoredByProject = ignoredProjects.some(projectName =>\n      project.includes(projectName.toLowerCase())\n    );\n\n    if (isIgnoredByTitle || isIgnoredByProject) return false;\n\n    return true;\n  })\n  .map(task => ({\n    title: pickTaskName(task),\n    project: pickProject(task),\n    due: pickDueDate(task),\n    priority: pickPriority(task),\n  }))\n  .filter(task => task.title && task.title !== 'Unbenannte Aufgabe');\n\nconst taskLines = tasks.map((task, index) => {\n  const parts = [\n    `${index + 1}. ${task.title}`,\n    task.project ? `Bereich: ${task.project}` : '',\n    task.due ? `Fällig: ${task.due}` : '',\n    task.priority ? `Priorität: ${task.priority}` : '',\n  ].filter(Boolean);\n\n  return parts.join(' | ');\n});\n\nconst prompt = `\nDu bist mein persönlicher Tagesplan-Assistent.\n\nErstelle für Dennis einen kurzen, motivierenden Tagesplan für heute: ${dateString}.\n\nWichtig:\n- Nimm nur echte Aufgaben aus Vikunja.\n- Keine Meta-Aufgaben nennen.\n- Keine Routine-Checks nennen.\n- Kalender prüfen, Termine prüfen, Tagesplan prüfen, Abend-Check, Backup-Check, Reviews, Reset-Aufgaben und reine Prüfaufgaben ignorieren.\n- Keine Aufgaben erfinden.\n- Maximal 5 Hauptaufgaben.\n- Harte oder wichtige Aufgaben zuerst.\n- Telegram-tauglich, kurz und motivierend.\n- Wenn keine echten Aufgaben übrig bleiben, schreibe freundlich, dass heute keine echten Aufgaben offen sind.\n- Schreibe nicht, dass du Aufgaben ignoriert hast.\n\nEchte offene Aufgaben aus Vikunja:\n${taskLines.length > 0 ? taskLines.join('\\n') : 'Keine echten offenen Aufgaben gefunden.'}\n\nAusgabeformat:\nGuten Morgen Dennis! 👋\n\nHeute zählen vor allem diese Aufgaben:\n\n1. ...\n2. ...\n3. ...\n4. ...\n5. ...\n\nKurzer motivierender Abschlusssatz.\n`;\n\nreturn [\n  {\n    json: {\n      task_count: tasks.length,\n      prompt,\n      debug_tasks: tasks.slice(0, 30),\n      filtered_out_note: 'Meta-Aufgaben wie Kalender prüfen, Tagesplan prüfen, Abend-Check, Backup-Check und reine Prüfaufgaben wurden entfernt.',\n    },\n  },\n];"
+        },
+        "id": "c729dc39-b775-432b-9e09-2d370094eb91",
+        "name": "Code - Tagesplan Prompt bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3056,
+          2176
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const text =\n  $json.output?.[0]?.content?.[0]?.text\n  ?? $json.output?.[0]?.text\n  ?? $json.content?.[0]?.text\n  ?? $json.text\n  ?? 'Guten Morgen. Heute gibt es keinen Tagesplan.';\n\nreturn [\n  {\n    json: {\n      text,\n      telegram_text: text,\n    },\n  },\n];"
+        },
+        "id": "87842dcf-273c-48bf-b85b-99c2441ad9c5",
+        "name": "Code - Tagesplan Text extrahieren",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3584,
+          2160
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{$json.text}}",
+          "additionalFields": {}
+        },
+        "id": "c066b79c-9280-4b83-8b33-01d01a07fbcc",
+        "name": "Telegram - Tagesplan senden",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          4096,
+          2176
+        ],
+        "webhookId": "109c08bb-fc54-4db6-a361-203df5e4b027",
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "30 20 * * *"
+              }
+            ]
+          }
+        },
+        "id": "bb89f86d-4fb2-4c25-a697-0587ae80a99f",
+        "name": "Cron - 20:30 Abend-Review",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          1216,
+          2544
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const cfg = $input.first().json;\n\nconst projects = [\n  { key: 'inbox', id: cfg.VIKUNJA_PROJECT_INBOX_ID },\n  { key: 'termine', id: cfg.VIKUNJA_PROJECT_TERMINE_ID },\n  { key: 'menschen', id: cfg.VIKUNJA_PROJECT_MENSCHEN_ID },\n  { key: 'haushalt', id: cfg.VIKUNJA_PROJECT_HAUSHALT_ID },\n  { key: 'putzen', id: cfg.VIKUNJA_PROJECT_PUTZEN_ID },\n  { key: 'einkaufen', id: cfg.VIKUNJA_PROJECT_EINKAUFEN_ID },\n  { key: 'sport', id: cfg.VIKUNJA_PROJECT_SPORT_ID },\n  { key: 'finanzen', id: cfg.VIKUNJA_PROJECT_FINANZEN_ID },\n  { key: 'papierkram', id: cfg.VIKUNJA_PROJECT_PAPIERKRAM_ID },\n  { key: 'digital', id: cfg.VIKUNJA_PROJECT_DIGITAL_ID },\n  { key: 'auto', id: cfg.VIKUNJA_PROJECT_AUTO_ID },\n  { key: 'sicherheit', id: cfg.VIKUNJA_PROJECT_SICHERHEIT_ID },\n];\n\nconst validProjects = projects\n  .map(p => ({\n    key: p.key,\n    project_id: Number(p.id),\n  }))\n  .filter(p => Number.isFinite(p.project_id) && p.project_id > 0);\n\nif (validProjects.length === 0) {\n  return [\n    {\n      json: {\n        status: 'FEHLER',\n        message: 'Keine gültigen Vikunja-Projekt-IDs gefunden.',\n        input: cfg,\n      },\n    },\n  ];\n}\n\nreturn validProjects.map(p => ({\n  json: p,\n}));"
+        },
+        "id": "3f076546-f10d-425c-a491-705d4913893e",
+        "name": "Code - Projektliste für Abend-Review",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2272,
+          2560
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "taskProject": {
+            "__rl": true,
+            "value": "={{$json.project_id}}",
+            "mode": "id"
+          },
+          "requestOptions": {}
+        },
+        "id": "c95ae095-8107-42b3-923a-2bca5b497720",
+        "name": "Vikunja - Aufgaben je Projekt holen Abend",
+        "type": "n8n-nodes-vikunja.vikunja",
+        "typeVersion": 1,
+        "position": [
+          2496,
+          2560
+        ],
+        "credentials": {
+          "vikunjaApi": {
+            "id": "IsQ0AYbsFndZaCGo",
+            "name": "Vikunja account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst allItems = $input.all().map(i => i.json);\nconst now = new Date();\nconst today = now.toISOString().slice(0,10);\n\nconst todays = allItems\n  .filter(t => !t.done)\n  .filter(t => !t.due_date || (t.due_date || '').slice(0,10) <= today)\n  .sort((a,b) => (b.priority || 0) - (a.priority || 0))\n  .slice(0,40)\n  .map(t => ({\n    id: t.id,\n    title: t.title,\n    due_date: t.due_date,\n    priority: t.priority,\n    description: t.description\n  }));\n\nreturn [{\n  json: {\n    prompt: `Erstelle einen kurzen Abend-Review für Dennis per Telegram. Keine Vorwürfe. Teile in: noch offen/Vorschlag. Wenn weiche Aufgaben offen sind, schlage Verschiebung vor. Harte Aufgaben klar markieren. Offene Aufgaben: ${JSON.stringify(todays)}`\n  }\n}];\n"
+        },
+        "id": "64234e4d-40d3-4280-b5a9-e6d27dd3b094",
+        "name": "Code - Abend-Review Prompt bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2720,
+          2560
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const text =\n  $json.output?.[0]?.content?.[0]?.text\n  ?? $json.output?.[0]?.text\n  ?? $json.content?.[0]?.text\n  ?? $json.text\n  ?? 'Guten Abend. Heute gibt es keinen Abend-Review.';\n\nreturn [\n  {\n    json: {\n      text,\n      telegram_text: text,\n    },\n  },\n];"
+        },
+        "id": "39aa3335-2910-43f8-a6d6-7df510c89850",
+        "name": "Code - Abend-Review Text extrahieren",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3664,
+          2592
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "=6422093154",
+          "text": "={{$json.text}}",
+          "additionalFields": {}
+        },
+        "id": "273e7d44-4632-432d-86a0-df34fa8afe0e",
+        "name": "Telegram - Abend-Review senden",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          4032,
+          2528
+        ],
+        "webhookId": "1a29c8b8-50ac-4d6b-9a2a-173aa0184d26",
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 6
+              }
+            ]
+          }
+        },
+        "id": "ea8e3d67-dc42-4fe6-aafb-d27275f80f57",
+        "name": "Cron - Sport alle 6h prüfen",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          1440,
+          3136
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\n// HIER DEINE SPORT-PROJEKT-ID EINTRAGEN\nconst sportProjectId = 0;\n\nif (!sportProjectId) {\n  return [{ json: { error: 'SPORT_PROJECT_ID_MISSING', hint: 'Bitte im Node \"Code - Sport Projekt-ID\" die Sport-Projekt-ID eintragen.' } }];\n}\n\nreturn [{ json: { project_id: String(sportProjectId) } }];\n"
+        },
+        "id": "f74dfa0f-85f9-4532-88d6-2918d68ef4de",
+        "name": "Code - Sport Projekt-ID",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1904,
+          3024
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "taskProject": {
+            "__rl": true,
+            "value": "={{$json.project_id}}",
+            "mode": "id"
+          },
+          "requestOptions": {}
+        },
+        "id": "51e051a2-2179-4043-8810-32bad07a6fcf",
+        "name": "Vikunja - Sportaufgaben holen",
+        "type": "n8n-nodes-vikunja.vikunja",
+        "typeVersion": 1,
+        "position": [
+          2128,
+          3024
+        ],
+        "credentials": {
+          "vikunjaApi": {
+            "id": "IsQ0AYbsFndZaCGo",
+            "name": "Vikunja account"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "id": "89a112d0-4645-4333-a04d-d7e3afbd0a63",
+        "name": "Merge - Vikunja + Strava",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          2560,
+          2992
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "8f572cff-6edf-414c-ab87-fb03e9b19960",
+        "name": "Merge - plus Hevy",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          2576,
+          3216
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all().map(i => i.json);\n\n// Deutsche lokale Tagesgrenze\nconst now = new Date();\n\nfunction dateKeyBerlin(dateValue) {\n  if (!dateValue) return '';\n\n  const d = new Date(dateValue);\n  if (Number.isNaN(d.getTime())) return '';\n\n  return new Intl.DateTimeFormat('en-CA', {\n    timeZone: 'Europe/Berlin',\n    year: 'numeric',\n    month: '2-digit',\n    day: '2-digit',\n  }).format(d);\n}\n\nconst todayKey = dateKeyBerlin(now);\n\nfunction isTodayBerlin(dateValue) {\n  return dateKeyBerlin(dateValue) === todayKey;\n}\n\nfunction isStravaActivity(i) {\n  return (\n    i.source === 'strava' ||\n    i.sport_type !== undefined ||\n    i.start_date_local !== undefined ||\n    i.start_date !== undefined && i.athlete !== undefined\n  );\n}\n\nfunction isVikunjaTask(i) {\n  return (\n    i.source === 'vikunja' ||\n    i.title !== undefined ||\n    i.done !== undefined ||\n    i.due_date !== undefined\n  );\n}\n\nfunction getTaskTitle(i) {\n  return String(\n    i.title ??\n    i.name ??\n    i.text ??\n    ''\n  );\n}\n\nfunction isDone(i) {\n  return (\n    i.done === true ||\n    i.is_done === true ||\n    i.completed === true ||\n    i.status === 'done'\n  );\n}\n\n// Strava-Aktivitäten heute\nconst stravaActivitiesToday = items.filter(i => {\n  if (!isStravaActivity(i)) return false;\n\n  const activityDate =\n    i.start_date_local ??\n    i.start_date ??\n    i.raw?.start_date_local ??\n    i.raw?.start_date;\n\n  return isTodayBerlin(activityDate);\n});\n\n// Hevy optional, falls später vorhanden\nconst hevyActivitiesToday = items.filter(i => {\n  const source = String(i.source ?? '').toLowerCase();\n  if (!source.includes('hevy')) return false;\n\n  const date =\n    i.start_time ??\n    i.startTime ??\n    i.created_at ??\n    i.date ??\n    i.raw?.start_time ??\n    i.raw?.created_at;\n\n  return isTodayBerlin(date);\n});\n\n// Offene Sportaufgaben aus Vikunja\nconst sportTasks = items.filter(i => {\n  if (!isVikunjaTask(i)) return false;\n  if (isDone(i)) return false;\n\n  const title = getTaskTitle(i).toLowerCase();\n\n  return /sport|gym|training|workout|laufen|joggen|run|fitness|hevy|strava/.test(title);\n});\n\nconst workoutCountToday = stravaActivitiesToday.length + hevyActivitiesToday.length;\n\nconst stravaSummary = stravaActivitiesToday.map(a => ({\n  id: a.id,\n  name: a.name,\n  type: a.sport_type ?? a.type,\n  start: a.start_date_local ?? a.start_date,\n  moving_time: a.moving_time,\n  distance: a.distance,\n}));\n\nif (workoutCountToday === 0) {\n  return [\n    {\n      json: {\n        action: 'notify',\n        workout_count_today: 0,\n        strava_count_today: 0,\n        hevy_count_today: 0,\n        open_sport_tasks: sportTasks.length,\n        message:\n          `🏃 Sport-Status heute\\n\\n` +\n          `Strava/Laufen/Cardio: 0\\n` +\n          `Hevy/Gym/Home: 0\\n\\n` +\n          `Noch offen: ${sportTasks.length} Workout(s).\\n` +\n          `Wenn heute nichts mehr geht: Sportaufgabe im Abend-Review verschieben.`,\n      },\n    },\n  ];\n}\n\nif (sportTasks.length === 0) {\n  return [\n    {\n      json: {\n        action: 'notify',\n        workout_count_today: workoutCountToday,\n        strava_count_today: stravaActivitiesToday.length,\n        hevy_count_today: hevyActivitiesToday.length,\n        activities: stravaSummary,\n        message:\n          `✅ Sport erkannt!\\n\\n` +\n          `Heute wurden ${workoutCountToday} Workout(s) erkannt.\\n` +\n          `Strava: ${stravaActivitiesToday.length}\\n` +\n          `Hevy: ${hevyActivitiesToday.length}\\n\\n` +\n          `Es gibt aber keine passende offene Vikunja-Sportaufgabe zum Abhaken.`,\n      },\n    },\n  ];\n}\n\n// Erste passende offene Sportaufgabe abhaken\nconst task = sportTasks[0];\nconst activity = stravaActivitiesToday[0] ?? hevyActivitiesToday[0];\n\nreturn [\n  {\n    json: {\n      action: 'complete_task',\n      task_id: task.id,\n      task_title: getTaskTitle(task),\n      workout_count_today: workoutCountToday,\n      strava_count_today: stravaActivitiesToday.length,\n      hevy_count_today: hevyActivitiesToday.length,\n      activity_name: activity?.name ?? activity?.title ?? 'Workout',\n      activity_type: activity?.sport_type ?? activity?.type ?? 'Workout',\n      activity_start: activity?.start_date_local ?? activity?.start_date ?? '',\n      message:\n        `✅ Sport erkannt und Aufgabe wird abgehakt.\\n\\n` +\n        `Aktivität: ${activity?.name ?? activity?.title ?? 'Workout'}\\n` +\n        `Aufgabe: ${getTaskTitle(task)}`,\n    },\n  },\n];"
+        },
+        "id": "f77b2709-6e8f-404b-90d3-33ee459fcda5",
+        "name": "Code - Sport erkannt und Vikunja-Aktion bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2800,
+          3216
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "boolean": [
+              {
+                "value1": "={{ $json.action === 'complete_task' }}",
+                "value2": "={{ true }}"
+              }
+            ]
+          }
+        },
+        "id": "db3e8731-f484-4aa4-9ec2-7daabf128c98",
+        "name": "IF - Sportaufgabe erledigen?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 1,
+        "position": [
+          3024,
+          3216
+        ],
+        "alwaysOutputData": false
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "taskId": "={{$json.task_id}}",
+          "taskTitle": "={{$json.title}}",
+          "options": {
+            "done": true
+          },
+          "requestOptions": {}
+        },
+        "id": "094151f6-0f69-4ee3-b1b4-4fb101863c10",
+        "name": "Vikunja - Sportaufgabe abhaken",
+        "type": "n8n-nodes-vikunja.vikunja",
+        "typeVersion": 1,
+        "position": [
+          3328,
+          3024
+        ],
+        "credentials": {
+          "vikunjaApi": {
+            "id": "IsQ0AYbsFndZaCGo",
+            "name": "Vikunja account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "=6422093154",
+          "text": "=✅ Sport erkannt und abgehakt: {{$json.title}}\\n{{$json.reason}}",
+          "additionalFields": {}
+        },
+        "id": "b6c0b414-58ba-46cb-8a9a-7af90ff6d730",
+        "name": "Telegram - Sport abgehakt",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          3488,
+          3072
+        ],
+        "webhookId": "105b3d20-25c7-4148-b7dc-602eab7ac478",
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "=6422093154",
+          "text": "={{$json.message}}",
+          "additionalFields": {}
+        },
+        "id": "aad4b737-7fbd-460b-9ee6-6248d1223697",
+        "name": "Telegram - Sportstatus optional",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          3248,
+          3312
+        ],
+        "webhookId": "366cc698-07f6-40e9-b3e0-2e1527239981",
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "5eb7883d-299b-4899-8915-d3794ad3dc77",
+                "name": "VIKUNJA_PROJECT_INBOX_ID",
+                "value": "1",
+                "type": "string"
+              },
+              {
+                "id": "f80a51af-c8fc-46bf-ac27-2dfe7e820c76",
+                "name": "VIKUNJA_PROJECT_TERMINE_ID",
+                "value": "13",
+                "type": "string"
+              },
+              {
+                "id": "e34f6585-c912-4d9f-b895-d05ef4882aff",
+                "name": "VIKUNJA_PROJECT_MENSCHEN_ID",
+                "value": "14",
+                "type": "string"
+              },
+              {
+                "id": "05c257f0-d044-49a0-9ff3-4d751fe7bc2d",
+                "name": "VIKUNJA_PROJECT_HAUSHALT_ID",
+                "value": "15",
+                "type": "string"
+              },
+              {
+                "id": "b1715777-194f-466c-a9a7-b0a238c68072",
+                "name": "VIKUNJA_PROJECT_PUTZEN_ID",
+                "value": "16",
+                "type": "string"
+              },
+              {
+                "id": "b16e732e-209b-438d-9e98-d21786ef99f5",
+                "name": "VIKUNJA_PROJECT_EINKAUFEN_ID",
+                "value": "17",
+                "type": "string"
+              },
+              {
+                "id": "16e346b2-ed2c-4b9f-99e9-6c26e3bdb806",
+                "name": "VIKUNJA_PROJECT_SPORT_ID",
+                "value": "18",
+                "type": "string"
+              },
+              {
+                "id": "c23f8d7e-64e0-430e-9762-91542ff2a6db",
+                "name": "VIKUNJA_PROJECT_FINANZEN_ID",
+                "value": "19",
+                "type": "string"
+              },
+              {
+                "id": "3e347ad8-1966-4aa7-9b74-03e8d1ceb492",
+                "name": "VIKUNJA_PROJECT_PAPIERKRAM_ID",
+                "value": "20",
+                "type": "string"
+              },
+              {
+                "id": "cb27eed6-3bd7-4571-ae12-b5b77022f335",
+                "name": "VIKUNJA_PROJECT_DIGITAL_ID",
+                "value": "21",
+                "type": "string"
+              },
+              {
+                "id": "132da73d-79c8-4541-b920-ddff8a0912bc",
+                "name": "VIKUNJA_PROJECT_AUTO_ID",
+                "value": "22",
+                "type": "string"
+              },
+              {
+                "id": "7b71269d-114a-4f75-8971-304c054db855",
+                "name": "VIKUNJA_PROJECT_SICHERHEIT_ID",
+                "value": "23",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2512,
+          1888
+        ],
+        "id": "7bb9b9f2-c762-41c4-9c94-22ea9c59aa95",
+        "name": "Konfiguration"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "5eb7883d-299b-4899-8915-d3794ad3dc77",
+                "name": "VIKUNJA_PROJECT_INBOX_ID",
+                "value": "1",
+                "type": "string"
+              },
+              {
+                "id": "f80a51af-c8fc-46bf-ac27-2dfe7e820c76",
+                "name": "VIKUNJA_PROJECT_TERMINE_ID",
+                "value": "13",
+                "type": "string"
+              },
+              {
+                "id": "e34f6585-c912-4d9f-b895-d05ef4882aff",
+                "name": "VIKUNJA_PROJECT_MENSCHEN_ID",
+                "value": "14",
+                "type": "string"
+              },
+              {
+                "id": "05c257f0-d044-49a0-9ff3-4d751fe7bc2d",
+                "name": "VIKUNJA_PROJECT_HAUSHALT_ID",
+                "value": "15",
+                "type": "string"
+              },
+              {
+                "id": "b1715777-194f-466c-a9a7-b0a238c68072",
+                "name": "VIKUNJA_PROJECT_PUTZEN_ID",
+                "value": "16",
+                "type": "string"
+              },
+              {
+                "id": "b16e732e-209b-438d-9e98-d21786ef99f5",
+                "name": "VIKUNJA_PROJECT_EINKAUFEN_ID",
+                "value": "17",
+                "type": "string"
+              },
+              {
+                "id": "16e346b2-ed2c-4b9f-99e9-6c26e3bdb806",
+                "name": "VIKUNJA_PROJECT_SPORT_ID",
+                "value": "18",
+                "type": "string"
+              },
+              {
+                "id": "c23f8d7e-64e0-430e-9762-91542ff2a6db",
+                "name": "VIKUNJA_PROJECT_FINANZEN_ID",
+                "value": "19",
+                "type": "string"
+              },
+              {
+                "id": "3e347ad8-1966-4aa7-9b74-03e8d1ceb492",
+                "name": "VIKUNJA_PROJECT_PAPIERKRAM_ID",
+                "value": "20",
+                "type": "string"
+              },
+              {
+                "id": "cb27eed6-3bd7-4571-ae12-b5b77022f335",
+                "name": "VIKUNJA_PROJECT_DIGITAL_ID",
+                "value": "21",
+                "type": "string"
+              },
+              {
+                "id": "132da73d-79c8-4541-b920-ddff8a0912bc",
+                "name": "VIKUNJA_PROJECT_AUTO_ID",
+                "value": "22",
+                "type": "string"
+              },
+              {
+                "id": "7b71269d-114a-4f75-8971-304c054db855",
+                "name": "VIKUNJA_PROJECT_SICHERHEIT_ID",
+                "value": "23",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2368,
+          2176
+        ],
+        "id": "782b520e-4d8a-4077-832c-d6ac4b22a8d9",
+        "name": "Konfiguration2"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.4-nano-2026-03-17",
+            "mode": "list",
+            "cachedResultName": "GPT-5.4-NANO-2026-03-17"
+          },
+          "responses": {
+            "values": [
+              {
+                "content": "={{ $json.prompt }}\nen"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          3264,
+          2176
+        ],
+        "id": "6d8e25a0-c19c-4366-98f9-2deb6133acae",
+        "name": "Message a model",
+        "credentials": {
+          "openAiApi": {
+            "id": "EVf6W0jyq4ACcS36",
+            "name": "OpenAI account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "5eb7883d-299b-4899-8915-d3794ad3dc77",
+                "name": "VIKUNJA_PROJECT_INBOX_ID",
+                "value": "1",
+                "type": "string"
+              },
+              {
+                "id": "f80a51af-c8fc-46bf-ac27-2dfe7e820c76",
+                "name": "VIKUNJA_PROJECT_TERMINE_ID",
+                "value": "13",
+                "type": "string"
+              },
+              {
+                "id": "e34f6585-c912-4d9f-b895-d05ef4882aff",
+                "name": "VIKUNJA_PROJECT_MENSCHEN_ID",
+                "value": "14",
+                "type": "string"
+              },
+              {
+                "id": "05c257f0-d044-49a0-9ff3-4d751fe7bc2d",
+                "name": "VIKUNJA_PROJECT_HAUSHALT_ID",
+                "value": "15",
+                "type": "string"
+              },
+              {
+                "id": "b1715777-194f-466c-a9a7-b0a238c68072",
+                "name": "VIKUNJA_PROJECT_PUTZEN_ID",
+                "value": "16",
+                "type": "string"
+              },
+              {
+                "id": "b16e732e-209b-438d-9e98-d21786ef99f5",
+                "name": "VIKUNJA_PROJECT_EINKAUFEN_ID",
+                "value": "17",
+                "type": "string"
+              },
+              {
+                "id": "16e346b2-ed2c-4b9f-99e9-6c26e3bdb806",
+                "name": "VIKUNJA_PROJECT_SPORT_ID",
+                "value": "18",
+                "type": "string"
+              },
+              {
+                "id": "c23f8d7e-64e0-430e-9762-91542ff2a6db",
+                "name": "VIKUNJA_PROJECT_FINANZEN_ID",
+                "value": "19",
+                "type": "string"
+              },
+              {
+                "id": "3e347ad8-1966-4aa7-9b74-03e8d1ceb492",
+                "name": "VIKUNJA_PROJECT_PAPIERKRAM_ID",
+                "value": "20",
+                "type": "string"
+              },
+              {
+                "id": "cb27eed6-3bd7-4571-ae12-b5b77022f335",
+                "name": "VIKUNJA_PROJECT_DIGITAL_ID",
+                "value": "21",
+                "type": "string"
+              },
+              {
+                "id": "132da73d-79c8-4541-b920-ddff8a0912bc",
+                "name": "VIKUNJA_PROJECT_AUTO_ID",
+                "value": "22",
+                "type": "string"
+              },
+              {
+                "id": "7b71269d-114a-4f75-8971-304c054db855",
+                "name": "VIKUNJA_PROJECT_SICHERHEIT_ID",
+                "value": "23",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1696,
+          2544
+        ],
+        "id": "0a1fffa5-68b3-4222-a1b9-1ef8d97134f9",
+        "name": "Konfiguration3"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.4-nano",
+            "mode": "list",
+            "cachedResultName": "GPT-5.4-NANO"
+          },
+          "responses": {
+            "values": [
+              {
+                "content": "={{ $json.prompt }}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          2928,
+          2560
+        ],
+        "id": "d47af849-0f11-4745-bc01-23f6fab4ba6a",
+        "name": "Message a model1",
+        "credentials": {
+          "openAiApi": {
+            "id": "EVf6W0jyq4ACcS36",
+            "name": "OpenAI account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll"
+        },
+        "type": "n8n-nodes-base.strava",
+        "typeVersion": 1.1,
+        "position": [
+          1872,
+          3280
+        ],
+        "id": "50cc54e5-28c5-4f63-80a3-67d27888dd24",
+        "name": "Get many activities",
+        "credentials": {
+          "stravaOAuth2Api": {
+            "id": "XmPEc4l78f5iHNF7",
+            "name": "Strava account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Cron - 05:30 Backoffice-Aufgaben erzeugen": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Masterliste prüfen und fällige Aufgaben bauen": {
+        "main": [
+          [
+            {
+              "node": "Vikunja - Aufgabe erstellen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cron - 07:30 Tagesplan": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Projektliste für Tagesplan": {
+        "main": [
+          [
+            {
+              "node": "Vikunja - Aufgaben je Projekt holen Tagesplan",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Vikunja - Aufgaben je Projekt holen Tagesplan": {
+        "main": [
+          [
+            {
+              "node": "Code - Tagesplan Prompt bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Tagesplan Prompt bauen": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Tagesplan Text extrahieren": {
+        "main": [
+          [
+            {
+              "node": "Telegram - Tagesplan senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cron - 20:30 Abend-Review": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Projektliste für Abend-Review": {
+        "main": [
+          [
+            {
+              "node": "Vikunja - Aufgaben je Projekt holen Abend",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Vikunja - Aufgaben je Projekt holen Abend": {
+        "main": [
+          [
+            {
+              "node": "Code - Abend-Review Prompt bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Abend-Review Prompt bauen": {
+        "main": [
+          [
+            {
+              "node": "Message a model1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Abend-Review Text extrahieren": {
+        "main": [
+          [
+            {
+              "node": "Telegram - Abend-Review senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cron - Sport alle 6h prüfen": {
+        "main": [
+          [
+            {
+              "node": "Code - Sport Projekt-ID",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get many activities",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Sport Projekt-ID": {
+        "main": [
+          [
+            {
+              "node": "Vikunja - Sportaufgaben holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Vikunja - Sportaufgaben holen": {
+        "main": [
+          [
+            {
+              "node": "Merge - Vikunja + Strava",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge - Vikunja + Strava": {
+        "main": [
+          [
+            {
+              "node": "Merge - plus Hevy",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge - plus Hevy": {
+        "main": [
+          [
+            {
+              "node": "Code - Sport erkannt und Vikunja-Aktion bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code - Sport erkannt und Vikunja-Aktion bauen": {
+        "main": [
+          [
+            {
+              "node": "IF - Sportaufgabe erledigen?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF - Sportaufgabe erledigen?": {
+        "main": [
+          [
+            {
+              "node": "Vikunja - Sportaufgabe abhaken",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Telegram - Sportstatus optional",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Vikunja - Sportaufgabe abhaken": {
+        "main": [
+          [
+            {
+              "node": "Telegram - Sport abgehakt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Konfiguration": {
+        "main": [
+          [
+            {
+              "node": "Code - Masterliste prüfen und fällige Aufgaben bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Vikunja - Aufgabe erstellen": {
+        "main": [
+          []
+        ]
+      },
+      "Konfiguration2": {
+        "main": [
+          [
+            {
+              "node": "Code - Projektliste für Tagesplan",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Code - Tagesplan Text extrahieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Konfiguration3": {
+        "main": [
+          [
+            {
+              "node": "Code - Projektliste für Abend-Review",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model1": {
+        "main": [
+          [
+            {
+              "node": "Code - Abend-Review Text extrahieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get many activities": {
+        "main": [
+          [
+            {
+              "node": "Merge - Vikunja + Strava",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": "Version a82362a8",
+    "description": "",
+    "autosaved": true
+  },
+  "activeVersionId": "a82362a8-c5cd-486e-bd59-4f532870c645",
   "connections": {
     "Cron - 05:30 Backoffice-Aufgaben erzeugen": {
       "main": [
@@ -29,7 +1167,7 @@
       "main": [
         [
           {
-            "node": "Code - Projektliste für Tagesplan",
+            "node": "Konfiguration2",
             "type": "main",
             "index": 0
           }
@@ -62,18 +1200,7 @@
       "main": [
         [
           {
-            "node": "ChatGPT - Tagesplan formulieren",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ChatGPT - Tagesplan formulieren": {
-      "main": [
-        [
-          {
-            "node": "Code - Tagesplan Text extrahieren",
+            "node": "Message a model",
             "type": "main",
             "index": 0
           }
@@ -95,7 +1222,7 @@
       "main": [
         [
           {
-            "node": "Code - Projektliste für Abend-Review",
+            "node": "Konfiguration3",
             "type": "main",
             "index": 0
           }
@@ -128,18 +1255,7 @@
       "main": [
         [
           {
-            "node": "ChatGPT - Abend-Review formulieren",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ChatGPT - Abend-Review formulieren": {
-      "main": [
-        [
-          {
-            "node": "Code - Abend-Review Text extrahieren",
+            "node": "Message a model1",
             "type": "main",
             "index": 0
           }
@@ -166,12 +1282,7 @@
             "index": 0
           },
           {
-            "node": "Strava - Aktivitäten holen optional",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Hevy - Workouts holen optional",
+            "node": "Get many activities",
             "type": "main",
             "index": 0
           }
@@ -200,17 +1311,6 @@
         ]
       ]
     },
-    "Strava - Aktivitäten holen optional": {
-      "main": [
-        [
-          {
-            "node": "Merge - Vikunja + Strava",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
     "Merge - Vikunja + Strava": {
       "main": [
         [
@@ -218,17 +1318,6 @@
             "node": "Merge - plus Hevy",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Hevy - Workouts holen optional": {
-      "main": [
-        [
-          {
-            "node": "Merge - plus Hevy",
-            "type": "main",
-            "index": 1
           }
         ]
       ]
@@ -300,93 +1389,57 @@
         []
       ]
     },
-    "Manuell starten": {
+    "Konfiguration2": {
       "main": [
         [
           {
-            "node": "Konfiguration1",
+            "node": "Code - Projektliste für Tagesplan",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Projekte prüfen und fehlende bauen": {
+    "Message a model": {
       "main": [
         [
           {
-            "node": "Fehlen Projekte?",
+            "node": "Code - Tagesplan Text extrahieren",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Fehlen Projekte?": {
+    "Konfiguration3": {
       "main": [
         [
           {
-            "node": "Loop Over Items1",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Ausgabe - existieren bereits",
+            "node": "Code - Projektliste für Abend-Review",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Konfiguration1": {
+    "Message a model1": {
       "main": [
         [
           {
-            "node": "Get many projects",
+            "node": "Code - Abend-Review Text extrahieren",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Loop Over Items1": {
+    "Get many activities": {
       "main": [
         [
           {
-            "node": "Create a project",
+            "node": "Merge - Vikunja + Strava",
             "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Loop Over Items1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get many projects": {
-      "main": [
-        [
-          {
-            "node": "Projekte prüfen und fehlende bauen",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create a project": {
-      "main": [
-        [
-          {
-            "node": "Ausgabe - Projekt IDs",
-            "type": "main",
-            "index": 0
+            "index": 1
           }
         ]
       ]
@@ -429,8 +1482,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        2384,
-        1952
+        2160,
+        1760
       ]
     },
     {
@@ -491,13 +1544,13 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        2384,
-        2176
+        2128,
+        2160
       ]
     },
     {
       "parameters": {
-        "jsCode": "\n// HIER DEINE VIKUNJA PROJEKT-IDs EINTRAGEN\n// 0 oder leer lassen = wird ignoriert\nconst projects = [\n  { key: 'inbox', id: 0 },\n  { key: 'termine', id: 0 },\n  { key: 'menschen', id: 0 },\n  { key: 'haushalt', id: 0 },\n  { key: 'putzen', id: 0 },\n  { key: 'einkaufen', id: 0 },\n  { key: 'sport', id: 0 },\n  { key: 'finanzen', id: 0 },\n  { key: 'papierkram', id: 0 },\n  { key: 'digital', id: 0 },\n  { key: 'auto', id: 0 },\n  { key: 'sicherheit', id: 0 }\n];\n\nreturn projects\n  .filter(p => Number(p.id) > 0)\n  .map(p => ({ json: { project_key: p.key, project_id: String(p.id) } }));\n"
+        "jsCode": "const cfg = $input.first().json;\n\nconst projects = [\n  { key: 'inbox', id: cfg.VIKUNJA_PROJECT_INBOX_ID },\n  { key: 'termine', id: cfg.VIKUNJA_PROJECT_TERMINE_ID },\n  { key: 'menschen', id: cfg.VIKUNJA_PROJECT_MENSCHEN_ID },\n  { key: 'haushalt', id: cfg.VIKUNJA_PROJECT_HAUSHALT_ID },\n  { key: 'putzen', id: cfg.VIKUNJA_PROJECT_PUTZEN_ID },\n  { key: 'einkaufen', id: cfg.VIKUNJA_PROJECT_EINKAUFEN_ID },\n  { key: 'sport', id: cfg.VIKUNJA_PROJECT_SPORT_ID },\n  { key: 'finanzen', id: cfg.VIKUNJA_PROJECT_FINANZEN_ID },\n  { key: 'papierkram', id: cfg.VIKUNJA_PROJECT_PAPIERKRAM_ID },\n  { key: 'digital', id: cfg.VIKUNJA_PROJECT_DIGITAL_ID },\n  { key: 'auto', id: cfg.VIKUNJA_PROJECT_AUTO_ID },\n  { key: 'sicherheit', id: cfg.VIKUNJA_PROJECT_SICHERHEIT_ID },\n];\n\nconst validProjects = projects\n  .map(p => ({\n    key: p.key,\n    project_id: Number(p.id),\n  }))\n  .filter(p => Number.isFinite(p.project_id) && p.project_id > 0);\n\nif (validProjects.length === 0) {\n  return [\n    {\n      json: {\n        status: 'FEHLER',\n        message: 'Keine gültigen Vikunja-Projekt-IDs gefunden.',\n        input: cfg,\n      },\n    },\n  ];\n}\n\nreturn validProjects.map(p => ({\n  json: p,\n}));"
       },
       "id": "61611941-d134-494b-8e48-d68f0b5c97b6",
       "name": "Code - Projektliste für Tagesplan",
@@ -525,11 +1578,17 @@
       "position": [
         2832,
         2176
-      ]
+      ],
+      "credentials": {
+        "vikunjaApi": {
+          "id": "IsQ0AYbsFndZaCGo",
+          "name": "Vikunja account"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "\nconst allItems = $input.all().map(i => i.json);\nconst now = new Date();\nconst plus3 = new Date(now.getTime() + 3*24*60*60*1000);\n\nconst relevant = allItems\n  .filter(t => !t.done)\n  .filter(t => {\n    if (!t.due_date) return false;\n    const d = new Date(t.due_date);\n    return d <= plus3;\n  })\n  .sort((a,b) => {\n    const prio = (b.priority || 0) - (a.priority || 0);\n    if (prio !== 0) return prio;\n    return new Date(a.due_date || 0) - new Date(b.due_date || 0);\n  })\n  .slice(0,40)\n  .map(t => ({\n    title: t.title,\n    due_date: t.due_date,\n    priority: t.priority,\n    description: t.description\n  }));\n\nreturn [{\n  json: {\n    prompt: `Erstelle einen motivierenden Tagesplan für Dennis als Telegram-Nachricht. Maximal 5 Hauptaufgaben. Harte Aufgaben zuerst: Termine, Rechnungen, Fristen, Sicherheit, Backups. Danach Haushalt/Sport. Kleine Schritte, keine Vorwürfe. Offene Aufgaben: ${JSON.stringify(relevant)}`\n  }\n}];\n"
+        "jsCode": "const items = $input.all();\n\nconst today = new Date();\n\nconst dateString = today.toLocaleDateString('de-DE', {\n  weekday: 'long',\n  day: '2-digit',\n  month: '2-digit',\n  year: 'numeric',\n});\n\nfunction clean(value) {\n  if (value === undefined || value === null) return '';\n  return String(value).trim();\n}\n\nfunction pickTaskName(task) {\n  return clean(\n    task.title ??\n    task.name ??\n    task.text ??\n    task.task ??\n    task.content ??\n    task.summary ??\n    'Unbenannte Aufgabe'\n  );\n}\n\nfunction pickProject(task) {\n  return clean(\n    task.project_title ??\n    task.project_name ??\n    task.project ??\n    task.namespace_name ??\n    task.bucket_title ??\n    task.key ??\n    'Ohne Projekt'\n  );\n}\n\nfunction pickDueDate(task) {\n  return clean(\n    task.due_date ??\n    task.dueDate ??\n    task.due ??\n    task.due_at ??\n    ''\n  );\n}\n\nfunction pickPriority(task) {\n  return clean(\n    task.priority ??\n    task.prio ??\n    ''\n  );\n}\n\n// Diese Begriffe werden aus dem Tagesplan entfernt.\n// Ziel: Nur echte Aufgaben anzeigen, keine Checks / Routinen / Meta-Aufgaben.\nconst ignoreWords = [\n  'kalender',\n  'termin',\n  'termine prüfen',\n  'kalender prüfen',\n  'kalender für heute prüfen',\n  'kalender für morgen prüfen',\n  'heute prüfen',\n  'morgen prüfen',\n\n  'tagesplan',\n  'tagesplan prüfen',\n  'daily',\n  'daily check',\n  'daily-check',\n  'wochenplan',\n  'wochenreview',\n  'review',\n\n  'abend check',\n  'abend-check',\n  'abendroutine',\n  'abend routine',\n\n  'backup',\n  'backup status',\n  'backup-status',\n  'backup prüfen',\n  'backup check',\n  'backup-check',\n\n  'check machen',\n  'prüfen',\n  'kontrollieren',\n  'status prüfen',\n\n  'reset',\n  'wohnungs-reset',\n  'wohnung reset',\n  'kurz resetten',\n\n  'kurz saugen',\n  'bad kurz',\n  'dusche/badewanne',\n];\n\n// Optional: Projekte/Bereiche ignorieren, falls dort nur Routinen liegen.\n// Wenn du nichts nach Projekt filtern willst, leer lassen.\nconst ignoredProjects = [\n  // Beispiel:\n  // 'termine',\n];\n\nconst tasks = items\n  .map(item => item.json)\n  .filter(task => {\n    const done =\n      task.done === true ||\n      task.is_done === true ||\n      task.completed === true ||\n      task.status === 'done';\n\n    if (done) return false;\n\n    const title = pickTaskName(task).toLowerCase();\n    const project = pickProject(task).toLowerCase();\n\n    const isIgnoredByTitle = ignoreWords.some(word =>\n      title.includes(word.toLowerCase())\n    );\n\n    const isIgnoredByProject = ignoredProjects.some(projectName =>\n      project.includes(projectName.toLowerCase())\n    );\n\n    if (isIgnoredByTitle || isIgnoredByProject) return false;\n\n    return true;\n  })\n  .map(task => ({\n    title: pickTaskName(task),\n    project: pickProject(task),\n    due: pickDueDate(task),\n    priority: pickPriority(task),\n  }))\n  .filter(task => task.title && task.title !== 'Unbenannte Aufgabe');\n\nconst taskLines = tasks.map((task, index) => {\n  const parts = [\n    `${index + 1}. ${task.title}`,\n    task.project ? `Bereich: ${task.project}` : '',\n    task.due ? `Fällig: ${task.due}` : '',\n    task.priority ? `Priorität: ${task.priority}` : '',\n  ].filter(Boolean);\n\n  return parts.join(' | ');\n});\n\nconst prompt = `\nDu bist mein persönlicher Tagesplan-Assistent.\n\nErstelle für Dennis einen kurzen, motivierenden Tagesplan für heute: ${dateString}.\n\nWichtig:\n- Nimm nur echte Aufgaben aus Vikunja.\n- Keine Meta-Aufgaben nennen.\n- Keine Routine-Checks nennen.\n- Kalender prüfen, Termine prüfen, Tagesplan prüfen, Abend-Check, Backup-Check, Reviews, Reset-Aufgaben und reine Prüfaufgaben ignorieren.\n- Keine Aufgaben erfinden.\n- Maximal 5 Hauptaufgaben.\n- Harte oder wichtige Aufgaben zuerst.\n- Telegram-tauglich, kurz und motivierend.\n- Wenn keine echten Aufgaben übrig bleiben, schreibe freundlich, dass heute keine echten Aufgaben offen sind.\n- Schreibe nicht, dass du Aufgaben ignoriert hast.\n\nEchte offene Aufgaben aus Vikunja:\n${taskLines.length > 0 ? taskLines.join('\\n') : 'Keine echten offenen Aufgaben gefunden.'}\n\nAusgabeformat:\nGuten Morgen Dennis! 👋\n\nHeute zählen vor allem diese Aufgaben:\n\n1. ...\n2. ...\n3. ...\n4. ...\n5. ...\n\nKurzer motivierender Abschlusssatz.\n`;\n\nreturn [\n  {\n    json: {\n      task_count: tasks.length,\n      prompt,\n      debug_tasks: tasks.slice(0, 30),\n      filtered_out_note: 'Meta-Aufgaben wie Kalender prüfen, Tagesplan prüfen, Abend-Check, Backup-Check und reine Prüfaufgaben wurden entfernt.',\n    },\n  },\n];"
       },
       "id": "c729dc39-b775-432b-9e09-2d370094eb91",
       "name": "Code - Tagesplan Prompt bauen",
@@ -538,56 +1597,24 @@
       "position": [
         3056,
         2176
-      ],
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.openai.com/v1/chat/completions",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.OPENAI_API_KEY}}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"gpt-4.1-mini\",\n  \"temperature\": 0.3,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Du bist Dennis' freundlicher Tagesplaner. Antworte kurz als Telegram-Nachricht. Maximal 5 Aufgaben, klare Reihenfolge, keine Vorwürfe.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{$json.prompt}}\"\n    }\n  ]\n}\n",
-        "options": {}
-      },
-      "id": "1e0d536a-b0a4-408b-bf8f-7533a498b759",
-      "name": "ChatGPT - Tagesplan formulieren",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        3280,
-        2176
       ]
     },
     {
       "parameters": {
-        "jsCode": "const text = $json.choices?.[0]?.message?.content || 'Guten Morgen. Heute gibt es keinen Tagesplan.'; return [{json:{text}}];"
+        "jsCode": "const text =\n  $json.output?.[0]?.content?.[0]?.text\n  ?? $json.output?.[0]?.text\n  ?? $json.content?.[0]?.text\n  ?? $json.text\n  ?? 'Guten Morgen. Heute gibt es keinen Tagesplan.';\n\nreturn [\n  {\n    json: {\n      text,\n      telegram_text: text,\n    },\n  },\n];"
       },
       "id": "87842dcf-273c-48bf-b85b-99c2441ad9c5",
       "name": "Code - Tagesplan Text extrahieren",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3504,
-        2176
+        3584,
+        2160
       ]
     },
     {
       "parameters": {
-        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "chatId": "6422093154",
         "text": "={{$json.text}}",
         "additionalFields": {}
       },
@@ -596,10 +1623,16 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3728,
+        4096,
         2176
       ],
-      "webhookId": "109c08bb-fc54-4db6-a361-203df5e4b027"
+      "webhookId": "109c08bb-fc54-4db6-a361-203df5e4b027",
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      }
     },
     {
       "parameters": {
@@ -617,21 +1650,21 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        2384,
-        2400
+        1216,
+        2544
       ]
     },
     {
       "parameters": {
-        "jsCode": "\n// HIER DEINE VIKUNJA PROJEKT-IDs EINTRAGEN\n// 0 oder leer lassen = wird ignoriert\nconst projects = [\n  { key: 'inbox', id: 0 },\n  { key: 'termine', id: 0 },\n  { key: 'menschen', id: 0 },\n  { key: 'haushalt', id: 0 },\n  { key: 'putzen', id: 0 },\n  { key: 'einkaufen', id: 0 },\n  { key: 'sport', id: 0 },\n  { key: 'finanzen', id: 0 },\n  { key: 'papierkram', id: 0 },\n  { key: 'digital', id: 0 },\n  { key: 'auto', id: 0 },\n  { key: 'sicherheit', id: 0 }\n];\n\nreturn projects\n  .filter(p => Number(p.id) > 0)\n  .map(p => ({ json: { project_key: p.key, project_id: String(p.id) } }));\n"
+        "jsCode": "const cfg = $input.first().json;\n\nconst projects = [\n  { key: 'inbox', id: cfg.VIKUNJA_PROJECT_INBOX_ID },\n  { key: 'termine', id: cfg.VIKUNJA_PROJECT_TERMINE_ID },\n  { key: 'menschen', id: cfg.VIKUNJA_PROJECT_MENSCHEN_ID },\n  { key: 'haushalt', id: cfg.VIKUNJA_PROJECT_HAUSHALT_ID },\n  { key: 'putzen', id: cfg.VIKUNJA_PROJECT_PUTZEN_ID },\n  { key: 'einkaufen', id: cfg.VIKUNJA_PROJECT_EINKAUFEN_ID },\n  { key: 'sport', id: cfg.VIKUNJA_PROJECT_SPORT_ID },\n  { key: 'finanzen', id: cfg.VIKUNJA_PROJECT_FINANZEN_ID },\n  { key: 'papierkram', id: cfg.VIKUNJA_PROJECT_PAPIERKRAM_ID },\n  { key: 'digital', id: cfg.VIKUNJA_PROJECT_DIGITAL_ID },\n  { key: 'auto', id: cfg.VIKUNJA_PROJECT_AUTO_ID },\n  { key: 'sicherheit', id: cfg.VIKUNJA_PROJECT_SICHERHEIT_ID },\n];\n\nconst validProjects = projects\n  .map(p => ({\n    key: p.key,\n    project_id: Number(p.id),\n  }))\n  .filter(p => Number.isFinite(p.project_id) && p.project_id > 0);\n\nif (validProjects.length === 0) {\n  return [\n    {\n      json: {\n        status: 'FEHLER',\n        message: 'Keine gültigen Vikunja-Projekt-IDs gefunden.',\n        input: cfg,\n      },\n    },\n  ];\n}\n\nreturn validProjects.map(p => ({\n  json: p,\n}));"
       },
       "id": "3f076546-f10d-425c-a491-705d4913893e",
       "name": "Code - Projektliste für Abend-Review",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2608,
-        2400
+        2272,
+        2560
       ]
     },
     {
@@ -649,9 +1682,15 @@
       "type": "n8n-nodes-vikunja.vikunja",
       "typeVersion": 1,
       "position": [
-        2832,
-        2400
-      ]
+        2496,
+        2560
+      ],
+      "credentials": {
+        "vikunjaApi": {
+          "id": "IsQ0AYbsFndZaCGo",
+          "name": "Vikunja account"
+        }
+      }
     },
     {
       "parameters": {
@@ -662,57 +1701,26 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3056,
-        2400
+        2720,
+        2560
       ]
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.openai.com/v1/chat/completions",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.OPENAI_API_KEY}}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"gpt-4.1-mini\",\n  \"temperature\": 0.3,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Du bist Dennis' freundlicher Abend-Review-Assistent. Kurz, hilfreich, keine Vorwürfe. Gib konkrete Verschiebevorschläge.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{$json.prompt}}\"\n    }\n  ]\n}\n",
-        "options": {}
-      },
-      "id": "0c66178a-1250-47e5-a74a-91fc2db9f49d",
-      "name": "ChatGPT - Abend-Review formulieren",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        3280,
-        2400
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const text = $json.choices?.[0]?.message?.content || 'Abend-Check: Keine offenen Aufgaben gefunden.'; return [{json:{text}}];"
+        "jsCode": "const text =\n  $json.output?.[0]?.content?.[0]?.text\n  ?? $json.output?.[0]?.text\n  ?? $json.content?.[0]?.text\n  ?? $json.text\n  ?? 'Guten Abend. Heute gibt es keinen Abend-Review.';\n\nreturn [\n  {\n    json: {\n      text,\n      telegram_text: text,\n    },\n  },\n];"
       },
       "id": "39aa3335-2910-43f8-a6d6-7df510c89850",
       "name": "Code - Abend-Review Text extrahieren",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3504,
-        2400
+        3664,
+        2592
       ]
     },
     {
       "parameters": {
-        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "chatId": "=6422093154",
         "text": "={{$json.text}}",
         "additionalFields": {}
       },
@@ -721,10 +1729,16 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3728,
-        2400
+        4032,
+        2528
       ],
-      "webhookId": "1a29c8b8-50ac-4d6b-9a2a-173aa0184d26"
+      "webhookId": "1a29c8b8-50ac-4d6b-9a2a-173aa0184d26",
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      }
     },
     {
       "parameters": {
@@ -742,8 +1756,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        2384,
-        2816
+        1440,
+        3136
       ]
     },
     {
@@ -755,8 +1769,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2608,
-        2624
+        1904,
+        3024
       ]
     },
     {
@@ -774,55 +1788,15 @@
       "type": "n8n-nodes-vikunja.vikunja",
       "typeVersion": 1,
       "position": [
-        2832,
-        2624
-      ]
-    },
-    {
-      "parameters": {
-        "url": "https://www.strava.com/api/v3/athlete/activities?per_page=30",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.STRAVA_ACCESS_TOKEN}}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "b0fd96ea-8d21-48f2-8311-1d516ff72998",
-      "name": "Strava - Aktivitäten holen optional",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2832,
-        2816
-      ]
-    },
-    {
-      "parameters": {
-        "url": "https://api.hevyapp.com/v1/workouts",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "api-key",
-              "value": "={{$env.HEVY_API_KEY}}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "be728b54-8cc4-49eb-a5fb-875516fe2bbe",
-      "name": "Hevy - Workouts holen optional",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        3056,
-        2992
-      ]
+        2128,
+        3024
+      ],
+      "credentials": {
+        "vikunjaApi": {
+          "id": "IsQ0AYbsFndZaCGo",
+          "name": "Vikunja account"
+        }
+      }
     },
     {
       "parameters": {},
@@ -831,8 +1805,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        3056,
-        2720
+        2560,
+        2992
       ]
     },
     {
@@ -842,31 +1816,30 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
       "position": [
-        3280,
-        2816
+        2576,
+        3216
       ]
     },
     {
       "parameters": {
-        "jsCode": "\n// ==========================================================\n// SPORT AUTO-COMPLETE LOGIK v2\n// Strava = Laufen/Cardio draußen\n// Hevy = Gym/Home-Workouts\n//\n// Ziel:\n// - Wochenziel: 3 Workouts pro Woche\n// - Strava-Aktivitäten zählen als Cardio/Laufen\n// - Hevy-Workouts zählen als Gym/Home\n// - Wenn heute ein Workout erkannt wurde: heutige/offene Sport-Aufgabe abhaken\n// - Wenn diese Woche schon 3 Workouts erkannt wurden: offene Sport-Aufgabe abhaken\n// ==========================================================\n\nfunction startOfWeek(d) {\n  const x = new Date(d);\n  const day = x.getDay(); // 0 Sunday\n  const diff = (day === 0 ? -6 : 1 - day);\n  x.setDate(x.getDate() + diff);\n  x.setHours(0,0,0,0);\n  return x;\n}\n\nfunction ymd(date) {\n  if (!date) return '';\n  return new Date(date).toISOString().slice(0, 10);\n}\n\nfunction parseStrava(input) {\n  const arr = Array.isArray(input) ? input : (input.data || input.activities || []);\n  const allowedTypes = [\n    'Run',\n    'TrailRun',\n    'VirtualRun',\n    'Walk',\n    'Hike',\n    'Ride',\n    'VirtualRide',\n    'Workout'\n  ];\n\n  return arr\n    .filter(a => a && (a.start_date || a.start_date_local))\n    .filter(a => allowedTypes.includes(a.type || a.sport_type || ''))\n    .map(a => ({\n      source: 'strava',\n      kind: 'cardio',\n      name: a.name || `${a.type || a.sport_type || 'Strava'} Aktivität`,\n      type: a.type || a.sport_type || 'unknown',\n      date: a.start_date_local || a.start_date,\n      duration_seconds: a.elapsed_time || a.moving_time || 0,\n      distance_m: a.distance || 0\n    }));\n}\n\nfunction parseHevy(input) {\n  // Hevy liefert je nach Endpoint z.B. {workouts:[...]} oder {data:[...]}\n  const arr = Array.isArray(input) ? input : (input.workouts || input.data || input.events || []);\n  return arr\n    .map(w => w.workout || w)\n    .filter(w => w && (w.start_time || w.created_at || w.updated_at || w.date))\n    .map(w => ({\n      source: 'hevy',\n      kind: 'strength',\n      name: w.title || w.name || 'Hevy Workout',\n      type: 'gym_home',\n      date: w.start_time || w.created_at || w.updated_at || w.date,\n      duration_seconds: w.duration_seconds || w.duration || 0,\n      exercise_count: Array.isArray(w.exercises) ? w.exercises.length : null\n    }));\n}\n\nfunction extractTasks(input) {\n  const maybe = input.data || input.tasks || input.results || input;\n  if (!Array.isArray(maybe)) return [];\n  if (!maybe.some(x => x && x.title && ('done' in x || 'due_date' in x || 'id' in x))) return [];\n  return maybe;\n}\n\nconst now = new Date();\nconst weekStart = startOfWeek(now);\nconst todayYmd = ymd(now);\n\nconst inputs = $input.all().map(i => i.json);\nlet vikunjaTasks = [];\nlet workouts = [];\n\nfor (const inp of inputs) {\n  const tasks = extractTasks(inp);\n  if (tasks.length) {\n    vikunjaTasks = tasks;\n    continue;\n  }\n\n  // Heuristik: Strava Aktivitäten haben oft \"type\"/\"sport_type\"; Hevy Workouts \"exercises\"/\"title\"\n  const rawArr = Array.isArray(inp) ? inp : (inp.data || inp.workouts || inp.activities || inp.events || []);\n  if (Array.isArray(rawArr) && rawArr.some(x => x && (x.type || x.sport_type || x.distance))) {\n    workouts.push(...parseStrava(inp));\n  } else {\n    workouts.push(...parseHevy(inp));\n  }\n}\n\n// Dedupe grob nach Quelle+Datum+Name\nconst seen = new Set();\nworkouts = workouts.filter(w => {\n  const key = `${w.source}|${w.date}|${w.name}`;\n  if (seen.has(key)) return false;\n  seen.add(key);\n  return true;\n});\n\nconst weekWorkouts = workouts.filter(w => new Date(w.date) >= weekStart);\nconst todayWorkouts = workouts.filter(w => ymd(w.date) === todayYmd);\n\nconst stravaWeek = weekWorkouts.filter(w => w.source === 'strava');\nconst hevyWeek = weekWorkouts.filter(w => w.source === 'hevy');\n\nconst openSportTasks = vikunjaTasks\n  .filter(t => !t.done)\n  .filter(t => `${t.title || ''} ${t.description || ''}`.toLowerCase().includes('sport'))\n  .sort((a,b) => new Date(a.due_date || 0) - new Date(b.due_date || 0));\n\nconst dueOrTodaySportTasks = openSportTasks.filter(t => {\n  if (!t.due_date) return true;\n  return new Date(t.due_date) <= now;\n});\n\nconst results = [];\n\nif (todayWorkouts.length > 0 && dueOrTodaySportTasks.length > 0) {\n  const task = dueOrTodaySportTasks[0];\n  const details = todayWorkouts.map(w => `${w.source.toUpperCase()}: ${w.name}`).join(', ');\n  results.push({\n    json: {\n      action: 'complete_task',\n      task_id: task.id,\n      title: task.title,\n      done: true,\n      reason: `Heute Workout erkannt: ${details}`,\n      workout_count_week: weekWorkouts.length,\n      strava_count_week: stravaWeek.length,\n      hevy_count_week: hevyWeek.length\n    }\n  });\n} else if (weekWorkouts.length >= 3 && openSportTasks.length > 0) {\n  const task = openSportTasks[0];\n  results.push({\n    json: {\n      action: 'complete_task',\n      task_id: task.id,\n      title: task.title,\n      done: true,\n      reason: `Wochenziel 3x Sport erreicht: ${weekWorkouts.length}/3 Workouts (${stravaWeek.length} Strava, ${hevyWeek.length} Hevy).`,\n      workout_count_week: weekWorkouts.length,\n      strava_count_week: stravaWeek.length,\n      hevy_count_week: hevyWeek.length\n    }\n  });\n} else {\n  const remaining = Math.max(0, 3 - weekWorkouts.length);\n  results.push({\n    json: {\n      action: 'notify',\n      workout_count_week: weekWorkouts.length,\n      strava_count_week: stravaWeek.length,\n      hevy_count_week: hevyWeek.length,\n      workout_count_today: todayWorkouts.length,\n      message:\n`🏃‍♂️ Sport-Status diese Woche: ${weekWorkouts.length}/3\n\nStrava/Laufen/Cardio: ${stravaWeek.length}\nHevy/Gym/Home: ${hevyWeek.length}\n\nNoch offen: ${remaining} Workout(s).\nWenn heute nichts mehr geht: Sportaufgabe im Abend-Review verschieben.`\n    }\n  });\n}\n\nreturn results;\n"
+        "jsCode": "const items = $input.all().map(i => i.json);\n\n// Deutsche lokale Tagesgrenze\nconst now = new Date();\n\nfunction dateKeyBerlin(dateValue) {\n  if (!dateValue) return '';\n\n  const d = new Date(dateValue);\n  if (Number.isNaN(d.getTime())) return '';\n\n  return new Intl.DateTimeFormat('en-CA', {\n    timeZone: 'Europe/Berlin',\n    year: 'numeric',\n    month: '2-digit',\n    day: '2-digit',\n  }).format(d);\n}\n\nconst todayKey = dateKeyBerlin(now);\n\nfunction isTodayBerlin(dateValue) {\n  return dateKeyBerlin(dateValue) === todayKey;\n}\n\nfunction isStravaActivity(i) {\n  return (\n    i.source === 'strava' ||\n    i.sport_type !== undefined ||\n    i.start_date_local !== undefined ||\n    i.start_date !== undefined && i.athlete !== undefined\n  );\n}\n\nfunction isVikunjaTask(i) {\n  return (\n    i.source === 'vikunja' ||\n    i.title !== undefined ||\n    i.done !== undefined ||\n    i.due_date !== undefined\n  );\n}\n\nfunction getTaskTitle(i) {\n  return String(\n    i.title ??\n    i.name ??\n    i.text ??\n    ''\n  );\n}\n\nfunction isDone(i) {\n  return (\n    i.done === true ||\n    i.is_done === true ||\n    i.completed === true ||\n    i.status === 'done'\n  );\n}\n\n// Strava-Aktivitäten heute\nconst stravaActivitiesToday = items.filter(i => {\n  if (!isStravaActivity(i)) return false;\n\n  const activityDate =\n    i.start_date_local ??\n    i.start_date ??\n    i.raw?.start_date_local ??\n    i.raw?.start_date;\n\n  return isTodayBerlin(activityDate);\n});\n\n// Hevy optional, falls später vorhanden\nconst hevyActivitiesToday = items.filter(i => {\n  const source = String(i.source ?? '').toLowerCase();\n  if (!source.includes('hevy')) return false;\n\n  const date =\n    i.start_time ??\n    i.startTime ??\n    i.created_at ??\n    i.date ??\n    i.raw?.start_time ??\n    i.raw?.created_at;\n\n  return isTodayBerlin(date);\n});\n\n// Offene Sportaufgaben aus Vikunja\nconst sportTasks = items.filter(i => {\n  if (!isVikunjaTask(i)) return false;\n  if (isDone(i)) return false;\n\n  const title = getTaskTitle(i).toLowerCase();\n\n  return /sport|gym|training|workout|laufen|joggen|run|fitness|hevy|strava/.test(title);\n});\n\nconst workoutCountToday = stravaActivitiesToday.length + hevyActivitiesToday.length;\n\nconst stravaSummary = stravaActivitiesToday.map(a => ({\n  id: a.id,\n  name: a.name,\n  type: a.sport_type ?? a.type,\n  start: a.start_date_local ?? a.start_date,\n  moving_time: a.moving_time,\n  distance: a.distance,\n}));\n\nif (workoutCountToday === 0) {\n  return [\n    {\n      json: {\n        action: 'notify',\n        workout_count_today: 0,\n        strava_count_today: 0,\n        hevy_count_today: 0,\n        open_sport_tasks: sportTasks.length,\n        message:\n          `🏃 Sport-Status heute\\n\\n` +\n          `Strava/Laufen/Cardio: 0\\n` +\n          `Hevy/Gym/Home: 0\\n\\n` +\n          `Noch offen: ${sportTasks.length} Workout(s).\\n` +\n          `Wenn heute nichts mehr geht: Sportaufgabe im Abend-Review verschieben.`,\n      },\n    },\n  ];\n}\n\nif (sportTasks.length === 0) {\n  return [\n    {\n      json: {\n        action: 'notify',\n        workout_count_today: workoutCountToday,\n        strava_count_today: stravaActivitiesToday.length,\n        hevy_count_today: hevyActivitiesToday.length,\n        activities: stravaSummary,\n        message:\n          `✅ Sport erkannt!\\n\\n` +\n          `Heute wurden ${workoutCountToday} Workout(s) erkannt.\\n` +\n          `Strava: ${stravaActivitiesToday.length}\\n` +\n          `Hevy: ${hevyActivitiesToday.length}\\n\\n` +\n          `Es gibt aber keine passende offene Vikunja-Sportaufgabe zum Abhaken.`,\n      },\n    },\n  ];\n}\n\n// Erste passende offene Sportaufgabe abhaken\nconst task = sportTasks[0];\nconst activity = stravaActivitiesToday[0] ?? hevyActivitiesToday[0];\n\nreturn [\n  {\n    json: {\n      action: 'complete_task',\n      task_id: task.id,\n      task_title: getTaskTitle(task),\n      workout_count_today: workoutCountToday,\n      strava_count_today: stravaActivitiesToday.length,\n      hevy_count_today: hevyActivitiesToday.length,\n      activity_name: activity?.name ?? activity?.title ?? 'Workout',\n      activity_type: activity?.sport_type ?? activity?.type ?? 'Workout',\n      activity_start: activity?.start_date_local ?? activity?.start_date ?? '',\n      message:\n        `✅ Sport erkannt und Aufgabe wird abgehakt.\\n\\n` +\n        `Aktivität: ${activity?.name ?? activity?.title ?? 'Workout'}\\n` +\n        `Aufgabe: ${getTaskTitle(task)}`,\n    },\n  },\n];"
       },
       "id": "f77b2709-6e8f-404b-90d3-33ee459fcda5",
       "name": "Code - Sport erkannt und Vikunja-Aktion bauen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3504,
-        2816
+        2800,
+        3216
       ]
     },
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "boolean": [
             {
-              "value1": "={{$json.action}}",
-              "operation": "equals",
-              "value2": "complete_task"
+              "value1": "={{ $json.action === 'complete_task' }}",
+              "value2": "={{ true }}"
             }
           ]
         }
@@ -876,9 +1849,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        3728,
-        2816
-      ]
+        3024,
+        3216
+      ],
+      "alwaysOutputData": false
     },
     {
       "parameters": {
@@ -895,13 +1869,19 @@
       "type": "n8n-nodes-vikunja.vikunja",
       "typeVersion": 1,
       "position": [
-        3952,
-        2720
-      ]
+        3328,
+        3024
+      ],
+      "credentials": {
+        "vikunjaApi": {
+          "id": "IsQ0AYbsFndZaCGo",
+          "name": "Vikunja account"
+        }
+      }
     },
     {
       "parameters": {
-        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "chatId": "=6422093154",
         "text": "=✅ Sport erkannt und abgehakt: {{$json.title}}\\n{{$json.reason}}",
         "additionalFields": {}
       },
@@ -910,14 +1890,20 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        4176,
-        2720
+        3488,
+        3072
       ],
-      "webhookId": "105b3d20-25c7-4148-b7dc-602eab7ac478"
+      "webhookId": "105b3d20-25c7-4148-b7dc-602eab7ac478",
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      }
     },
     {
       "parameters": {
-        "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
+        "chatId": "=6422093154",
         "text": "={{$json.message}}",
         "additionalFields": {}
       },
@@ -926,10 +1912,16 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        3952,
-        2912
+        3248,
+        3312
       ],
-      "webhookId": "366cc698-07f6-40e9-b3e0-2e1527239981"
+      "webhookId": "366cc698-07f6-40e9-b3e0-2e1527239981",
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      }
     },
     {
       "parameters": {
@@ -1014,184 +2006,272 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2608,
-        1952
+        2512,
+        1888
       ],
       "id": "7bb9b9f2-c762-41c4-9c94-22ea9c59aa95",
       "name": "Konfiguration"
-    },
-    {
-      "parameters": {},
-      "id": "948cae8e-1524-49b4-a67d-66334ca43a5c",
-      "name": "Manuell starten",
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        304,
-        4480
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const config = $('Konfiguration1').first().json;\n\n// Diese Projekte werden angelegt. \"Heute\" ist bewusst NICHT enthalten.\nconst wantedProjects = [\n  { key: 'INBOX', name: 'Inbox', description: 'Sammelstelle für neue ungeplante Aufgaben.' },\n  { key: 'TERMINE', name: 'Termine', description: 'Aufgaben mit festen Terminen, Fristen und Erinnerungen.' },\n  { key: 'MENSCHEN', name: 'Menschen', description: 'Rückmeldungen, Anrufe, Kontakte und soziale Verpflichtungen.' },\n  { key: 'HAUSHALT', name: 'Haushalt', description: 'Allgemeine Haushaltsaufgaben.' },\n  { key: 'PUTZEN', name: 'Putzen', description: 'Reinigung: Bad, saugen, wischen, Schreibtisch, Waschmaschine reinigen.' },\n  { key: 'EINKAUFEN', name: 'Einkaufen', description: 'Einkaufslisten, Besorgungen und Dinge, die gekauft werden müssen.' },\n  { key: 'SPORT', name: 'Sport', description: 'Gym, Home Workouts, Strava, Hevy und Bewegung.' },\n  { key: 'FINANZEN', name: 'Finanzen', description: 'Rechnungen, Zahlungen, Firefly, Verträge und Geldthemen.' },\n  { key: 'PAPIERKRAM', name: 'Papierkram', description: 'Dokumente, Behörden, Versicherungen und Ablage.' },\n  { key: 'DIGITAL', name: 'Digital', description: 'IT, Homelab, Accounts, Automationen und digitale Ordnung.' },\n  { key: 'AUTO', name: 'Auto', description: 'KFZ, Steuer, Versicherung, Werkstatt, TÜV und Wartung.' },\n  { key: 'SICHERHEIT', name: 'Sicherheit', description: 'Backups, Passwörter, Updates, Notfall- und Sicherheitsaufgaben.' }\n];\n\nconst existing = items.map(i => i.json);\nconst existingTitles = new Set(\n  existing\n    .map(p => String(p.title || p.name || '').trim().toLowerCase())\n    .filter(Boolean)\n);\n\nconst missing = wantedProjects\n  .filter(p => !existingTitles.has(p.name.toLowerCase()))\n  .map(p => ({\n    json: {\n      key: p.key,\n      title: p.name,\n      description: p.description,\n      vikunja_url: config.vikunja_url,\n      vikunja_token: config.vikunja_token,\n      action: 'create'\n    }\n  }));\n\nconst alreadyThere = wantedProjects\n  .filter(p => existingTitles.has(p.name.toLowerCase()))\n  .map(p => {\n    const found = existing.find(e => String(e.title || e.name || '').trim().toLowerCase() === p.name.toLowerCase());\n    return {\n      json: {\n        key: p.key,\n        title: p.name,\n        id: found?.id,\n        action: 'exists'\n      }\n    };\n  });\n\nif (missing.length === 0) {\n  return [{\n    json: {\n      nothing_to_create: true,\n      message: 'Alle benötigten Projekte existieren bereits.',\n      existing_projects: alreadyThere.map(i => ({ key: i.json.key, title: i.json.title, id: i.json.id }))\n    }\n  }];\n}\n\nreturn missing;"
-      },
-      "id": "11eb4599-a68b-4c23-8eb4-90ca37406dea",
-      "name": "Projekte prüfen und fehlende bauen",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        992,
-        4480
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "has-project-to-create",
-              "leftValue": "={{ $json.nothing_to_create }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "notEquals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "24335e68-e3cd-4424-a53d-5d17c64aa1f9",
-      "name": "Fehlen Projekte?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1232,
-        4480
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "return items.map(item => {\n  return {\n    json: {\n      status: 'angelegt',\n      project_id: item.json.id,\n      title: item.json.title,\n      env_name: 'VIKUNJA_PROJECT_' + String(item.json.title || '')\n        .toUpperCase()\n        .replace(/Ä/g, 'AE')\n        .replace(/Ö/g, 'OE')\n        .replace(/Ü/g, 'UE')\n        .replace(/ß/g, 'SS')\n        .replace(/[^A-Z0-9]+/g, '_')\n        .replace(/^_|_$/g, '') + '_ID'\n    }\n  };\n});"
-      },
-      "id": "323114cd-e14d-4f3a-b197-1fa08024f6c7",
-      "name": "Ausgabe - Projekt IDs",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1968,
-        4192
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const data = $json;\nreturn [{\n  json: {\n    status: 'nichts_zu_tun',\n    message: data.message || 'Alle Projekte existieren bereits.',\n    existing_projects: data.existing_projects || []\n  }\n}];"
-      },
-      "id": "21e4a842-97a7-4234-9778-da0f6d9659a8",
-      "name": "Ausgabe - existieren bereits",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1472,
-        4624
-      ]
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "vikunja_url",
-              "name": "vikunja_url",
-              "value": "https://DEINE-VIKUNJA-URL.de",
+              "id": "5eb7883d-299b-4899-8915-d3794ad3dc77",
+              "name": "VIKUNJA_PROJECT_INBOX_ID",
+              "value": "1",
               "type": "string"
             },
             {
-              "id": "vikunja_token",
-              "name": "vikunja_token",
-              "value": "HIER_DEIN_API_TOKEN",
+              "id": "f80a51af-c8fc-46bf-ac27-2dfe7e820c76",
+              "name": "VIKUNJA_PROJECT_TERMINE_ID",
+              "value": "13",
+              "type": "string"
+            },
+            {
+              "id": "e34f6585-c912-4d9f-b895-d05ef4882aff",
+              "name": "VIKUNJA_PROJECT_MENSCHEN_ID",
+              "value": "14",
+              "type": "string"
+            },
+            {
+              "id": "05c257f0-d044-49a0-9ff3-4d751fe7bc2d",
+              "name": "VIKUNJA_PROJECT_HAUSHALT_ID",
+              "value": "15",
+              "type": "string"
+            },
+            {
+              "id": "b1715777-194f-466c-a9a7-b0a238c68072",
+              "name": "VIKUNJA_PROJECT_PUTZEN_ID",
+              "value": "16",
+              "type": "string"
+            },
+            {
+              "id": "b16e732e-209b-438d-9e98-d21786ef99f5",
+              "name": "VIKUNJA_PROJECT_EINKAUFEN_ID",
+              "value": "17",
+              "type": "string"
+            },
+            {
+              "id": "16e346b2-ed2c-4b9f-99e9-6c26e3bdb806",
+              "name": "VIKUNJA_PROJECT_SPORT_ID",
+              "value": "18",
+              "type": "string"
+            },
+            {
+              "id": "c23f8d7e-64e0-430e-9762-91542ff2a6db",
+              "name": "VIKUNJA_PROJECT_FINANZEN_ID",
+              "value": "19",
+              "type": "string"
+            },
+            {
+              "id": "3e347ad8-1966-4aa7-9b74-03e8d1ceb492",
+              "name": "VIKUNJA_PROJECT_PAPIERKRAM_ID",
+              "value": "20",
+              "type": "string"
+            },
+            {
+              "id": "cb27eed6-3bd7-4571-ae12-b5b77022f335",
+              "name": "VIKUNJA_PROJECT_DIGITAL_ID",
+              "value": "21",
+              "type": "string"
+            },
+            {
+              "id": "132da73d-79c8-4541-b920-ddff8a0912bc",
+              "name": "VIKUNJA_PROJECT_AUTO_ID",
+              "value": "22",
+              "type": "string"
+            },
+            {
+              "id": "7b71269d-114a-4f75-8971-304c054db855",
+              "name": "VIKUNJA_PROJECT_SICHERHEIT_ID",
+              "value": "23",
               "type": "string"
             }
           ]
         },
         "options": {}
       },
-      "id": "5a3b13ef-fc6c-45bb-872e-e5dd40913140",
-      "name": "Konfiguration1",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        528,
-        4480
+        2368,
+        2176
       ],
-      "notesInFlow": true,
-      "notes": "Hier Vikunja URL und API Token eintragen. Beispiel URL ohne /api/v1 am Ende."
+      "id": "782b520e-4d8a-4077-832c-d6ac4b22a8d9",
+      "name": "Konfiguration2"
     },
     {
       "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4-nano-2026-03-17",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4-NANO-2026-03-17"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}\nen"
+            }
+          ]
+        },
+        "builtInTools": {},
         "options": {}
       },
-      "id": "23097147-e425-48a6-8851-9fb91109906f",
-      "name": "Loop Over Items1",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
       "position": [
-        1472,
-        4384
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "project",
-        "operation": "getAll",
-        "requestOptions": {}
-      },
-      "type": "n8n-nodes-vikunja.vikunja",
-      "typeVersion": 1,
-      "position": [
-        736,
-        4480
+        3264,
+        2176
       ],
-      "id": "51628693-0070-4c27-9000-dc367f5715f8",
-      "name": "Get many projects",
+      "id": "6d8e25a0-c19c-4366-98f9-2deb6133acae",
+      "name": "Message a model",
       "credentials": {
-        "vikunjaApi": {
-          "id": "IsQ0AYbsFndZaCGo",
-          "name": "Vikunja account"
+        "openAiApi": {
+          "id": "EVf6W0jyq4ACcS36",
+          "name": "OpenAI account"
         }
       }
     },
     {
       "parameters": {
-        "resource": "project",
-        "parentProject": {
-          "__rl": true,
-          "mode": "id",
-          "value": 0
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5eb7883d-299b-4899-8915-d3794ad3dc77",
+              "name": "VIKUNJA_PROJECT_INBOX_ID",
+              "value": "1",
+              "type": "string"
+            },
+            {
+              "id": "f80a51af-c8fc-46bf-ac27-2dfe7e820c76",
+              "name": "VIKUNJA_PROJECT_TERMINE_ID",
+              "value": "13",
+              "type": "string"
+            },
+            {
+              "id": "e34f6585-c912-4d9f-b895-d05ef4882aff",
+              "name": "VIKUNJA_PROJECT_MENSCHEN_ID",
+              "value": "14",
+              "type": "string"
+            },
+            {
+              "id": "05c257f0-d044-49a0-9ff3-4d751fe7bc2d",
+              "name": "VIKUNJA_PROJECT_HAUSHALT_ID",
+              "value": "15",
+              "type": "string"
+            },
+            {
+              "id": "b1715777-194f-466c-a9a7-b0a238c68072",
+              "name": "VIKUNJA_PROJECT_PUTZEN_ID",
+              "value": "16",
+              "type": "string"
+            },
+            {
+              "id": "b16e732e-209b-438d-9e98-d21786ef99f5",
+              "name": "VIKUNJA_PROJECT_EINKAUFEN_ID",
+              "value": "17",
+              "type": "string"
+            },
+            {
+              "id": "16e346b2-ed2c-4b9f-99e9-6c26e3bdb806",
+              "name": "VIKUNJA_PROJECT_SPORT_ID",
+              "value": "18",
+              "type": "string"
+            },
+            {
+              "id": "c23f8d7e-64e0-430e-9762-91542ff2a6db",
+              "name": "VIKUNJA_PROJECT_FINANZEN_ID",
+              "value": "19",
+              "type": "string"
+            },
+            {
+              "id": "3e347ad8-1966-4aa7-9b74-03e8d1ceb492",
+              "name": "VIKUNJA_PROJECT_PAPIERKRAM_ID",
+              "value": "20",
+              "type": "string"
+            },
+            {
+              "id": "cb27eed6-3bd7-4571-ae12-b5b77022f335",
+              "name": "VIKUNJA_PROJECT_DIGITAL_ID",
+              "value": "21",
+              "type": "string"
+            },
+            {
+              "id": "132da73d-79c8-4541-b920-ddff8a0912bc",
+              "name": "VIKUNJA_PROJECT_AUTO_ID",
+              "value": "22",
+              "type": "string"
+            },
+            {
+              "id": "7b71269d-114a-4f75-8971-304c054db855",
+              "name": "VIKUNJA_PROJECT_SICHERHEIT_ID",
+              "value": "23",
+              "type": "string"
+            }
+          ]
         },
-        "projectTitle": "={{ $('Fehlen Projekte?').item.json.key }}",
-        "options": {},
-        "requestOptions": {}
+        "options": {}
       },
-      "type": "n8n-nodes-vikunja.vikunja",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
-        1680,
-        4384
+        1696,
+        2544
       ],
-      "id": "2f593201-55c0-42b4-8bbd-665f957778f0",
-      "name": "Create a project",
+      "id": "0a1fffa5-68b3-4222-a1b9-1ef8d97134f9",
+      "name": "Konfiguration3"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4-nano",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4-NANO"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        2928,
+        2560
+      ],
+      "id": "d47af849-0f11-4745-bc01-23f6fab4ba6a",
+      "name": "Message a model1",
       "credentials": {
-        "vikunjaApi": {
-          "id": "IsQ0AYbsFndZaCGo",
-          "name": "Vikunja account"
+        "openAiApi": {
+          "id": "EVf6W0jyq4ACcS36",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll"
+      },
+      "type": "n8n-nodes-base.strava",
+      "typeVersion": 1.1,
+      "position": [
+        1872,
+        3280
+      ],
+      "id": "50cc54e5-28c5-4f63-80a3-67d27888dd24",
+      "name": "Get many activities",
+      "credentials": {
+        "stravaOAuth2Api": {
+          "id": "XmPEc4l78f5iHNF7",
+          "name": "Strava account"
         }
       }
     }
@@ -1213,9 +2293,24 @@
       "projectId": "Iyrtd5xOBA8QCG1f"
     }
   ],
-  "staticData": null,
+  "staticData": {
+    "node:Cron - 05:30 Backoffice-Aufgaben erzeugen": {
+      "recurrenceRules": []
+    },
+    "node:Cron - 07:30 Tagesplan": {
+      "recurrenceRules": []
+    },
+    "node:Cron - 20:30 Abend-Review": {
+      "recurrenceRules": []
+    },
+    "node:Cron - Sport alle 6h prüfen": {
+      "recurrenceRules": [
+        0
+      ]
+    }
+  },
   "tags": [],
-  "triggerCount": 0,
-  "updatedAt": "2026-05-06T18:14:30.801Z",
-  "versionId": "f6a8474d-c35d-4afa-90bb-626e3e5a0163"
+  "triggerCount": 4,
+  "updatedAt": "2026-05-09T13:03:34.044Z",
+  "versionId": "a82362a8-c5cd-486e-bd59-4f532870c645"
 }
