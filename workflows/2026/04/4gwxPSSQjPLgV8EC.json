@@ -50,7 +50,7 @@
   },
   "createdAt": "2026-04-26T21:24:29.459Z",
   "id": "4gwxPSSQjPLgV8EC",
-  "isArchived": false,
+  "isArchived": true,
   "meta": null,
   "name": "Firefly Monats-Saldo zu InfluxDB",
   "nodes": [
@@ -192,6 +192,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2026-04-26T21:26:05.256Z",
-  "versionId": "791c79b6-d8d1-4168-bc5a-e603f944c724"
+  "updatedAt": "2026-05-09T13:08:32.000Z",
+  "versionId": "1c1f6678-838b-4804-83bd-2b44d0a3d80b"
 }
