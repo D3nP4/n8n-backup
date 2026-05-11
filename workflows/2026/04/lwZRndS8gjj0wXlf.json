@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-04-26T22:58:31.000Z",
-    "createdAt": "2026-04-26T22:58:30.341Z",
-    "versionId": "0cfa4fb3-8959-4299-af68-2022be649fd2",
+    "updatedAt": "2026-05-09T13:08:02.000Z",
+    "createdAt": "2026-05-09T13:08:01.151Z",
+    "versionId": "19b85a10-e38d-44de-8532-85f8a6dd4f8b",
     "workflowId": "lwZRndS8gjj0wXlf",
     "nodes": [
       {
@@ -67,38 +67,17 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 1,
         "position": [
-          240,
-          -64
+          192,
+          -96
         ]
-      },
-      {
-        "parameters": {
-          "userKey": "uv1265uon69b2871uey6x8ba94t9dy",
-          "message": "🚨 Kritische Mail\n\nVon: {{$json.from}}\nBetreff: {{$json.subject}}\n\n{{$json.ai.summary}}\n\nAufgabe:\n{{$json.ai.task}}",
-          "priority": 1,
-          "additionalFields": {}
-        },
-        "id": "af406e56-52fb-4406-a470-70c324d29384",
-        "name": "Send Pushover",
-        "type": "n8n-nodes-base.pushover",
-        "typeVersion": 1,
-        "position": [
-          448,
-          -160
-        ],
-        "credentials": {
-          "pushoverApi": {
-            "id": "1VD3iZZtoihGdzBM",
-            "name": "Pushover account"
-          }
-        }
       },
       {
         "parameters": {
           "conditions": {
             "boolean": [
               {
-                "value1": "={{$json.ai.needs_reply}}"
+                "value1": "={{$json.ai.needs_reply}}",
+                "value2": true
               }
             ]
           }
@@ -108,33 +87,9 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 1,
         "position": [
-          240,
-          96
+          80,
+          112
         ]
-      },
-      {
-        "parameters": {
-          "fromEmail": "={{ $('IMAP Trigger').item.json.metadata['delivered-to'] }}",
-          "toEmail": "={{ $('IMAP Trigger').item.json.from }}",
-          "subject": "Re: {{$json.subject}}",
-          "text": "={{ $json.ai.suggested_reply }}",
-          "options": {}
-        },
-        "id": "72b8bb83-e399-4717-a6f4-53aa1580c52c",
-        "name": "Create Draft",
-        "type": "n8n-nodes-base.emailSend",
-        "typeVersion": 2,
-        "position": [
-          480,
-          80
-        ],
-        "webhookId": "e2d9eb8f-c978-4945-bc52-a7973f1b5481",
-        "credentials": {
-          "smtp": {
-            "id": "X7DQ7int6ak0mBA4",
-            "name": "SMTP account"
-          }
-        }
       },
       {
         "parameters": {
@@ -166,6 +121,28 @@
           "openAiApi": {
             "id": "EVf6W0jyq4ACcS36",
             "name": "OpenAI account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $('Message a model').item.json.output[0].content[0].text }}",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          288,
+          16
+        ],
+        "id": "57ccdd25-5d3d-4886-8180-803b5a2e137f",
+        "name": "Send a text message",
+        "webhookId": "80834618-ff1d-4504-88f8-b932ffa965d4",
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
           }
         }
       }
@@ -211,18 +188,18 @@
       },
       "IF Critical": {
         "main": [
-          [
-            {
-              "node": "Send Pushover",
-              "type": "main",
-              "index": 0
-            }
-          ]
+          []
         ]
       },
       "IF Reply Needed": {
         "main": [
-          []
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
         ]
       },
       "Message a model": {
@@ -238,11 +215,11 @@
       }
     },
     "authors": "Dennis Paun",
-    "name": "Version 0cfa4fb3",
+    "name": "Version 19b85a10",
     "description": "",
     "autosaved": false
   },
-  "activeVersionId": "0cfa4fb3-8959-4299-af68-2022be649fd2",
+  "activeVersionId": "19b85a10-e38d-44de-8532-85f8a6dd4f8b",
   "connections": {
     "IMAP Trigger": {
       "main": [
@@ -284,20 +261,14 @@
     },
     "IF Critical": {
       "main": [
-        [
-          {
-            "node": "Send Pushover",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "IF Reply Needed": {
       "main": [
         [
           {
-            "node": "Send Pushover1",
+            "node": "Send a text message",
             "type": "main",
             "index": 0
           }
@@ -385,38 +356,17 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        240,
-        -64
+        192,
+        -96
       ]
-    },
-    {
-      "parameters": {
-        "userKey": "uv1265uon69b2871uey6x8ba94t9dy",
-        "message": "🚨 Kritische Mail\n\nVon: {{$json.from}}\nBetreff: {{$json.subject}}\n\n{{$json.ai.summary}}\n\nAufgabe:\n{{$json.ai.task}}",
-        "priority": 1,
-        "additionalFields": {}
-      },
-      "id": "af406e56-52fb-4406-a470-70c324d29384",
-      "name": "Send Pushover",
-      "type": "n8n-nodes-base.pushover",
-      "typeVersion": 1,
-      "position": [
-        448,
-        -160
-      ],
-      "credentials": {
-        "pushoverApi": {
-          "id": "1VD3iZZtoihGdzBM",
-          "name": "Pushover account"
-        }
-      }
     },
     {
       "parameters": {
         "conditions": {
           "boolean": [
             {
-              "value1": "={{$json.ai.needs_reply}}"
+              "value1": "={{$json.ai.needs_reply}}",
+              "value2": true
             }
           ]
         }
@@ -426,34 +376,9 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        240,
-        96
+        80,
+        112
       ]
-    },
-    {
-      "parameters": {
-        "fromEmail": "={{ $('IMAP Trigger').item.json.metadata['delivered-to'] }}",
-        "toEmail": "={{ $('IMAP Trigger').item.json.from }}",
-        "subject": "={{ $('IMAP Trigger').item.json.subject }}",
-        "text": "={{ $json.ai.suggested_reply }}",
-        "options": {}
-      },
-      "id": "72b8bb83-e399-4717-a6f4-53aa1580c52c",
-      "name": "Create Draft",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
-      "position": [
-        112,
-        512
-      ],
-      "webhookId": "e2d9eb8f-c978-4945-bc52-a7973f1b5481",
-      "credentials": {
-        "smtp": {
-          "id": "X7DQ7int6ak0mBA4",
-          "name": "SMTP account"
-        }
-      },
-      "disabled": true
     },
     {
       "parameters": {
@@ -490,23 +415,23 @@
     },
     {
       "parameters": {
-        "userKey": "uv1265uon69b2871uey6x8ba94t9dy",
-        "message": "🚨 Kritische Mail\n\nVon: {{$json.from}}\nBetreff: {{$json.subject}}\n\n{{$json.ai.summary}}\n\nAufgabe:\n{{$json.ai.task}}",
-        "priority": 1,
+        "chatId": "6422093154",
+        "text": "={{ $('Message a model').item.json.output[0].content[0].text }}",
         "additionalFields": {}
       },
-      "id": "50b1d80d-340a-4ce1-9e67-10ac3f0f1228",
-      "name": "Send Pushover1",
-      "type": "n8n-nodes-base.pushover",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
-        576,
-        64
+        320,
+        32
       ],
+      "id": "57ccdd25-5d3d-4886-8180-803b5a2e137f",
+      "name": "Send a text message",
+      "webhookId": "80834618-ff1d-4504-88f8-b932ffa965d4",
       "credentials": {
-        "pushoverApi": {
-          "id": "1VD3iZZtoihGdzBM",
-          "name": "Pushover account"
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
         }
       }
     }
@@ -530,11 +455,11 @@
   ],
   "staticData": {
     "node:IMAP Trigger": {
-      "lastMessageUid": 846
+      "lastMessageUid": 910
     }
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-04-26T23:02:50.981Z",
-  "versionId": "3479b729-650c-4a26-baf4-9ac36d01a539"
+  "updatedAt": "2026-05-09T16:55:22.332Z",
+  "versionId": "11255c44-075b-46d3-97a5-5024fac04bed"
 }
