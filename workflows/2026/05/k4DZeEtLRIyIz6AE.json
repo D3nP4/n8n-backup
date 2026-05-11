@@ -1,0 +1,842 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-05-09T16:47:41.000Z",
+    "createdAt": "2026-05-09T15:57:52.219Z",
+    "versionId": "b1a4d986-f9a7-447c-9f9f-0dee5f15ce3a",
+    "workflowId": "k4DZeEtLRIyIz6AE",
+    "nodes": [
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "cfg_influx_url",
+                "name": "INFLUX_URL",
+                "value": "http://192.168.178.42:8086/",
+                "type": "string"
+              },
+              {
+                "id": "cfg_influx_org",
+                "name": "INFLUX_ORG",
+                "value": "home",
+                "type": "string"
+              },
+              {
+                "id": "cfg_influx_bucket",
+                "name": "INFLUX_BUCKET",
+                "value": "sport",
+                "type": "string"
+              },
+              {
+                "id": "cfg_influx_token",
+                "name": "INFLUX_TOKEN",
+                "value": "DEIN_INFLUX_TOKEN",
+                "type": "string"
+              },
+              {
+                "id": "cfg_days",
+                "name": "ANALYSE_TAGE",
+                "value": 7,
+                "type": "number"
+              },
+              {
+                "id": "c0291bb2-a291-4337-852f-9013fd021ee3",
+                "name": "HEIGHT_CM",
+                "value": "176",
+                "type": "string"
+              },
+              {
+                "id": "074bfdfd-8754-42d9-9e16-e828fb2f2418",
+                "name": "WEIGHT_KG_MANUAL",
+                "value": "85",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "75585483-cb89-4c92-81be-32d56e425225",
+        "name": "Konfiguration",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -1520,
+          128
+        ],
+        "notesInFlow": true,
+        "notes": "Hier InfluxDB URL, Org, Bucket und Token setzen. Strava- und OpenAI-Credentials direkt in den jeweiligen Nodes auswählen."
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "limit": 1
+        },
+        "id": "c6a00189-b4b0-408e-90dd-a9fdf0ed0aa9",
+        "name": "Strava - Aktivitäten holen",
+        "type": "n8n-nodes-base.strava",
+        "typeVersion": 1,
+        "position": [
+          -1296,
+          128
+        ],
+        "notesInFlow": true,
+        "credentials": {
+          "stravaOAuth2Api": {
+            "id": "XmPEc4l78f5iHNF7",
+            "name": "Strava account"
+          }
+        },
+        "notes": "Nach Import: Strava Credential auswählen. Operation soll Activity → Get all activities sein. Falls 'after' nicht automatisch sitzt: Filter 'After' = Expression aus diesem Node."
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\n// Strava liefert pro Aktivität ein Item.\n// Dieses Node erzeugt:\n// 1) Line Protocol für jede Strava-Aktivität\n// 2) Eine kompakte JSON-Zusammenfassung für ChatGPT\n\nfunction escTag(value) {\n  if (value === undefined || value === null || value === '') return 'unknown';\n  return String(value)\n    .replace(/ /g, '\\\\ ')\n    .replace(/,/g, '\\\\,')\n    .replace(/=/g, '\\\\=');\n}\n\nfunction escFieldString(value) {\n  if (value === undefined || value === null) return '';\n  return String(value)\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/\"/g, '\\\\\"')\n    .replace(/\\n/g, ' ');\n}\n\nfunction num(value, fallback = 0) {\n  const n = Number(value);\n  return Number.isFinite(n) ? n : fallback;\n}\n\nconst activities = items\n  .map(i => i.json)\n  .filter(a => a && (a.id || a.name || a.start_date));\n\nconst lines = [];\nconst compact = [];\n\nfor (const a of activities) {\n  const id = a.id || `${a.start_date || 'unknown'}_${a.name || 'activity'}`;\n  const name = a.name || 'Strava Activity';\n  const type = a.type || a.sport_type || 'Activity';\n  const start = a.start_date || a.start_date_local || new Date().toISOString();\n\n  const distanceKm = num(a.distance) / 1000;\n  const durationMin = num(a.moving_time || a.elapsed_time) / 60;\n  const elapsedMin = num(a.elapsed_time) / 60;\n  const elevationM = num(a.total_elevation_gain);\n  const calories = num(a.calories);\n  const avgSpeedKmh = num(a.average_speed) * 3.6;\n  const maxSpeedKmh = num(a.max_speed) * 3.6;\n  const avgHeartrate = num(a.average_heartrate);\n  const maxHeartrate = num(a.max_heartrate);\n  const kudos = num(a.kudos_count);\n  const achievementCount = num(a.achievement_count);\n  const sufferScore = num(a.suffer_score);\n\n  const ts = new Date(start).getTime() * 1000000;\n\n  const fields = [\n    `activity_count=1i`,\n    `distance_km=${distanceKm}`,\n    `duration_min=${durationMin}`,\n    `elapsed_min=${elapsedMin}`,\n    `elevation_m=${elevationM}`,\n    `calories=${calories}`,\n    `avg_speed_kmh=${avgSpeedKmh}`,\n    `max_speed_kmh=${maxSpeedKmh}`,\n    `avg_heartrate=${avgHeartrate}`,\n    `max_heartrate=${maxHeartrate}`,\n    `kudos=${kudos}i`,\n    `achievement_count=${achievementCount}i`,\n    `suffer_score=${sufferScore}`,\n    `activity_name=\"${escFieldString(name)}\"`\n  ];\n\n  lines.push(\n    `sport_activity,source=strava,sport_type=${escTag(type)},activity_id=${escTag(id)} ${fields.join(',')} ${ts}`\n  );\n\n  compact.push({\n    date: start,\n    id,\n    name,\n    type,\n    distance_km: Number(distanceKm.toFixed(2)),\n    duration_min: Number(durationMin.toFixed(1)),\n    elapsed_min: Number(elapsedMin.toFixed(1)),\n    elevation_m: Number(elevationM.toFixed(0)),\n    calories: calories,\n    avg_speed_kmh: Number(avgSpeedKmh.toFixed(2)),\n    max_speed_kmh: Number(maxSpeedKmh.toFixed(2)),\n    avg_heartrate: avgHeartrate,\n    max_heartrate: maxHeartrate,\n    suffer_score: sufferScore || null\n  });\n}\n\nconst totals = compact.reduce((acc, a) => {\n  acc.activities += 1;\n  acc.duration_min += a.duration_min || 0;\n  acc.distance_km += a.distance_km || 0;\n  acc.elevation_m += a.elevation_m || 0;\n  acc.calories += a.calories || 0;\n\n  acc.by_type[a.type] = acc.by_type[a.type] || {\n    count: 0,\n    duration_min: 0,\n    distance_km: 0\n  };\n\n  acc.by_type[a.type].count += 1;\n  acc.by_type[a.type].duration_min += a.duration_min || 0;\n  acc.by_type[a.type].distance_km += a.distance_km || 0;\n\n  return acc;\n}, {\n  activities: 0,\n  duration_min: 0,\n  distance_km: 0,\n  elevation_m: 0,\n  calories: 0,\n  by_type: {}\n});\n\ntotals.duration_min = Number(totals.duration_min.toFixed(1));\ntotals.distance_km = Number(totals.distance_km.toFixed(2));\ntotals.elevation_m = Number(totals.elevation_m.toFixed(0));\ntotals.calories = Number(totals.calories.toFixed(0));\n\nreturn [\n  {\n    json: {\n      influx_activity_line_protocol: lines.join('\\n'),\n      activity_count: compact.length,\n      strava_compact: compact,\n      totals\n    }\n  }\n];"
+        },
+        "id": "4bbeca49-d576-4258-9fbb-70e5da6b0a49",
+        "name": "Strava Daten vorbereiten",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1072,
+          128
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $('Konfiguration').first().json.INFLUX_URL + '/api/v2/write?org=' + encodeURIComponent($('Konfiguration').first().json.INFLUX_ORG) + '&bucket=' + encodeURIComponent($('Konfiguration').first().json.INFLUX_BUCKET) + '&precision=ns' }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ 'Token ' + $('Konfiguration').first().json.INFLUX_TOKEN }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "text/plain"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "text/plain",
+          "body": "={{ $json.influx_activity_line_protocol }}",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "c5c0cb36-b1da-4e9a-807c-37558968a1bc",
+        "name": "InfluxDB - Aktivitäten schreiben",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -848,
+          32
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $json;\n\nconst cfg = $('Konfiguration').first().json;\n\nconst heightCm = Number(cfg.HEIGHT_CM || 0);\nconst weightKg = Number(cfg.WEIGHT_KG_MANUAL || cfg.WEIGHT_KG || 0);\n\nconst heightM = heightCm / 100;\nconst bmi = heightM > 0 && weightKg > 0\n  ? Number((weightKg / (heightM * heightM)).toFixed(2))\n  : null;\n\nconst bodyMetrics = {\n  weight_kg: weightKg,\n  height_cm: heightCm,\n  bmi: bmi\n};\n\nconst healthData = (() => {\n  try {\n    return $('Health Daten vorbereiten').first().json.health_auto_export_raw;\n  } catch (e) {\n    return {};\n  }\n})();\n\nconst prompt = `\nDu bist mein vorsichtiger Sportanalyse-Coach während der Kreuzband-Reha.\n\nWichtiger Kontext:\n- Ich befinde mich aktuell in der Recovery nach einer Kreuzband-OP / Kreuzbandverletzung.\n- Die Analyse darf keine medizinische Diagnose ersetzen.\n- Sicherheit, Belastungssteuerung und vorsichtiger Fortschritt sind wichtiger als Leistung.\n- Keine aggressiven Trainingssteigerungen empfehlen.\n- Bei Warnzeichen soll empfohlen werden, mit Arzt/Physio Rücksprache zu halten.\n\nAnalysiere ausschließlich:\n1. Strava-Daten der letzten ${cfg.ANALYSE_TAGE} Tage\n2. Gewichtsdaten\n3. Apple Health / Garmin Health Daten über Health Auto Export\n\nBewerte:\n1. Trainingshäufigkeit\n2. Ausdauer-Belastung\n3. Geh-/Lauf-/Radanteil, falls erkennbar\n4. Belastungssteigerung im Vergleich der Aktivitäten\n5. Intensität anhand Tempo, Dauer, Höhenmeter, Herzfrequenz und Suffer Score, falls vorhanden\n6. Recovery-Verträglichkeit\n7. Risiko für zu schnelle Belastungssteigerung\n8. Gewicht im Kontext von Kniebelastung, Recovery und Trainingssteuerung\n9. Schlafdauer und Schlafqualität\n10. Schritte und Alltagsbelastung\n11. Ruhepuls, Herzfrequenz und HRV\n12. Walking-/Gangbild-Werte, falls vorhanden\n13. Ob nächste Woche Belastung halten, reduzieren oder leicht steigern sinnvoll ist\n14. Konkrete, vorsichtige Empfehlung für die nächste Woche\n\nBesonders beachten:\n- Joggen/Laufen nur vorsichtig bewerten.\n- Keine Empfehlung zu Sprint, Intervallen, Sprüngen, Richtungswechseln oder maximaler Belastung.\n- Wenn viele Aktivitäten mit hoher Intensität, langen Distanzen oder starken Höhenmetern vorkommen, als mögliches Reha-Risiko markieren.\n- Wenn nur lockere Spaziergänge, Radfahren oder kurze Einheiten vorhanden sind, positiv bewerten.\n- Wenn Herzfrequenzdaten fehlen, Belastung vorsichtig anhand Dauer, Distanz und Tempo einschätzen.\n- Gewichtsdaten nicht bewerten wie eine Diät-App, sondern nur im Kontext von Kniebelastung, Recovery und Trainingssteuerung.\n- Wenn Schlaf schlecht, Ruhepuls erhöht oder HRV niedrig wirkt: Belastung eher reduzieren.\n- Wenn Schritte sehr hoch sind, Alltagsbelastung berücksichtigen.\n- Wenn Health-Daten fehlen oder unvollständig sind, klar erwähnen.\n- Keine medizinische Diagnose.\n- Bei Schmerzen, Schwellung, Instabilität, Wärmegefühl im Knie oder deutlicher Verschlechterung: Training reduzieren und Physio/Arzt kontaktieren.\n\nNutze für passende Übungs-/Workout-Links ausschließlich diese kuratierte Linkliste.\nWähle 2 bis maximal 4 Links aus, die zur Empfehlung für nächste Woche passen.\nKeine frei erfundenen Links.\n\nKuratierte Links:\n[\n  {\n    \"title\": \"Cambridge University Hospitals – ACL reconstruction rehabilitation\",\n    \"url\": \"https://www.cuh.nhs.uk/patient-information/anterior-cruciate-ligament-acl-reconstruction-rehabilitation/\",\n    \"use_when\": \"Allgemeine ACL-Reha, sichere Progression, Patientenerklärung\"\n  },\n  {\n    \"title\": \"AAOS – Knee Conditioning Program\",\n    \"url\": \"https://orthoinfo.aaos.org/en/recovery/knee-conditioning-program/\",\n    \"use_when\": \"Kniekräftigung, Mobility, allgemeine Übungen unter ärztlicher/physiotherapeutischer Anleitung\"\n  },\n  {\n    \"title\": \"AAOS – Knee Rehabilitation Exercises PDF\",\n    \"url\": \"https://orthoinfo.aaos.org/en/recovery/knee-conditioning-program/knee-pdf/\",\n    \"use_when\": \"Konkrete Knie-Reha-Übungen als PDF\"\n  },\n  {\n    \"title\": \"Mass General – ACL Rehabilitation Protocol PDF\",\n    \"url\": \"https://www.massgeneral.org/assets/mgh/pdf/orthopaedics/sports-medicine/physical-therapy/rehabilitation-protocol-for-acl.pdf\",\n    \"use_when\": \"Strukturierter ACL-Reha-Plan mit Progression, nur als Orientierung mit Physio\"\n  }\n]\n\nAntworte ausschließlich als valides JSON ohne Markdown.\nScore ist 0 bis 100.\nDer Score bewertet nicht maximale Leistung, sondern sinnvolle, sichere Recovery-Belastung.\n\nJSON-Format:\n{\n  \"score\": 0,\n  \"status\": \"gut|okay|kritisch\",\n  \"summary_short\": \"\",\n  \"summary_long\": \"\",\n  \"positive_points\": [],\n  \"risk_points\": [],\n  \"next_week_recommendation\": \"\",\n  \"cardio_feedback\": \"\",\n  \"recovery_feedback\": \"\",\n  \"knee_rehab_feedback\": \"\",\n  \"load_progression_feedback\": \"\",\n  \"weight_feedback\": \"\",\n  \"bmi_feedback\": \"\",\n  \"sleep_feedback\": \"\",\n  \"steps_feedback\": \"\",\n  \"heart_rate_feedback\": \"\",\n  \"hrv_feedback\": \"\",\n  \"walking_stability_feedback\": \"\",\n  \"recovery_readiness\": \"gut|mittel|niedrig|unbekannt\",\n  \"warning_signs\": [],\n  \"avoid_next_week\": [],\n  \"workout_links\": [\n    {\n      \"title\": \"\",\n      \"url\": \"\",\n      \"why\": \"\"\n    }\n  ],\n  \"grafana_text\": \"\",\n  \"training_days_estimate\": 0,\n  \"focus_next_week\": \"\",\n  \"detected_main_sports\": [],\n  \"total_distance_km\": 0,\n  \"total_duration_min\": 0,\n  \"weight_kg\": 0,\n  \"bmi\": 0\n}\n\nStrava Summen:\n${JSON.stringify(data.totals, null, 2)}\n\nStrava Aktivitäten:\n${JSON.stringify(data.strava_compact, null, 2)}\n\nGewichtsdaten:\n${JSON.stringify(bodyMetrics, null, 2)}\n\nApple Health / Garmin Health Daten über Health Auto Export:\n${JSON.stringify(healthData, null, 2)}\n`;\n\nreturn [\n  {\n    json: {\n      prompt,\n      totals: data.totals,\n      strava_compact: data.strava_compact,\n      body_metrics: bodyMetrics,\n      health_data: healthData\n    }\n  }\n];"
+        },
+        "id": "a180bd34-73f9-4ace-8923-034d93c30957",
+        "name": "Prompt für ChatGPT bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -400,
+          224
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## Einrichtung\n\n1. In **Konfiguration** Influx URL, Org, Bucket und Token setzen.\n2. In **Strava - Aktivitäten holen** dein Strava OAuth2 Credential auswählen.\n3. In **ChatGPT - Strava analysieren** dein OpenAI Credential auswählen.\n4. Test mit **Manuell starten**.\n5. Danach Schedule aktivieren.\n\nInflux Measurements:\n- `sport_activity`\n- `sport_ai_analysis`\n\nNur Strava, kein Hevy.",
+          "height": 360,
+          "width": 520,
+          "color": 4
+        },
+        "id": "56e09387-d2ff-49dd-bddd-068216f35fda",
+        "name": "Setup Hinweis",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -1440,
+          -528
+        ]
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-5.4-nano-2026-03-17",
+            "mode": "list",
+            "cachedResultName": "GPT-5.4-NANO-2026-03-17"
+          },
+          "responses": {
+            "values": [
+              {
+                "content": "={{ $json.prompt }}"
+              }
+            ]
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 2.1,
+        "position": [
+          -176,
+          224
+        ],
+        "id": "770784f2-9890-492b-a02f-5cbb6a218455",
+        "name": "Message a model",
+        "credentials": {
+          "openAiApi": {
+            "id": "EVf6W0jyq4ACcS36",
+            "name": "OpenAI account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "=Hui {{ $json.telegram_text }}",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          400,
+          224
+        ],
+        "id": "2400c719-9e01-4e10-9c05-b8968fa830cc",
+        "name": "Send a text message",
+        "webhookId": "47f1d738-c088-4c05-a02f-dda9ee96c95c",
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $json;\n\nlet raw =\n  input.output?.[0]?.content?.[0]?.text ||\n  input.content?.[0]?.text ||\n  input.text ||\n  input.output ||\n  input.response ||\n  input.message ||\n  input.data ||\n  input.result ||\n  JSON.stringify(input);\n\nif (typeof raw !== 'string') {\n  raw = JSON.stringify(raw);\n}\n\nraw = raw\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\nlet d;\n\ntry {\n  d = JSON.parse(raw);\n} catch (e) {\n  d = {\n    score: \"?\",\n    status: \"unbekannt\",\n    summary_short: raw,\n    knee_rehab_feedback: \"\",\n    weight_feedback: \"\",\n    bmi_feedback: \"\",\n    next_week_recommendation: \"\",\n    avoid_next_week: [],\n    workout_links: []\n  };\n}\n\nconst avoid = Array.isArray(d.avoid_next_week)\n  ? d.avoid_next_week.join(\", \")\n  : d.avoid_next_week || \"\";\n\nconst links = Array.isArray(d.workout_links)\n  ? d.workout_links\n      .map((l, i) => `${i + 1}. ${l.title}\\n${l.url}\\nWarum: ${l.why || \"-\"}`)\n      .join(\"\\n\\n\")\n  : \"-\";\n\nreturn [\n  {\n    json: {\n      telegram_text:\n`🏃‍♂️ Sportanalyse letzte Woche\n\nScore: ${d.score ?? \"?\"}/100\nStatus: ${d.status ?? \"-\"}\n\nKurzfassung:\n${d.summary_short ?? \"-\"}\n\nKreuzband-Reha:\n${d.knee_rehab_feedback ?? \"-\"}\n\nGewicht:\n${d.weight_feedback ?? \"-\"}\n\nBMI:\n${d.bmi_feedback ?? \"-\"}\n\nEmpfehlung nächste Woche:\n${d.next_week_recommendation ?? \"-\"}\n\nVermeiden:\n${avoid || \"-\"}\n\nPassende Übungen / Workouts:\n${links || \"-\"}\n\nHinweis:\nBei Schmerzen, Schwellung, Instabilität oder Wärmegefühl im Knie Training reduzieren und Physio/Arzt fragen.`\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          176,
+          224
+        ],
+        "id": "6d521d04-5369-49f3-ac95-d80d95f320c2",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 23
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -1744,
+          128
+        ],
+        "id": "5faebdc5-d86b-4895-961c-757229226ba7",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "url": "http://192.168.178.42:8787/health-week?days=7",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -848,
+          224
+        ],
+        "id": "731dde4f-d9a3-45ba-8ef1-520b806190eb",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "jsCode": "const response = $json;\n\nif (!response.ok) {\n  throw new Error(response.error || \"Health Auto Export Bridge Fehler\");\n}\n\nconst healthData =\n  response.json?.result ||\n  response.json ||\n  response.raw ||\n  response;\n\nreturn [\n  {\n    json: {\n      health_auto_export_raw: healthData,\n      health_auto_export_meta: {\n        days: response.days,\n        start: response.start,\n        end: response.end,\n        metrics: response.metrics\n      }\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -624,
+          224
+        ],
+        "id": "41654f84-7cb7-4554-b2c4-6a599f539558",
+        "name": "Health Daten vorbereiten"
+      }
+    ],
+    "connections": {
+      "Konfiguration": {
+        "main": [
+          [
+            {
+              "node": "Strava - Aktivitäten holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Strava - Aktivitäten holen": {
+        "main": [
+          [
+            {
+              "node": "Strava Daten vorbereiten",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Strava Daten vorbereiten": {
+        "main": [
+          [
+            {
+              "node": "InfluxDB - Aktivitäten schreiben",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prompt für ChatGPT bauen": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message a model": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Health Daten vorbereiten",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Health Daten vorbereiten": {
+        "main": [
+          [
+            {
+              "node": "Prompt für ChatGPT bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": "Version b1a4d986",
+    "description": "",
+    "autosaved": true
+  },
+  "activeVersionId": "b1a4d986-f9a7-447c-9f9f-0dee5f15ce3a",
+  "connections": {
+    "Konfiguration": {
+      "main": [
+        [
+          {
+            "node": "Strava - Aktivitäten holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strava - Aktivitäten holen": {
+      "main": [
+        [
+          {
+            "node": "Strava Daten vorbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strava Daten vorbereiten": {
+      "main": [
+        [
+          {
+            "node": "InfluxDB - Aktivitäten schreiben",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt für ChatGPT bauen": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Konfiguration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Health Daten vorbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Health Daten vorbereiten": {
+      "main": [
+        [
+          {
+            "node": "Prompt für ChatGPT bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-05-09T13:22:33.948Z",
+  "id": "k4DZeEtLRIyIz6AE",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "Sport Analyse – Strava + ChatGPT + InfluxDB",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg_influx_url",
+              "name": "INFLUX_URL",
+              "value": "http://192.168.178.42:8086/",
+              "type": "string"
+            },
+            {
+              "id": "cfg_influx_org",
+              "name": "INFLUX_ORG",
+              "value": "home",
+              "type": "string"
+            },
+            {
+              "id": "cfg_influx_bucket",
+              "name": "INFLUX_BUCKET",
+              "value": "sport",
+              "type": "string"
+            },
+            {
+              "id": "cfg_influx_token",
+              "name": "INFLUX_TOKEN",
+              "value": "DEIN_INFLUX_TOKEN",
+              "type": "string"
+            },
+            {
+              "id": "cfg_days",
+              "name": "ANALYSE_TAGE",
+              "value": 7,
+              "type": "number"
+            },
+            {
+              "id": "c0291bb2-a291-4337-852f-9013fd021ee3",
+              "name": "HEIGHT_CM",
+              "value": "176",
+              "type": "string"
+            },
+            {
+              "id": "074bfdfd-8754-42d9-9e16-e828fb2f2418",
+              "name": "WEIGHT_KG_MANUAL",
+              "value": "85",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "75585483-cb89-4c92-81be-32d56e425225",
+      "name": "Konfiguration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1520,
+        128
+      ],
+      "notesInFlow": true,
+      "notes": "Hier InfluxDB URL, Org, Bucket und Token setzen. Strava- und OpenAI-Credentials direkt in den jeweiligen Nodes auswählen."
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1
+      },
+      "id": "c6a00189-b4b0-408e-90dd-a9fdf0ed0aa9",
+      "name": "Strava - Aktivitäten holen",
+      "type": "n8n-nodes-base.strava",
+      "typeVersion": 1,
+      "position": [
+        -1296,
+        128
+      ],
+      "notesInFlow": true,
+      "credentials": {
+        "stravaOAuth2Api": {
+          "id": "XmPEc4l78f5iHNF7",
+          "name": "Strava account"
+        }
+      },
+      "notes": "Nach Import: Strava Credential auswählen. Operation soll Activity → Get all activities sein. Falls 'after' nicht automatisch sitzt: Filter 'After' = Expression aus diesem Node."
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Strava liefert pro Aktivität ein Item.\n// Dieses Node erzeugt:\n// 1) Line Protocol für jede Strava-Aktivität\n// 2) Eine kompakte JSON-Zusammenfassung für ChatGPT\n\nfunction escTag(value) {\n  if (value === undefined || value === null || value === '') return 'unknown';\n  return String(value)\n    .replace(/ /g, '\\\\ ')\n    .replace(/,/g, '\\\\,')\n    .replace(/=/g, '\\\\=');\n}\n\nfunction escFieldString(value) {\n  if (value === undefined || value === null) return '';\n  return String(value)\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/\"/g, '\\\\\"')\n    .replace(/\\n/g, ' ');\n}\n\nfunction num(value, fallback = 0) {\n  const n = Number(value);\n  return Number.isFinite(n) ? n : fallback;\n}\n\nconst activities = items\n  .map(i => i.json)\n  .filter(a => a && (a.id || a.name || a.start_date));\n\nconst lines = [];\nconst compact = [];\n\nfor (const a of activities) {\n  const id = a.id || `${a.start_date || 'unknown'}_${a.name || 'activity'}`;\n  const name = a.name || 'Strava Activity';\n  const type = a.type || a.sport_type || 'Activity';\n  const start = a.start_date || a.start_date_local || new Date().toISOString();\n\n  const distanceKm = num(a.distance) / 1000;\n  const durationMin = num(a.moving_time || a.elapsed_time) / 60;\n  const elapsedMin = num(a.elapsed_time) / 60;\n  const elevationM = num(a.total_elevation_gain);\n  const calories = num(a.calories);\n  const avgSpeedKmh = num(a.average_speed) * 3.6;\n  const maxSpeedKmh = num(a.max_speed) * 3.6;\n  const avgHeartrate = num(a.average_heartrate);\n  const maxHeartrate = num(a.max_heartrate);\n  const kudos = num(a.kudos_count);\n  const achievementCount = num(a.achievement_count);\n  const sufferScore = num(a.suffer_score);\n\n  const ts = new Date(start).getTime() * 1000000;\n\n  const fields = [\n    `activity_count=1i`,\n    `distance_km=${distanceKm}`,\n    `duration_min=${durationMin}`,\n    `elapsed_min=${elapsedMin}`,\n    `elevation_m=${elevationM}`,\n    `calories=${calories}`,\n    `avg_speed_kmh=${avgSpeedKmh}`,\n    `max_speed_kmh=${maxSpeedKmh}`,\n    `avg_heartrate=${avgHeartrate}`,\n    `max_heartrate=${maxHeartrate}`,\n    `kudos=${kudos}i`,\n    `achievement_count=${achievementCount}i`,\n    `suffer_score=${sufferScore}`,\n    `activity_name=\"${escFieldString(name)}\"`\n  ];\n\n  lines.push(\n    `sport_activity,source=strava,sport_type=${escTag(type)},activity_id=${escTag(id)} ${fields.join(',')} ${ts}`\n  );\n\n  compact.push({\n    date: start,\n    id,\n    name,\n    type,\n    distance_km: Number(distanceKm.toFixed(2)),\n    duration_min: Number(durationMin.toFixed(1)),\n    elapsed_min: Number(elapsedMin.toFixed(1)),\n    elevation_m: Number(elevationM.toFixed(0)),\n    calories: calories,\n    avg_speed_kmh: Number(avgSpeedKmh.toFixed(2)),\n    max_speed_kmh: Number(maxSpeedKmh.toFixed(2)),\n    avg_heartrate: avgHeartrate,\n    max_heartrate: maxHeartrate,\n    suffer_score: sufferScore || null\n  });\n}\n\nconst totals = compact.reduce((acc, a) => {\n  acc.activities += 1;\n  acc.duration_min += a.duration_min || 0;\n  acc.distance_km += a.distance_km || 0;\n  acc.elevation_m += a.elevation_m || 0;\n  acc.calories += a.calories || 0;\n\n  acc.by_type[a.type] = acc.by_type[a.type] || {\n    count: 0,\n    duration_min: 0,\n    distance_km: 0\n  };\n\n  acc.by_type[a.type].count += 1;\n  acc.by_type[a.type].duration_min += a.duration_min || 0;\n  acc.by_type[a.type].distance_km += a.distance_km || 0;\n\n  return acc;\n}, {\n  activities: 0,\n  duration_min: 0,\n  distance_km: 0,\n  elevation_m: 0,\n  calories: 0,\n  by_type: {}\n});\n\ntotals.duration_min = Number(totals.duration_min.toFixed(1));\ntotals.distance_km = Number(totals.distance_km.toFixed(2));\ntotals.elevation_m = Number(totals.elevation_m.toFixed(0));\ntotals.calories = Number(totals.calories.toFixed(0));\n\nreturn [\n  {\n    json: {\n      influx_activity_line_protocol: lines.join('\\n'),\n      activity_count: compact.length,\n      strava_compact: compact,\n      totals\n    }\n  }\n];"
+      },
+      "id": "4bbeca49-d576-4258-9fbb-70e5da6b0a49",
+      "name": "Strava Daten vorbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1072,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Konfiguration').first().json.INFLUX_URL + '/api/v2/write?org=' + encodeURIComponent($('Konfiguration').first().json.INFLUX_ORG) + '&bucket=' + encodeURIComponent($('Konfiguration').first().json.INFLUX_BUCKET) + '&precision=ns' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Token ' + $('Konfiguration').first().json.INFLUX_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "text/plain"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/plain",
+        "body": "={{ $json.influx_activity_line_protocol }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c5c0cb36-b1da-4e9a-807c-37558968a1bc",
+      "name": "InfluxDB - Aktivitäten schreiben",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -848,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nconst cfg = $('Konfiguration').first().json;\n\nconst heightCm = Number(cfg.HEIGHT_CM || 0);\nconst weightKg = Number(cfg.WEIGHT_KG_MANUAL || cfg.WEIGHT_KG || 0);\n\nconst heightM = heightCm / 100;\nconst bmi = heightM > 0 && weightKg > 0\n  ? Number((weightKg / (heightM * heightM)).toFixed(2))\n  : null;\n\nconst bodyMetrics = {\n  weight_kg: weightKg,\n  height_cm: heightCm,\n  bmi: bmi\n};\n\nconst healthData = (() => {\n  try {\n    return $('Health Daten vorbereiten').first().json.health_auto_export_raw;\n  } catch (e) {\n    return {};\n  }\n})();\n\nconst prompt = `\nDu bist mein vorsichtiger Sportanalyse-Coach während der Kreuzband-Reha.\n\nWichtiger Kontext:\n- Ich befinde mich aktuell in der Recovery nach einer Kreuzband-OP / Kreuzbandverletzung.\n- Die Analyse darf keine medizinische Diagnose ersetzen.\n- Sicherheit, Belastungssteuerung und vorsichtiger Fortschritt sind wichtiger als Leistung.\n- Keine aggressiven Trainingssteigerungen empfehlen.\n- Bei Warnzeichen soll empfohlen werden, mit Arzt/Physio Rücksprache zu halten.\n\nAnalysiere ausschließlich:\n1. Strava-Daten der letzten ${cfg.ANALYSE_TAGE} Tage\n2. Gewichtsdaten\n3. Apple Health / Garmin Health Daten über Health Auto Export\n\nBewerte:\n1. Trainingshäufigkeit\n2. Ausdauer-Belastung\n3. Geh-/Lauf-/Radanteil, falls erkennbar\n4. Belastungssteigerung im Vergleich der Aktivitäten\n5. Intensität anhand Tempo, Dauer, Höhenmeter, Herzfrequenz und Suffer Score, falls vorhanden\n6. Recovery-Verträglichkeit\n7. Risiko für zu schnelle Belastungssteigerung\n8. Gewicht im Kontext von Kniebelastung, Recovery und Trainingssteuerung\n9. Schlafdauer und Schlafqualität\n10. Schritte und Alltagsbelastung\n11. Ruhepuls, Herzfrequenz und HRV\n12. Walking-/Gangbild-Werte, falls vorhanden\n13. Ob nächste Woche Belastung halten, reduzieren oder leicht steigern sinnvoll ist\n14. Konkrete, vorsichtige Empfehlung für die nächste Woche\n\nBesonders beachten:\n- Joggen/Laufen nur vorsichtig bewerten.\n- Keine Empfehlung zu Sprint, Intervallen, Sprüngen, Richtungswechseln oder maximaler Belastung.\n- Wenn viele Aktivitäten mit hoher Intensität, langen Distanzen oder starken Höhenmetern vorkommen, als mögliches Reha-Risiko markieren.\n- Wenn nur lockere Spaziergänge, Radfahren oder kurze Einheiten vorhanden sind, positiv bewerten.\n- Wenn Herzfrequenzdaten fehlen, Belastung vorsichtig anhand Dauer, Distanz und Tempo einschätzen.\n- Gewichtsdaten nicht bewerten wie eine Diät-App, sondern nur im Kontext von Kniebelastung, Recovery und Trainingssteuerung.\n- Wenn Schlaf schlecht, Ruhepuls erhöht oder HRV niedrig wirkt: Belastung eher reduzieren.\n- Wenn Schritte sehr hoch sind, Alltagsbelastung berücksichtigen.\n- Wenn Health-Daten fehlen oder unvollständig sind, klar erwähnen.\n- Keine medizinische Diagnose.\n- Bei Schmerzen, Schwellung, Instabilität, Wärmegefühl im Knie oder deutlicher Verschlechterung: Training reduzieren und Physio/Arzt kontaktieren.\n\nNutze für passende Übungs-/Workout-Links ausschließlich diese kuratierte Linkliste.\nWähle 2 bis maximal 4 Links aus, die zur Empfehlung für nächste Woche passen.\nKeine frei erfundenen Links.\n\nKuratierte Links:\n[\n  {\n    \"title\": \"Cambridge University Hospitals – ACL reconstruction rehabilitation\",\n    \"url\": \"https://www.cuh.nhs.uk/patient-information/anterior-cruciate-ligament-acl-reconstruction-rehabilitation/\",\n    \"use_when\": \"Allgemeine ACL-Reha, sichere Progression, Patientenerklärung\"\n  },\n  {\n    \"title\": \"AAOS – Knee Conditioning Program\",\n    \"url\": \"https://orthoinfo.aaos.org/en/recovery/knee-conditioning-program/\",\n    \"use_when\": \"Kniekräftigung, Mobility, allgemeine Übungen unter ärztlicher/physiotherapeutischer Anleitung\"\n  },\n  {\n    \"title\": \"AAOS – Knee Rehabilitation Exercises PDF\",\n    \"url\": \"https://orthoinfo.aaos.org/en/recovery/knee-conditioning-program/knee-pdf/\",\n    \"use_when\": \"Konkrete Knie-Reha-Übungen als PDF\"\n  },\n  {\n    \"title\": \"Mass General – ACL Rehabilitation Protocol PDF\",\n    \"url\": \"https://www.massgeneral.org/assets/mgh/pdf/orthopaedics/sports-medicine/physical-therapy/rehabilitation-protocol-for-acl.pdf\",\n    \"use_when\": \"Strukturierter ACL-Reha-Plan mit Progression, nur als Orientierung mit Physio\"\n  }\n]\n\nAntworte ausschließlich als valides JSON ohne Markdown.\nScore ist 0 bis 100.\nDer Score bewertet nicht maximale Leistung, sondern sinnvolle, sichere Recovery-Belastung.\n\nJSON-Format:\n{\n  \"score\": 0,\n  \"status\": \"gut|okay|kritisch\",\n  \"summary_short\": \"\",\n  \"summary_long\": \"\",\n  \"positive_points\": [],\n  \"risk_points\": [],\n  \"next_week_recommendation\": \"\",\n  \"cardio_feedback\": \"\",\n  \"recovery_feedback\": \"\",\n  \"knee_rehab_feedback\": \"\",\n  \"load_progression_feedback\": \"\",\n  \"weight_feedback\": \"\",\n  \"bmi_feedback\": \"\",\n  \"sleep_feedback\": \"\",\n  \"steps_feedback\": \"\",\n  \"heart_rate_feedback\": \"\",\n  \"hrv_feedback\": \"\",\n  \"walking_stability_feedback\": \"\",\n  \"recovery_readiness\": \"gut|mittel|niedrig|unbekannt\",\n  \"warning_signs\": [],\n  \"avoid_next_week\": [],\n  \"workout_links\": [\n    {\n      \"title\": \"\",\n      \"url\": \"\",\n      \"why\": \"\"\n    }\n  ],\n  \"grafana_text\": \"\",\n  \"training_days_estimate\": 0,\n  \"focus_next_week\": \"\",\n  \"detected_main_sports\": [],\n  \"total_distance_km\": 0,\n  \"total_duration_min\": 0,\n  \"weight_kg\": 0,\n  \"bmi\": 0\n}\n\nStrava Summen:\n${JSON.stringify(data.totals, null, 2)}\n\nStrava Aktivitäten:\n${JSON.stringify(data.strava_compact, null, 2)}\n\nGewichtsdaten:\n${JSON.stringify(bodyMetrics, null, 2)}\n\nApple Health / Garmin Health Daten über Health Auto Export:\n${JSON.stringify(healthData, null, 2)}\n`;\n\nreturn [\n  {\n    json: {\n      prompt,\n      totals: data.totals,\n      strava_compact: data.strava_compact,\n      body_metrics: bodyMetrics,\n      health_data: healthData\n    }\n  }\n];"
+      },
+      "id": "a180bd34-73f9-4ace-8923-034d93c30957",
+      "name": "Prompt für ChatGPT bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Einrichtung\n\n1. In **Konfiguration** Influx URL, Org, Bucket und Token setzen.\n2. In **Strava - Aktivitäten holen** dein Strava OAuth2 Credential auswählen.\n3. In **ChatGPT - Strava analysieren** dein OpenAI Credential auswählen.\n4. Test mit **Manuell starten**.\n5. Danach Schedule aktivieren.\n\nInflux Measurements:\n- `sport_activity`\n- `sport_ai_analysis`\n\nNur Strava, kein Hevy.",
+        "height": 360,
+        "width": 520,
+        "color": 4
+      },
+      "id": "56e09387-d2ff-49dd-bddd-068216f35fda",
+      "name": "Setup Hinweis",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1440,
+        -528
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4-nano-2026-03-17",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4-NANO-2026-03-17"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -176,
+        224
+      ],
+      "id": "770784f2-9890-492b-a02f-5cbb6a218455",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EVf6W0jyq4ACcS36",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "=Hui {{ $json.telegram_text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        224
+      ],
+      "id": "2400c719-9e01-4e10-9c05-b8968fa830cc",
+      "name": "Send a text message",
+      "webhookId": "47f1d738-c088-4c05-a02f-dda9ee96c95c",
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json;\n\nlet raw =\n  input.output?.[0]?.content?.[0]?.text ||\n  input.content?.[0]?.text ||\n  input.text ||\n  input.output ||\n  input.response ||\n  input.message ||\n  input.data ||\n  input.result ||\n  JSON.stringify(input);\n\nif (typeof raw !== 'string') {\n  raw = JSON.stringify(raw);\n}\n\nraw = raw\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\nlet d;\n\ntry {\n  d = JSON.parse(raw);\n} catch (e) {\n  d = {\n    score: \"?\",\n    status: \"unbekannt\",\n    summary_short: raw,\n    knee_rehab_feedback: \"\",\n    weight_feedback: \"\",\n    bmi_feedback: \"\",\n    next_week_recommendation: \"\",\n    avoid_next_week: [],\n    workout_links: []\n  };\n}\n\nconst avoid = Array.isArray(d.avoid_next_week)\n  ? d.avoid_next_week.join(\", \")\n  : d.avoid_next_week || \"\";\n\nconst links = Array.isArray(d.workout_links)\n  ? d.workout_links\n      .map((l, i) => `${i + 1}. ${l.title}\\n${l.url}\\nWarum: ${l.why || \"-\"}`)\n      .join(\"\\n\\n\")\n  : \"-\";\n\nreturn [\n  {\n    json: {\n      telegram_text:\n`🏃‍♂️ Sportanalyse letzte Woche\n\nScore: ${d.score ?? \"?\"}/100\nStatus: ${d.status ?? \"-\"}\n\nKurzfassung:\n${d.summary_short ?? \"-\"}\n\nKreuzband-Reha:\n${d.knee_rehab_feedback ?? \"-\"}\n\nGewicht:\n${d.weight_feedback ?? \"-\"}\n\nBMI:\n${d.bmi_feedback ?? \"-\"}\n\nEmpfehlung nächste Woche:\n${d.next_week_recommendation ?? \"-\"}\n\nVermeiden:\n${avoid || \"-\"}\n\nPassende Übungen / Workouts:\n${links || \"-\"}\n\nHinweis:\nBei Schmerzen, Schwellung, Instabilität oder Wärmegefühl im Knie Training reduzieren und Physio/Arzt fragen.`\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        224
+      ],
+      "id": "6d521d04-5369-49f3-ac95-d80d95f320c2",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 23
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1744,
+        128
+      ],
+      "id": "5faebdc5-d86b-4895-961c-757229226ba7",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.178.42:3002",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -848,
+        224
+      ],
+      "id": "731dde4f-d9a3-45ba-8ef1-520b806190eb",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $json;\n\nif (!response.ok) {\n  throw new Error(response.error || \"Health Auto Export Bridge Fehler\");\n}\n\nconst healthData =\n  response.json?.result ||\n  response.json ||\n  response.raw ||\n  response;\n\nreturn [\n  {\n    json: {\n      health_auto_export_raw: healthData,\n      health_auto_export_meta: {\n        days: response.days,\n        start: response.start,\n        end: response.end,\n        metrics: response.metrics\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        224
+      ],
+      "id": "41654f84-7cb7-4554-b2c4-6a599f539558",
+      "name": "Health Daten vorbereiten"
+    }
+  ],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-05-09T13:22:33.951Z",
+      "createdAt": "2026-05-09T13:22:33.951Z",
+      "role": "workflow:owner",
+      "workflowId": "k4DZeEtLRIyIz6AE",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [
+    {
+      "updatedAt": "2026-05-09T13:25:22.436Z",
+      "createdAt": "2026-05-09T13:25:22.436Z",
+      "id": "CMXW6ec6SO2wg923",
+      "name": "strava"
+    },
+    {
+      "updatedAt": "2026-05-09T13:25:22.448Z",
+      "createdAt": "2026-05-09T13:25:22.448Z",
+      "id": "cZSw6tgd7MptvaaP",
+      "name": "sport"
+    },
+    {
+      "updatedAt": "2026-05-09T13:25:22.452Z",
+      "createdAt": "2026-05-09T13:25:22.452Z",
+      "id": "tlKwiQEMyeVnsRkA",
+      "name": "chatgpt"
+    },
+    {
+      "updatedAt": "2026-05-09T13:25:22.456Z",
+      "createdAt": "2026-05-09T13:25:22.456Z",
+      "id": "zfpVobiZwtRDJYm3",
+      "name": "influxdb"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-05-10T21:50:34.928Z",
+  "versionId": "189691b7-2bd5-4b64-bd20-1128ec361383"
+}
