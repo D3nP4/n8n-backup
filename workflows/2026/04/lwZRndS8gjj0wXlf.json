@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-09T13:08:02.000Z",
-    "createdAt": "2026-05-09T13:08:01.151Z",
-    "versionId": "19b85a10-e38d-44de-8532-85f8a6dd4f8b",
+    "updatedAt": "2026-05-11T16:49:49.000Z",
+    "createdAt": "2026-05-09T16:55:22.334Z",
+    "versionId": "11255c44-075b-46d3-97a5-5024fac04bed",
     "workflowId": "lwZRndS8gjj0wXlf",
     "nodes": [
       {
@@ -133,8 +133,8 @@
         "type": "n8n-nodes-base.telegram",
         "typeVersion": 1.2,
         "position": [
-          288,
-          16
+          320,
+          32
         ],
         "id": "57ccdd25-5d3d-4886-8180-803b5a2e137f",
         "name": "Send a text message",
@@ -215,11 +215,11 @@
       }
     },
     "authors": "Dennis Paun",
-    "name": "Version 19b85a10",
+    "name": "Version 11255c44",
     "description": "",
-    "autosaved": false
+    "autosaved": true
   },
-  "activeVersionId": "19b85a10-e38d-44de-8532-85f8a6dd4f8b",
+  "activeVersionId": "11255c44-075b-46d3-97a5-5024fac04bed",
   "connections": {
     "IMAP Trigger": {
       "main": [
@@ -455,7 +455,7 @@
   ],
   "staticData": {
     "node:IMAP Trigger": {
-      "lastMessageUid": 910
+      "lastMessageUid": 928
     }
   },
   "tags": [],
