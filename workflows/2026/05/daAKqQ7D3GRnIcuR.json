@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-04T10:41:45.000Z",
-    "createdAt": "2026-05-04T10:41:18.883Z",
-    "versionId": "5299c70f-68fd-466c-b31e-c8ca6d172b69",
+    "updatedAt": "2026-05-11T16:52:41.000Z",
+    "createdAt": "2026-05-11T16:52:30.090Z",
+    "versionId": "4f1f3410-acd5-4e51-869f-a5467dd97151",
     "workflowId": "daAKqQ7D3GRnIcuR",
     "nodes": [
       {
@@ -222,6 +222,7 @@
           528
         ],
         "typeVersion": 1.8,
+        "retryOnFail": true,
         "credentials": {
           "openAiApi": {
             "id": "EVf6W0jyq4ACcS36",
@@ -627,11 +628,11 @@
       }
     },
     "authors": "Dennis Paun",
-    "name": "Version 5299c70f",
+    "name": "Version 4f1f3410",
     "description": "",
     "autosaved": true
   },
-  "activeVersionId": "5299c70f-68fd-466c-b31e-c8ca6d172b69",
+  "activeVersionId": "4f1f3410-acd5-4e51-869f-a5467dd97151",
   "connections": {
     "Limit": {
       "main": [
@@ -1038,6 +1039,7 @@
         528
       ],
       "typeVersion": 1.8,
+      "retryOnFail": true,
       "credentials": {
         "openAiApi": {
           "id": "EVf6W0jyq4ACcS36",
@@ -1261,7 +1263,28 @@
       }
     }
   ],
-  "pinData": {},
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-05-11T12:00:42.005-04:00",
+          "Readable date": "May 11th 2026, 12:00:42 pm",
+          "Readable time": "12:00:42 pm",
+          "Day of week": "Monday",
+          "Year": "2026",
+          "Month": "May",
+          "Day of month": "11",
+          "Hour": "12",
+          "Minute": "00",
+          "Second": "42",
+          "Timezone": "America/New_York (UTC-04:00)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
   "repo_name": "n8n-backup",
   "repo_owner": "D3nP4",
   "repo_path": "workflows/",
@@ -1287,6 +1310,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-05-04T10:41:18.883Z",
-  "versionId": "5299c70f-68fd-466c-b31e-c8ca6d172b69"
+  "updatedAt": "2026-05-11T16:52:30.089Z",
+  "versionId": "4f1f3410-acd5-4e51-869f-a5467dd97151"
 }
