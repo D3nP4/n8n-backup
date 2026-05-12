@@ -1,102 +1,7 @@
 {
-  "active": true,
-  "activeVersion": {
-    "updatedAt": "2026-04-28T08:28:27.000Z",
-    "createdAt": "2026-04-28T08:28:06.357Z",
-    "versionId": "4ab62782-ce62-451a-8dab-58591875ef94",
-    "workflowId": "irAsYcjqWTuWkBJn",
-    "nodes": [
-      {
-        "parameters": {
-          "rule": {
-            "interval": [
-              {
-                "field": "hours",
-                "hoursInterval": 8
-              }
-            ]
-          }
-        },
-        "type": "n8n-nodes-base.scheduleTrigger",
-        "typeVersion": 1.3,
-        "position": [
-          -160,
-          -64
-        ],
-        "id": "64d5a47b-fdda-4266-818f-fcb8847b1bd3",
-        "name": "Schedule Trigger"
-      },
-      {
-        "parameters": {
-          "url": "http://192.168.178.42:1234/?automate=true&config=volksbank.json",
-          "options": {
-            "response": {
-              "response": {}
-            },
-            "timeout": 20000
-          }
-        },
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.4,
-        "position": [
-          192,
-          16
-        ],
-        "id": "b8ec974f-63df-4ae8-9c06-59c03539707e",
-        "name": "HTTP Request"
-      },
-      {
-        "parameters": {
-          "userKey": "uv1265uon69b2871uey6x8ba94t9dy",
-          "message": "Bank Daten abgerufen",
-          "priority": 1,
-          "additionalFields": {}
-        },
-        "type": "n8n-nodes-base.pushover",
-        "typeVersion": 1,
-        "position": [
-          192,
-          -144
-        ],
-        "id": "ac6beac9-6087-4230-8083-0affb9132beb",
-        "name": "Push a message",
-        "credentials": {
-          "pushoverApi": {
-            "id": "1VD3iZZtoihGdzBM",
-            "name": "Pushover account"
-          }
-        }
-      }
-    ],
-    "connections": {
-      "Schedule Trigger": {
-        "main": [
-          [
-            {
-              "node": "Push a message",
-              "type": "main",
-              "index": 0
-            },
-            {
-              "node": "HTTP Request",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Push a message": {
-        "main": [
-          []
-        ]
-      }
-    },
-    "authors": "Dennis Paun",
-    "name": "Version 4ab62782",
-    "description": "",
-    "autosaved": true
-  },
-  "activeVersionId": "4ab62782-ce62-451a-8dab-58591875ef94",
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
   "connections": {
     "Schedule Trigger": {
       "main": [
@@ -210,7 +115,7 @@
   "staticData": {
     "node:Schedule Trigger": {
       "recurrenceRules": [
-        0
+        8
       ]
     }
   },
