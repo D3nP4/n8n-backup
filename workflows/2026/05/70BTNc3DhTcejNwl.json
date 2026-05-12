@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-06T15:09:55.000Z",
-    "createdAt": "2026-05-06T15:09:53.090Z",
-    "versionId": "bb6b4215-3c6f-4c8e-92d5-b237955e4e05",
+    "updatedAt": "2026-05-11T16:51:32.000Z",
+    "createdAt": "2026-05-11T16:51:27.279Z",
+    "versionId": "23fcd9b0-0032-4beb-bf44-16e6b0f44327",
     "workflowId": "70BTNc3DhTcejNwl",
     "nodes": [
       {
@@ -44,7 +44,7 @@
               {
                 "id": "paperless_url",
                 "name": "paperless_url",
-                "value": "http://192.168.178.42:8000",
+                "value": "https://paperless.paun01.de",
                 "type": "string"
               },
               {
@@ -683,11 +683,11 @@
       }
     },
     "authors": "Dennis Paun",
-    "name": "Version bb6b4215",
+    "name": "Version 23fcd9b0",
     "description": "",
     "autosaved": true
   },
-  "activeVersionId": "bb6b4215-3c6f-4c8e-92d5-b237955e4e05",
+  "activeVersionId": "23fcd9b0-0032-4beb-bf44-16e6b0f44327",
   "connections": {
     "Manual Trigger": {
       "main": [
@@ -931,7 +931,7 @@
             {
               "id": "paperless_url",
               "name": "paperless_url",
-              "value": "http://192.168.178.42:8000",
+              "value": "https://paperless.paun01.de",
               "type": "string"
             },
             {
@@ -1396,6 +1396,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-05-06T15:09:53.089Z",
-  "versionId": "bb6b4215-3c6f-4c8e-92d5-b237955e4e05"
+  "updatedAt": "2026-05-11T16:51:27.278Z",
+  "versionId": "23fcd9b0-0032-4beb-bf44-16e6b0f44327"
 }
