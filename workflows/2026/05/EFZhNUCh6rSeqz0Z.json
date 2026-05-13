@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-10T21:52:19.000Z",
-    "createdAt": "2026-05-09T13:03:34.046Z",
-    "versionId": "a82362a8-c5cd-486e-bd59-4f532870c645",
+    "updatedAt": "2026-05-12T21:10:12.000Z",
+    "createdAt": "2026-05-12T21:10:09.088Z",
+    "versionId": "5977957b-6f8d-4149-8aac-3661530fd3fe",
     "workflowId": "EFZhNUCh6rSeqz0Z",
     "nodes": [
       {
@@ -17,26 +17,6 @@
         "position": [
           1728,
           1952
-        ]
-      },
-      {
-        "parameters": {
-          "rule": {
-            "interval": [
-              {
-                "field": "cronExpression",
-                "expression": "30 5 * * *"
-              }
-            ]
-          }
-        },
-        "id": "dd6362fe-8dc5-4ab0-b6d1-c049905d482a",
-        "name": "Cron - 05:30 Backoffice-Aufgaben erzeugen",
-        "type": "n8n-nodes-base.scheduleTrigger",
-        "typeVersion": 1.2,
-        "position": [
-          2160,
-          1760
         ]
       },
       {
@@ -76,30 +56,10 @@
         ],
         "credentials": {
           "vikunjaApi": {
-            "id": "IsQ0AYbsFndZaCGo",
+            "id": "nXgiHW9MIy4I596w",
             "name": "Vikunja account"
           }
         }
-      },
-      {
-        "parameters": {
-          "rule": {
-            "interval": [
-              {
-                "field": "cronExpression",
-                "expression": "30 7 * * *"
-              }
-            ]
-          }
-        },
-        "id": "90066cca-56d4-4ec2-9fe1-0853f191c272",
-        "name": "Cron - 07:30 Tagesplan",
-        "type": "n8n-nodes-base.scheduleTrigger",
-        "typeVersion": 1.2,
-        "position": [
-          2128,
-          2160
-        ]
       },
       {
         "parameters": {
@@ -134,8 +94,8 @@
         ],
         "credentials": {
           "vikunjaApi": {
-            "id": "IsQ0AYbsFndZaCGo",
-            "name": "Vikunja account"
+            "id": "de5KHpwDWLGtx44A",
+            "name": "Vikunja account 2"
           }
         }
       },
@@ -189,26 +149,6 @@
       },
       {
         "parameters": {
-          "rule": {
-            "interval": [
-              {
-                "field": "cronExpression",
-                "expression": "30 20 * * *"
-              }
-            ]
-          }
-        },
-        "id": "bb89f86d-4fb2-4c25-a697-0587ae80a99f",
-        "name": "Cron - 20:30 Abend-Review",
-        "type": "n8n-nodes-base.scheduleTrigger",
-        "typeVersion": 1.2,
-        "position": [
-          1216,
-          2544
-        ]
-      },
-      {
-        "parameters": {
           "jsCode": "const cfg = $input.first().json;\n\nconst projects = [\n  { key: 'inbox', id: cfg.VIKUNJA_PROJECT_INBOX_ID },\n  { key: 'termine', id: cfg.VIKUNJA_PROJECT_TERMINE_ID },\n  { key: 'menschen', id: cfg.VIKUNJA_PROJECT_MENSCHEN_ID },\n  { key: 'haushalt', id: cfg.VIKUNJA_PROJECT_HAUSHALT_ID },\n  { key: 'putzen', id: cfg.VIKUNJA_PROJECT_PUTZEN_ID },\n  { key: 'einkaufen', id: cfg.VIKUNJA_PROJECT_EINKAUFEN_ID },\n  { key: 'sport', id: cfg.VIKUNJA_PROJECT_SPORT_ID },\n  { key: 'finanzen', id: cfg.VIKUNJA_PROJECT_FINANZEN_ID },\n  { key: 'papierkram', id: cfg.VIKUNJA_PROJECT_PAPIERKRAM_ID },\n  { key: 'digital', id: cfg.VIKUNJA_PROJECT_DIGITAL_ID },\n  { key: 'auto', id: cfg.VIKUNJA_PROJECT_AUTO_ID },\n  { key: 'sicherheit', id: cfg.VIKUNJA_PROJECT_SICHERHEIT_ID },\n];\n\nconst validProjects = projects\n  .map(p => ({\n    key: p.key,\n    project_id: Number(p.id),\n  }))\n  .filter(p => Number.isFinite(p.project_id) && p.project_id > 0);\n\nif (validProjects.length === 0) {\n  return [\n    {\n      json: {\n        status: 'FEHLER',\n        message: 'Keine gültigen Vikunja-Projekt-IDs gefunden.',\n        input: cfg,\n      },\n    },\n  ];\n}\n\nreturn validProjects.map(p => ({\n  json: p,\n}));"
         },
         "id": "3f076546-f10d-425c-a491-705d4913893e",
@@ -240,8 +180,8 @@
         ],
         "credentials": {
           "vikunjaApi": {
-            "id": "IsQ0AYbsFndZaCGo",
-            "name": "Vikunja account"
+            "id": "de5KHpwDWLGtx44A",
+            "name": "Vikunja account 2"
           }
         }
       },
@@ -295,26 +235,6 @@
       },
       {
         "parameters": {
-          "rule": {
-            "interval": [
-              {
-                "field": "hours",
-                "hoursInterval": 6
-              }
-            ]
-          }
-        },
-        "id": "ea8e3d67-dc42-4fe6-aafb-d27275f80f57",
-        "name": "Cron - Sport alle 6h prüfen",
-        "type": "n8n-nodes-base.scheduleTrigger",
-        "typeVersion": 1.2,
-        "position": [
-          1440,
-          3136
-        ]
-      },
-      {
-        "parameters": {
           "jsCode": "\n// HIER DEINE SPORT-PROJEKT-ID EINTRAGEN\nconst sportProjectId = 0;\n\nif (!sportProjectId) {\n  return [{ json: { error: 'SPORT_PROJECT_ID_MISSING', hint: 'Bitte im Node \"Code - Sport Projekt-ID\" die Sport-Projekt-ID eintragen.' } }];\n}\n\nreturn [{ json: { project_id: String(sportProjectId) } }];\n"
         },
         "id": "f74dfa0f-85f9-4532-88d6-2918d68ef4de",
@@ -346,8 +266,8 @@
         ],
         "credentials": {
           "vikunjaApi": {
-            "id": "IsQ0AYbsFndZaCGo",
-            "name": "Vikunja account"
+            "id": "de5KHpwDWLGtx44A",
+            "name": "Vikunja account 2"
           }
         }
       },
@@ -427,8 +347,8 @@
         ],
         "credentials": {
           "vikunjaApi": {
-            "id": "IsQ0AYbsFndZaCGo",
-            "name": "Vikunja account"
+            "id": "de5KHpwDWLGtx44A",
+            "name": "Vikunja account 2"
           }
         }
       },
@@ -489,67 +409,67 @@
               {
                 "id": "f80a51af-c8fc-46bf-ac27-2dfe7e820c76",
                 "name": "VIKUNJA_PROJECT_TERMINE_ID",
-                "value": "13",
+                "value": "2",
                 "type": "string"
               },
               {
                 "id": "e34f6585-c912-4d9f-b895-d05ef4882aff",
                 "name": "VIKUNJA_PROJECT_MENSCHEN_ID",
-                "value": "14",
+                "value": "3",
                 "type": "string"
               },
               {
                 "id": "05c257f0-d044-49a0-9ff3-4d751fe7bc2d",
                 "name": "VIKUNJA_PROJECT_HAUSHALT_ID",
-                "value": "15",
+                "value": "4",
                 "type": "string"
               },
               {
                 "id": "b1715777-194f-466c-a9a7-b0a238c68072",
                 "name": "VIKUNJA_PROJECT_PUTZEN_ID",
-                "value": "16",
+                "value": "5",
                 "type": "string"
               },
               {
                 "id": "b16e732e-209b-438d-9e98-d21786ef99f5",
                 "name": "VIKUNJA_PROJECT_EINKAUFEN_ID",
-                "value": "17",
+                "value": "6",
                 "type": "string"
               },
               {
                 "id": "16e346b2-ed2c-4b9f-99e9-6c26e3bdb806",
                 "name": "VIKUNJA_PROJECT_SPORT_ID",
-                "value": "18",
+                "value": "7",
                 "type": "string"
               },
               {
                 "id": "c23f8d7e-64e0-430e-9762-91542ff2a6db",
                 "name": "VIKUNJA_PROJECT_FINANZEN_ID",
-                "value": "19",
+                "value": "8",
                 "type": "string"
               },
               {
                 "id": "3e347ad8-1966-4aa7-9b74-03e8d1ceb492",
                 "name": "VIKUNJA_PROJECT_PAPIERKRAM_ID",
-                "value": "20",
+                "value": "9",
                 "type": "string"
               },
               {
                 "id": "cb27eed6-3bd7-4571-ae12-b5b77022f335",
                 "name": "VIKUNJA_PROJECT_DIGITAL_ID",
-                "value": "21",
+                "value": "10",
                 "type": "string"
               },
               {
                 "id": "132da73d-79c8-4541-b920-ddff8a0912bc",
                 "name": "VIKUNJA_PROJECT_AUTO_ID",
-                "value": "22",
+                "value": "11",
                 "type": "string"
               },
               {
                 "id": "7b71269d-114a-4f75-8971-304c054db855",
                 "name": "VIKUNJA_PROJECT_SICHERHEIT_ID",
-                "value": "23",
+                "value": "12",
                 "type": "string"
               }
             ]
@@ -578,67 +498,67 @@
               {
                 "id": "f80a51af-c8fc-46bf-ac27-2dfe7e820c76",
                 "name": "VIKUNJA_PROJECT_TERMINE_ID",
-                "value": "13",
+                "value": "2",
                 "type": "string"
               },
               {
                 "id": "e34f6585-c912-4d9f-b895-d05ef4882aff",
                 "name": "VIKUNJA_PROJECT_MENSCHEN_ID",
-                "value": "14",
+                "value": "3",
                 "type": "string"
               },
               {
                 "id": "05c257f0-d044-49a0-9ff3-4d751fe7bc2d",
                 "name": "VIKUNJA_PROJECT_HAUSHALT_ID",
-                "value": "15",
+                "value": "4",
                 "type": "string"
               },
               {
                 "id": "b1715777-194f-466c-a9a7-b0a238c68072",
                 "name": "VIKUNJA_PROJECT_PUTZEN_ID",
-                "value": "16",
+                "value": "5",
                 "type": "string"
               },
               {
                 "id": "b16e732e-209b-438d-9e98-d21786ef99f5",
                 "name": "VIKUNJA_PROJECT_EINKAUFEN_ID",
-                "value": "17",
+                "value": "6",
                 "type": "string"
               },
               {
                 "id": "16e346b2-ed2c-4b9f-99e9-6c26e3bdb806",
                 "name": "VIKUNJA_PROJECT_SPORT_ID",
-                "value": "18",
+                "value": "7",
                 "type": "string"
               },
               {
                 "id": "c23f8d7e-64e0-430e-9762-91542ff2a6db",
                 "name": "VIKUNJA_PROJECT_FINANZEN_ID",
-                "value": "19",
+                "value": "8",
                 "type": "string"
               },
               {
                 "id": "3e347ad8-1966-4aa7-9b74-03e8d1ceb492",
                 "name": "VIKUNJA_PROJECT_PAPIERKRAM_ID",
-                "value": "20",
+                "value": "9",
                 "type": "string"
               },
               {
                 "id": "cb27eed6-3bd7-4571-ae12-b5b77022f335",
                 "name": "VIKUNJA_PROJECT_DIGITAL_ID",
-                "value": "21",
+                "value": "10",
                 "type": "string"
               },
               {
                 "id": "132da73d-79c8-4541-b920-ddff8a0912bc",
                 "name": "VIKUNJA_PROJECT_AUTO_ID",
-                "value": "22",
+                "value": "11",
                 "type": "string"
               },
               {
                 "id": "7b71269d-114a-4f75-8971-304c054db855",
                 "name": "VIKUNJA_PROJECT_SICHERHEIT_ID",
-                "value": "23",
+                "value": "12",
                 "type": "string"
               }
             ]
@@ -700,67 +620,67 @@
               {
                 "id": "f80a51af-c8fc-46bf-ac27-2dfe7e820c76",
                 "name": "VIKUNJA_PROJECT_TERMINE_ID",
-                "value": "13",
+                "value": "2",
                 "type": "string"
               },
               {
                 "id": "e34f6585-c912-4d9f-b895-d05ef4882aff",
                 "name": "VIKUNJA_PROJECT_MENSCHEN_ID",
-                "value": "14",
+                "value": "3",
                 "type": "string"
               },
               {
                 "id": "05c257f0-d044-49a0-9ff3-4d751fe7bc2d",
                 "name": "VIKUNJA_PROJECT_HAUSHALT_ID",
-                "value": "15",
+                "value": "4",
                 "type": "string"
               },
               {
                 "id": "b1715777-194f-466c-a9a7-b0a238c68072",
                 "name": "VIKUNJA_PROJECT_PUTZEN_ID",
-                "value": "16",
+                "value": "5",
                 "type": "string"
               },
               {
                 "id": "b16e732e-209b-438d-9e98-d21786ef99f5",
                 "name": "VIKUNJA_PROJECT_EINKAUFEN_ID",
-                "value": "17",
+                "value": "6",
                 "type": "string"
               },
               {
                 "id": "16e346b2-ed2c-4b9f-99e9-6c26e3bdb806",
                 "name": "VIKUNJA_PROJECT_SPORT_ID",
-                "value": "18",
+                "value": "7",
                 "type": "string"
               },
               {
                 "id": "c23f8d7e-64e0-430e-9762-91542ff2a6db",
                 "name": "VIKUNJA_PROJECT_FINANZEN_ID",
-                "value": "19",
+                "value": "8",
                 "type": "string"
               },
               {
                 "id": "3e347ad8-1966-4aa7-9b74-03e8d1ceb492",
                 "name": "VIKUNJA_PROJECT_PAPIERKRAM_ID",
-                "value": "20",
+                "value": "9",
                 "type": "string"
               },
               {
                 "id": "cb27eed6-3bd7-4571-ae12-b5b77022f335",
                 "name": "VIKUNJA_PROJECT_DIGITAL_ID",
-                "value": "21",
+                "value": "10",
                 "type": "string"
               },
               {
                 "id": "132da73d-79c8-4541-b920-ddff8a0912bc",
                 "name": "VIKUNJA_PROJECT_AUTO_ID",
-                "value": "22",
+                "value": "11",
                 "type": "string"
               },
               {
                 "id": "7b71269d-114a-4f75-8971-304c054db855",
                 "name": "VIKUNJA_PROJECT_SICHERHEIT_ID",
-                "value": "23",
+                "value": "12",
                 "type": "string"
               }
             ]
@@ -827,36 +747,92 @@
             "name": "Strava account"
           }
         }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 5
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          2160,
+          1760
+        ],
+        "id": "f0819d1b-63eb-46ab-b778-14733e2d95d1",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 8
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          2128,
+          2160
+        ],
+        "id": "9d5e8167-2943-43cb-a260-53a844a472bf",
+        "name": "Schedule Trigger1"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 23,
+                "triggerAtMinute": 30
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          1216,
+          2544
+        ],
+        "id": "6bf1e4e8-0fb3-4f8d-947b-b3515457b5f9",
+        "name": "Schedule Trigger2"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 6
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          1440,
+          3136
+        ],
+        "id": "74109896-812f-4565-9c06-1128e0890a7d",
+        "name": "Schedule Trigger3"
       }
     ],
     "connections": {
-      "Cron - 05:30 Backoffice-Aufgaben erzeugen": {
-        "main": [
-          [
-            {
-              "node": "Konfiguration",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
       "Code - Masterliste prüfen und fällige Aufgaben bauen": {
         "main": [
           [
             {
               "node": "Vikunja - Aufgabe erstellen",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Cron - 07:30 Tagesplan": {
-        "main": [
-          [
-            {
-              "node": "Konfiguration2",
               "type": "main",
               "index": 0
             }
@@ -907,17 +883,6 @@
           ]
         ]
       },
-      "Cron - 20:30 Abend-Review": {
-        "main": [
-          [
-            {
-              "node": "Konfiguration3",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
       "Code - Projektliste für Abend-Review": {
         "main": [
           [
@@ -956,22 +921,6 @@
           [
             {
               "node": "Telegram - Abend-Review senden",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Cron - Sport alle 6h prüfen": {
-        "main": [
-          [
-            {
-              "node": "Code - Sport Projekt-ID",
-              "type": "main",
-              "index": 0
-            },
-            {
-              "node": "Get many activities",
               "type": "main",
               "index": 0
             }
@@ -1132,42 +1081,69 @@
             }
           ]
         ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger1": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger2": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger3": {
+        "main": [
+          [
+            {
+              "node": "Code - Sport Projekt-ID",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get many activities",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
-    "name": "Version a82362a8",
+    "name": "Version 5977957b",
     "description": "",
     "autosaved": true
   },
-  "activeVersionId": "a82362a8-c5cd-486e-bd59-4f532870c645",
+  "activeVersionId": "5977957b-6f8d-4149-8aac-3661530fd3fe",
   "connections": {
-    "Cron - 05:30 Backoffice-Aufgaben erzeugen": {
-      "main": [
-        [
-          {
-            "node": "Konfiguration",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Code - Masterliste prüfen und fällige Aufgaben bauen": {
       "main": [
         [
           {
             "node": "Vikunja - Aufgabe erstellen",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Cron - 07:30 Tagesplan": {
-      "main": [
-        [
-          {
-            "node": "Konfiguration2",
             "type": "main",
             "index": 0
           }
@@ -1218,17 +1194,6 @@
         ]
       ]
     },
-    "Cron - 20:30 Abend-Review": {
-      "main": [
-        [
-          {
-            "node": "Konfiguration3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Code - Projektliste für Abend-Review": {
       "main": [
         [
@@ -1267,22 +1232,6 @@
         [
           {
             "node": "Telegram - Abend-Review senden",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Cron - Sport alle 6h prüfen": {
-      "main": [
-        [
-          {
-            "node": "Code - Sport Projekt-ID",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Get many activities",
             "type": "main",
             "index": 0
           }
@@ -1443,6 +1392,55 @@
           }
         ]
       ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Konfiguration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Konfiguration2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Konfiguration3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger3": {
+      "main": [
+        [
+          {
+            "node": "Code - Sport Projekt-ID",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get many activities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "createdAt": "2026-05-05T21:36:41.268Z",
@@ -1464,26 +1462,6 @@
       "position": [
         1728,
         1952
-      ]
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "30 5 * * *"
-            }
-          ]
-        }
-      },
-      "id": "dd6362fe-8dc5-4ab0-b6d1-c049905d482a",
-      "name": "Cron - 05:30 Backoffice-Aufgaben erzeugen",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        2160,
-        1760
       ]
     },
     {
@@ -1523,30 +1501,10 @@
       ],
       "credentials": {
         "vikunjaApi": {
-          "id": "IsQ0AYbsFndZaCGo",
+          "id": "nXgiHW9MIy4I596w",
           "name": "Vikunja account"
         }
       }
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "30 7 * * *"
-            }
-          ]
-        }
-      },
-      "id": "90066cca-56d4-4ec2-9fe1-0853f191c272",
-      "name": "Cron - 07:30 Tagesplan",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        2128,
-        2160
-      ]
     },
     {
       "parameters": {
@@ -1581,8 +1539,8 @@
       ],
       "credentials": {
         "vikunjaApi": {
-          "id": "IsQ0AYbsFndZaCGo",
-          "name": "Vikunja account"
+          "id": "de5KHpwDWLGtx44A",
+          "name": "Vikunja account 2"
         }
       }
     },
@@ -1636,26 +1594,6 @@
     },
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "cronExpression",
-              "expression": "30 20 * * *"
-            }
-          ]
-        }
-      },
-      "id": "bb89f86d-4fb2-4c25-a697-0587ae80a99f",
-      "name": "Cron - 20:30 Abend-Review",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        1216,
-        2544
-      ]
-    },
-    {
-      "parameters": {
         "jsCode": "const cfg = $input.first().json;\n\nconst projects = [\n  { key: 'inbox', id: cfg.VIKUNJA_PROJECT_INBOX_ID },\n  { key: 'termine', id: cfg.VIKUNJA_PROJECT_TERMINE_ID },\n  { key: 'menschen', id: cfg.VIKUNJA_PROJECT_MENSCHEN_ID },\n  { key: 'haushalt', id: cfg.VIKUNJA_PROJECT_HAUSHALT_ID },\n  { key: 'putzen', id: cfg.VIKUNJA_PROJECT_PUTZEN_ID },\n  { key: 'einkaufen', id: cfg.VIKUNJA_PROJECT_EINKAUFEN_ID },\n  { key: 'sport', id: cfg.VIKUNJA_PROJECT_SPORT_ID },\n  { key: 'finanzen', id: cfg.VIKUNJA_PROJECT_FINANZEN_ID },\n  { key: 'papierkram', id: cfg.VIKUNJA_PROJECT_PAPIERKRAM_ID },\n  { key: 'digital', id: cfg.VIKUNJA_PROJECT_DIGITAL_ID },\n  { key: 'auto', id: cfg.VIKUNJA_PROJECT_AUTO_ID },\n  { key: 'sicherheit', id: cfg.VIKUNJA_PROJECT_SICHERHEIT_ID },\n];\n\nconst validProjects = projects\n  .map(p => ({\n    key: p.key,\n    project_id: Number(p.id),\n  }))\n  .filter(p => Number.isFinite(p.project_id) && p.project_id > 0);\n\nif (validProjects.length === 0) {\n  return [\n    {\n      json: {\n        status: 'FEHLER',\n        message: 'Keine gültigen Vikunja-Projekt-IDs gefunden.',\n        input: cfg,\n      },\n    },\n  ];\n}\n\nreturn validProjects.map(p => ({\n  json: p,\n}));"
       },
       "id": "3f076546-f10d-425c-a491-705d4913893e",
@@ -1687,8 +1625,8 @@
       ],
       "credentials": {
         "vikunjaApi": {
-          "id": "IsQ0AYbsFndZaCGo",
-          "name": "Vikunja account"
+          "id": "de5KHpwDWLGtx44A",
+          "name": "Vikunja account 2"
         }
       }
     },
@@ -1742,26 +1680,6 @@
     },
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "hours",
-              "hoursInterval": 6
-            }
-          ]
-        }
-      },
-      "id": "ea8e3d67-dc42-4fe6-aafb-d27275f80f57",
-      "name": "Cron - Sport alle 6h prüfen",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        1440,
-        3136
-      ]
-    },
-    {
-      "parameters": {
         "jsCode": "\n// HIER DEINE SPORT-PROJEKT-ID EINTRAGEN\nconst sportProjectId = 0;\n\nif (!sportProjectId) {\n  return [{ json: { error: 'SPORT_PROJECT_ID_MISSING', hint: 'Bitte im Node \"Code - Sport Projekt-ID\" die Sport-Projekt-ID eintragen.' } }];\n}\n\nreturn [{ json: { project_id: String(sportProjectId) } }];\n"
       },
       "id": "f74dfa0f-85f9-4532-88d6-2918d68ef4de",
@@ -1793,8 +1711,8 @@
       ],
       "credentials": {
         "vikunjaApi": {
-          "id": "IsQ0AYbsFndZaCGo",
-          "name": "Vikunja account"
+          "id": "de5KHpwDWLGtx44A",
+          "name": "Vikunja account 2"
         }
       }
     },
@@ -1874,8 +1792,8 @@
       ],
       "credentials": {
         "vikunjaApi": {
-          "id": "IsQ0AYbsFndZaCGo",
-          "name": "Vikunja account"
+          "id": "de5KHpwDWLGtx44A",
+          "name": "Vikunja account 2"
         }
       }
     },
@@ -1936,67 +1854,67 @@
             {
               "id": "f80a51af-c8fc-46bf-ac27-2dfe7e820c76",
               "name": "VIKUNJA_PROJECT_TERMINE_ID",
-              "value": "13",
+              "value": "2",
               "type": "string"
             },
             {
               "id": "e34f6585-c912-4d9f-b895-d05ef4882aff",
               "name": "VIKUNJA_PROJECT_MENSCHEN_ID",
-              "value": "14",
+              "value": "3",
               "type": "string"
             },
             {
               "id": "05c257f0-d044-49a0-9ff3-4d751fe7bc2d",
               "name": "VIKUNJA_PROJECT_HAUSHALT_ID",
-              "value": "15",
+              "value": "4",
               "type": "string"
             },
             {
               "id": "b1715777-194f-466c-a9a7-b0a238c68072",
               "name": "VIKUNJA_PROJECT_PUTZEN_ID",
-              "value": "16",
+              "value": "5",
               "type": "string"
             },
             {
               "id": "b16e732e-209b-438d-9e98-d21786ef99f5",
               "name": "VIKUNJA_PROJECT_EINKAUFEN_ID",
-              "value": "17",
+              "value": "6",
               "type": "string"
             },
             {
               "id": "16e346b2-ed2c-4b9f-99e9-6c26e3bdb806",
               "name": "VIKUNJA_PROJECT_SPORT_ID",
-              "value": "18",
+              "value": "7",
               "type": "string"
             },
             {
               "id": "c23f8d7e-64e0-430e-9762-91542ff2a6db",
               "name": "VIKUNJA_PROJECT_FINANZEN_ID",
-              "value": "19",
+              "value": "8",
               "type": "string"
             },
             {
               "id": "3e347ad8-1966-4aa7-9b74-03e8d1ceb492",
               "name": "VIKUNJA_PROJECT_PAPIERKRAM_ID",
-              "value": "20",
+              "value": "9",
               "type": "string"
             },
             {
               "id": "cb27eed6-3bd7-4571-ae12-b5b77022f335",
               "name": "VIKUNJA_PROJECT_DIGITAL_ID",
-              "value": "21",
+              "value": "10",
               "type": "string"
             },
             {
               "id": "132da73d-79c8-4541-b920-ddff8a0912bc",
               "name": "VIKUNJA_PROJECT_AUTO_ID",
-              "value": "22",
+              "value": "11",
               "type": "string"
             },
             {
               "id": "7b71269d-114a-4f75-8971-304c054db855",
               "name": "VIKUNJA_PROJECT_SICHERHEIT_ID",
-              "value": "23",
+              "value": "12",
               "type": "string"
             }
           ]
@@ -2025,67 +1943,67 @@
             {
               "id": "f80a51af-c8fc-46bf-ac27-2dfe7e820c76",
               "name": "VIKUNJA_PROJECT_TERMINE_ID",
-              "value": "13",
+              "value": "2",
               "type": "string"
             },
             {
               "id": "e34f6585-c912-4d9f-b895-d05ef4882aff",
               "name": "VIKUNJA_PROJECT_MENSCHEN_ID",
-              "value": "14",
+              "value": "3",
               "type": "string"
             },
             {
               "id": "05c257f0-d044-49a0-9ff3-4d751fe7bc2d",
               "name": "VIKUNJA_PROJECT_HAUSHALT_ID",
-              "value": "15",
+              "value": "4",
               "type": "string"
             },
             {
               "id": "b1715777-194f-466c-a9a7-b0a238c68072",
               "name": "VIKUNJA_PROJECT_PUTZEN_ID",
-              "value": "16",
+              "value": "5",
               "type": "string"
             },
             {
               "id": "b16e732e-209b-438d-9e98-d21786ef99f5",
               "name": "VIKUNJA_PROJECT_EINKAUFEN_ID",
-              "value": "17",
+              "value": "6",
               "type": "string"
             },
             {
               "id": "16e346b2-ed2c-4b9f-99e9-6c26e3bdb806",
               "name": "VIKUNJA_PROJECT_SPORT_ID",
-              "value": "18",
+              "value": "7",
               "type": "string"
             },
             {
               "id": "c23f8d7e-64e0-430e-9762-91542ff2a6db",
               "name": "VIKUNJA_PROJECT_FINANZEN_ID",
-              "value": "19",
+              "value": "8",
               "type": "string"
             },
             {
               "id": "3e347ad8-1966-4aa7-9b74-03e8d1ceb492",
               "name": "VIKUNJA_PROJECT_PAPIERKRAM_ID",
-              "value": "20",
+              "value": "9",
               "type": "string"
             },
             {
               "id": "cb27eed6-3bd7-4571-ae12-b5b77022f335",
               "name": "VIKUNJA_PROJECT_DIGITAL_ID",
-              "value": "21",
+              "value": "10",
               "type": "string"
             },
             {
               "id": "132da73d-79c8-4541-b920-ddff8a0912bc",
               "name": "VIKUNJA_PROJECT_AUTO_ID",
-              "value": "22",
+              "value": "11",
               "type": "string"
             },
             {
               "id": "7b71269d-114a-4f75-8971-304c054db855",
               "name": "VIKUNJA_PROJECT_SICHERHEIT_ID",
-              "value": "23",
+              "value": "12",
               "type": "string"
             }
           ]
@@ -2147,67 +2065,67 @@
             {
               "id": "f80a51af-c8fc-46bf-ac27-2dfe7e820c76",
               "name": "VIKUNJA_PROJECT_TERMINE_ID",
-              "value": "13",
+              "value": "2",
               "type": "string"
             },
             {
               "id": "e34f6585-c912-4d9f-b895-d05ef4882aff",
               "name": "VIKUNJA_PROJECT_MENSCHEN_ID",
-              "value": "14",
+              "value": "3",
               "type": "string"
             },
             {
               "id": "05c257f0-d044-49a0-9ff3-4d751fe7bc2d",
               "name": "VIKUNJA_PROJECT_HAUSHALT_ID",
-              "value": "15",
+              "value": "4",
               "type": "string"
             },
             {
               "id": "b1715777-194f-466c-a9a7-b0a238c68072",
               "name": "VIKUNJA_PROJECT_PUTZEN_ID",
-              "value": "16",
+              "value": "5",
               "type": "string"
             },
             {
               "id": "b16e732e-209b-438d-9e98-d21786ef99f5",
               "name": "VIKUNJA_PROJECT_EINKAUFEN_ID",
-              "value": "17",
+              "value": "6",
               "type": "string"
             },
             {
               "id": "16e346b2-ed2c-4b9f-99e9-6c26e3bdb806",
               "name": "VIKUNJA_PROJECT_SPORT_ID",
-              "value": "18",
+              "value": "7",
               "type": "string"
             },
             {
               "id": "c23f8d7e-64e0-430e-9762-91542ff2a6db",
               "name": "VIKUNJA_PROJECT_FINANZEN_ID",
-              "value": "19",
+              "value": "8",
               "type": "string"
             },
             {
               "id": "3e347ad8-1966-4aa7-9b74-03e8d1ceb492",
               "name": "VIKUNJA_PROJECT_PAPIERKRAM_ID",
-              "value": "20",
+              "value": "9",
               "type": "string"
             },
             {
               "id": "cb27eed6-3bd7-4571-ae12-b5b77022f335",
               "name": "VIKUNJA_PROJECT_DIGITAL_ID",
-              "value": "21",
+              "value": "10",
               "type": "string"
             },
             {
               "id": "132da73d-79c8-4541-b920-ddff8a0912bc",
               "name": "VIKUNJA_PROJECT_AUTO_ID",
-              "value": "22",
+              "value": "11",
               "type": "string"
             },
             {
               "id": "7b71269d-114a-4f75-8971-304c054db855",
               "name": "VIKUNJA_PROJECT_SICHERHEIT_ID",
-              "value": "23",
+              "value": "12",
               "type": "string"
             }
           ]
@@ -2274,6 +2192,84 @@
           "name": "Strava account"
         }
       }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        2160,
+        1760
+      ],
+      "id": "f0819d1b-63eb-46ab-b778-14733e2d95d1",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        2128,
+        2160
+      ],
+      "id": "9d5e8167-2943-43cb-a260-53a844a472bf",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 23,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        1216,
+        2544
+      ],
+      "id": "6bf1e4e8-0fb3-4f8d-947b-b3515457b5f9",
+      "name": "Schedule Trigger2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        1440,
+        3136
+      ],
+      "id": "74109896-812f-4565-9c06-1128e0890a7d",
+      "name": "Schedule Trigger3"
     }
   ],
   "pinData": {},
@@ -2305,12 +2301,26 @@
     },
     "node:Cron - Sport alle 6h prüfen": {
       "recurrenceRules": [
+        12
+      ]
+    },
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    },
+    "node:Schedule Trigger1": {
+      "recurrenceRules": []
+    },
+    "node:Schedule Trigger2": {
+      "recurrenceRules": []
+    },
+    "node:Schedule Trigger3": {
+      "recurrenceRules": [
         0
       ]
     }
   },
   "tags": [],
   "triggerCount": 4,
-  "updatedAt": "2026-05-09T13:03:34.044Z",
-  "versionId": "a82362a8-c5cd-486e-bd59-4f532870c645"
+  "updatedAt": "2026-05-12T21:10:09.086Z",
+  "versionId": "5977957b-6f8d-4149-8aac-3661530fd3fe"
 }
