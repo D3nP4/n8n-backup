@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-12T21:10:12.000Z",
-    "createdAt": "2026-05-12T21:10:09.088Z",
-    "versionId": "5977957b-6f8d-4149-8aac-3661530fd3fe",
+    "updatedAt": "2026-05-15T11:17:57.000Z",
+    "createdAt": "2026-05-15T11:17:45.056Z",
+    "versionId": "4cd8ddf7-d6e5-4077-85fe-0a943718efd6",
     "workflowId": "EFZhNUCh6rSeqz0Z",
     "nodes": [
       {
@@ -1133,11 +1133,11 @@
       }
     },
     "authors": "Dennis Paun",
-    "name": "Version 5977957b",
+    "name": "Version 4cd8ddf7",
     "description": "",
     "autosaved": true
   },
-  "activeVersionId": "5977957b-6f8d-4149-8aac-3661530fd3fe",
+  "activeVersionId": "4cd8ddf7-d6e5-4077-85fe-0a943718efd6",
   "connections": {
     "Code - Masterliste prüfen und fällige Aufgaben bauen": {
       "main": [
@@ -2278,7 +2278,11 @@
   "repo_path": "workflows/",
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Berlin",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "shared": [
     {
@@ -2315,12 +2319,35 @@
     },
     "node:Schedule Trigger3": {
       "recurrenceRules": [
-        0
+        6
       ]
+    },
+    "global": {
+      "createdMarkers": {
+        "[AUTO:daily-plan-check:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:daily-calendar-today:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:daily-calendar-tomorrow:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:daily-flat-reset:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:daily-kitchen-rescue:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:daily-visible-trash:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:daily-evening-review:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:every2-laundry-basket:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:every2-trash-out:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:every3-bath-sink:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:every3-shopping-list:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:weekly-vacuum:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:weekly-mop:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:weekly-bathroom:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:weekly-toilet:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:weekly-shower:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:weekly-kitchen-clean:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:weekly-laundry-wash:2026-05-16]": "2026-05-16T03:00:11.070Z",
+        "[AUTO:monthly-documents-scan:2026-05-16]": "2026-05-16T03:00:11.071Z"
+      }
     }
   },
   "tags": [],
   "triggerCount": 4,
-  "updatedAt": "2026-05-12T21:10:09.086Z",
-  "versionId": "5977957b-6f8d-4149-8aac-3661530fd3fe"
+  "updatedAt": "2026-05-15T11:17:45.054Z",
+  "versionId": "4cd8ddf7-d6e5-4077-85fe-0a943718efd6"
 }
