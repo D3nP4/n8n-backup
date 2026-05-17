@@ -2321,29 +2321,6 @@
       "recurrenceRules": [
         6
       ]
-    },
-    "global": {
-      "createdMarkers": {
-        "[AUTO:daily-plan-check:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:daily-calendar-today:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:daily-calendar-tomorrow:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:daily-flat-reset:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:daily-kitchen-rescue:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:daily-visible-trash:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:daily-evening-review:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:every2-laundry-basket:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:every2-trash-out:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:every3-bath-sink:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:every3-shopping-list:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:weekly-vacuum:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:weekly-mop:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:weekly-bathroom:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:weekly-toilet:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:weekly-shower:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:weekly-kitchen-clean:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:weekly-laundry-wash:2026-05-16]": "2026-05-16T03:00:11.070Z",
-        "[AUTO:monthly-documents-scan:2026-05-16]": "2026-05-16T03:00:11.071Z"
-      }
     }
   },
   "tags": [],
