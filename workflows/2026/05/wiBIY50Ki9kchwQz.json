@@ -1,0 +1,156 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Wöchentlich Montag 08:00": {
+      "main": [
+        [
+          {
+            "node": "ETFs abrufen und bewerten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ETFs abrufen und bewerten": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-05-17T19:05:10.089Z",
+  "id": "wiBIY50Ki9kchwQz",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "ETF Wochenmonitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "d955dc5d-9673-4f5b-b202-8c448545c32f",
+      "name": "Wöchentlich Montag 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -864,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const etfs = [\n  {\n    isin: 'IE00BKM4GZ66',\n    symbol: 'IS3N.DE',\n    name: 'iShares Core MSCI EM IMI UCITS ETF Acc'\n  },\n  {\n    isin: 'IE00B1YZSC51',\n    symbol: 'IQQY.DE',\n    name: 'iShares Core MSCI Europe UCITS ETF Dist'\n  },\n  {\n    isin: 'IE00B52MJY50',\n    symbol: 'SXR1.DE',\n    name: 'iShares Core MSCI Pacific ex Japan UCITS ETF Acc'\n  },\n  {\n    isin: 'IE00B4L5Y983',\n    symbol: 'EUNL.DE',\n    name: 'iShares Core MSCI World UCITS ETF Acc'\n  }\n];\n\nconst thresholds = {\n  weeklyDropPercent: -5,\n  monthlyDropPercent: -10,\n  weeklyRisePercent: 5\n};\n\nfunction pctChange(current, old) {\n  if (!current || !old) return null;\n  return Number((((current - old) / old) * 100).toFixed(2));\n}\n\nfunction getCloseAtOffset(closes, offsetFromEnd) {\n  const valid = closes.filter(v => typeof v === 'number');\n  if (valid.length <= offsetFromEnd) return null;\n  return valid[valid.length - 1 - offsetFromEnd];\n}\n\nconst results = [];\n\nfor (const etf of etfs) {\n  try {\n    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${etf.symbol}?range=1mo&interval=1d`;\n\n    const response = await this.helpers.httpRequest({\n      method: 'GET',\n      url,\n      json: true,\n      headers: {\n        'User-Agent': 'Mozilla/5.0 n8n ETF Monitor'\n      }\n    });\n\n    const chart = response?.chart?.result?.[0];\n    const closes = chart?.indicators?.quote?.[0]?.close || [];\n    const timestamps = chart?.timestamp || [];\n\n    const current = getCloseAtOffset(closes, 0);\n    const price7d = getCloseAtOffset(closes, 5);\n    const price30d = getCloseAtOffset(closes, 20);\n\n    const weeklyChange = pctChange(current, price7d);\n    const monthlyChange = pctChange(current, price30d);\n\n    const alerts = [];\n\n    if (weeklyChange !== null && weeklyChange <= thresholds.weeklyDropPercent) {\n      alerts.push(`Wochenverlust ${weeklyChange}%`);\n    }\n\n    if (monthlyChange !== null && monthlyChange <= thresholds.monthlyDropPercent) {\n      alerts.push(`Monatsverlust ${monthlyChange}%`);\n    }\n\n    if (weeklyChange !== null && weeklyChange >= thresholds.weeklyRisePercent) {\n      alerts.push(`Wochenanstieg ${weeklyChange}%`);\n    }\n\n    results.push({\n      json: {\n        isin: etf.isin,\n        symbol: etf.symbol,\n        name: etf.name,\n        currentPrice: current,\n        currency: chart?.meta?.currency || 'EUR',\n        weeklyChangePercent: weeklyChange,\n        monthlyChangePercent: monthlyChange,\n        alert: alerts.length > 0,\n        alerts: alerts.join(', ') || 'Keine Auffälligkeit',\n        checkedAt: new Date().toISOString()\n      }\n    });\n  } catch (error) {\n    results.push({\n      json: {\n        isin: etf.isin,\n        symbol: etf.symbol,\n        name: etf.name,\n        currentPrice: null,\n        weeklyChangePercent: null,\n        monthlyChangePercent: null,\n        alert: true,\n        alerts: `Fehler beim Abruf: ${error.message}`,\n        checkedAt: new Date().toISOString()\n      }\n    });\n  }\n}\n\nreturn results;"
+      },
+      "id": "729e474f-34f5-49ee-9238-9a5dcc5fec10",
+      "name": "ETFs abrufen und bewerten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const etfs = [\n  {\n    isin: 'IE00BKM4GZ66',\n    symbol: 'IS3N.DE',\n    name: 'iShares Core MSCI EM IMI UCITS ETF Acc'\n  },\n  {\n    isin: 'IE00B1YZSC51',\n    symbol: 'IQQY.DE',\n    name: 'iShares Core MSCI Europe UCITS ETF Dist'\n  },\n  {\n    isin: 'IE00B52MJY50',\n    symbol: 'SXR1.DE',\n    name: 'iShares Core MSCI Pacific ex Japan UCITS ETF Acc'\n  },\n  {\n    isin: 'IE00B4L5Y983',\n    symbol: 'EUNL.DE',\n    name: 'iShares Core MSCI World UCITS ETF Acc'\n  }\n];\n\nconst prompt = `\nDu bist ein sachlicher ETF-Monitoring-Assistent.\n\nÜberwache wöchentlich folgende ETFs:\n\n${etfs.map(etf => `- ${etf.name}\n  ISIN: ${etf.isin}\n  Börsensymbol: ${etf.symbol}`).join('\\n\\n')}\n\nAufgabe:\nErstelle eine kurze, verständliche Wochenbewertung der ETFs.\n\nBewerte insbesondere:\n1. Auffällige Kursbewegungen\n2. Starke Verluste oder starke Anstiege\n3. Vergleich zwischen den ETFs\n4. Ob ein ETF besonders beobachtet werden sollte\n5. Eine kurze Zusammenfassung für einen privaten Anleger\n\nWichtig:\n- Keine Anlageberatung geben.\n- Keine Kauf- oder Verkaufsempfehlung aussprechen.\n- Sachlich formulieren.\n- Wenn Daten fehlen, klar darauf hinweisen.\n- Ausgabe auf Deutsch.\n- Kurz und übersichtlich schreiben.\n\nGewünschtes Ausgabeformat:\n\nETF-Wochenüberblick\n\n1. Kurzfazit\n2. Einzelbewertung je ETF\n3. Auffälligkeiten\n4. Beobachtungshinweise\n5. Hinweis: Dies ist keine Anlageberatung.\n`;\n\nreturn [\n  {\n    json: {\n      etfs,\n      ai_prompt: prompt.trim(),\n      created_at: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        112
+      ],
+      "id": "a86f69f6-c290-4b97-ab1c-604fdb2fae7a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "qwen3:14b",
+          "mode": "list",
+          "cachedResultName": "qwen3:14b"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.etfs[0] }}{{ $json.etfs[1] }}{{ $json.etfs[2] }}{{ $json.etfs[3] }}"
+            },
+            {
+              "content": "={{ $json.ai_prompt }}",
+              "role": "assistant"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        112
+      ],
+      "id": "2efc7fd9-8c4f-4a02-abdd-5b52c3e963f2",
+      "name": "Message a model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "OjVS5Xxrn2eSNV63",
+          "name": "Ollama account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-05-17T19:05:10.094Z",
+      "createdAt": "2026-05-17T19:05:10.094Z",
+      "role": "workflow:owner",
+      "workflowId": "wiBIY50Ki9kchwQz",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-05-17T19:27:37.728Z",
+  "versionId": "840b8331-8391-46d1-b5b9-7417cb92e8ee"
+}
