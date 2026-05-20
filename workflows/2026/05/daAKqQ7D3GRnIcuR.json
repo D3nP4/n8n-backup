@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-11T16:52:41.000Z",
-    "createdAt": "2026-05-11T16:52:30.090Z",
-    "versionId": "4f1f3410-acd5-4e51-869f-a5467dd97151",
+    "updatedAt": "2026-05-19T22:07:36.000Z",
+    "createdAt": "2026-05-19T22:07:33.180Z",
+    "versionId": "cfb681f3-317d-4112-903d-b2ce1e70b095",
     "workflowId": "daAKqQ7D3GRnIcuR",
     "nodes": [
       {
@@ -323,7 +323,7 @@
       },
       {
         "parameters": {
-          "url": "https://www.heise.de/rss/heise-atom.xml",
+          "url": "https://www.heise.de/security/rss/alert-news-atom.xml",
           "options": {}
         },
         "id": "ce492fd5-c8f9-4074-a080-56a55fc5074d",
@@ -339,15 +339,15 @@
       },
       {
         "parameters": {
-          "url": "https://www.bleepingcomputer.com/feed/",
+          "url": "https://www.zeit.de/news/index",
           "options": {}
         },
         "id": "1418186b-ee9a-480b-93e6-6483014a3ddf",
         "name": "My RSS 03",
         "type": "n8n-nodes-base.rssFeedRead",
         "position": [
-          368,
-          672
+          320,
+          688
         ],
         "typeVersion": 1.1,
         "alwaysOutputData": true,
@@ -364,8 +364,8 @@
         "name": "My RSS 04",
         "type": "n8n-nodes-base.rssFeedRead",
         "position": [
-          368,
-          880
+          400,
+          1168
         ],
         "typeVersion": 1.1,
         "alwaysOutputData": true,
@@ -379,8 +379,8 @@
         "name": "Sticky Note1",
         "type": "n8n-nodes-base.stickyNote",
         "position": [
-          320,
-          1040
+          256,
+          688
         ],
         "typeVersion": 1
       },
@@ -628,11 +628,11 @@
       }
     },
     "authors": "Dennis Paun",
-    "name": "Version 4f1f3410",
+    "name": "Version cfb681f3",
     "description": "",
     "autosaved": true
   },
-  "activeVersionId": "4f1f3410-acd5-4e51-869f-a5467dd97151",
+  "activeVersionId": "cfb681f3-317d-4112-903d-b2ce1e70b095",
   "connections": {
     "Limit": {
       "main": [
@@ -1140,7 +1140,7 @@
     },
     {
       "parameters": {
-        "url": "https://www.heise.de/rss/heise-atom.xml",
+        "url": "https://www.heise.de/security/rss/alert-news-atom.xml",
         "options": {}
       },
       "id": "ce492fd5-c8f9-4074-a080-56a55fc5074d",
@@ -1156,15 +1156,15 @@
     },
     {
       "parameters": {
-        "url": "https://www.bleepingcomputer.com/feed/",
+        "url": "https://www.zeit.de/news/index",
         "options": {}
       },
       "id": "1418186b-ee9a-480b-93e6-6483014a3ddf",
       "name": "My RSS 03",
       "type": "n8n-nodes-base.rssFeedRead",
       "position": [
-        368,
-        672
+        320,
+        688
       ],
       "typeVersion": 1.1,
       "alwaysOutputData": true,
@@ -1181,8 +1181,8 @@
       "name": "My RSS 04",
       "type": "n8n-nodes-base.rssFeedRead",
       "position": [
-        368,
-        880
+        400,
+        1168
       ],
       "typeVersion": 1.1,
       "alwaysOutputData": true,
@@ -1196,8 +1196,8 @@
       "name": "Sticky Note1",
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        320,
-        1040
+        256,
+        688
       ],
       "typeVersion": 1
     },
@@ -1310,6 +1310,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-05-11T16:52:30.089Z",
-  "versionId": "4f1f3410-acd5-4e51-869f-a5467dd97151"
+  "updatedAt": "2026-05-19T22:07:33.179Z",
+  "versionId": "cfb681f3-317d-4112-903d-b2ce1e70b095"
 }
