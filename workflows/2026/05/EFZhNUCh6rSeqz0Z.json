@@ -2321,22 +2321,6 @@
       "recurrenceRules": [
         6
       ]
-    },
-    "global": {
-      "createdMarkers": {
-        "[AUTO:daily-plan-check:2026-05-20]": "2026-05-20T03:00:49.082Z",
-        "[AUTO:daily-calendar-today:2026-05-20]": "2026-05-20T03:00:49.082Z",
-        "[AUTO:daily-calendar-tomorrow:2026-05-20]": "2026-05-20T03:00:49.082Z",
-        "[AUTO:daily-flat-reset:2026-05-20]": "2026-05-20T03:00:49.082Z",
-        "[AUTO:daily-kitchen-rescue:2026-05-20]": "2026-05-20T03:00:49.082Z",
-        "[AUTO:daily-visible-trash:2026-05-20]": "2026-05-20T03:00:49.082Z",
-        "[AUTO:daily-evening-review:2026-05-20]": "2026-05-20T03:00:49.082Z",
-        "[AUTO:every2-laundry-basket:2026-05-20]": "2026-05-20T03:00:49.082Z",
-        "[AUTO:every2-trash-out:2026-05-20]": "2026-05-20T03:00:49.082Z",
-        "[AUTO:sport-weekly-2:2026-05-20]": "2026-05-20T03:00:49.082Z",
-        "[AUTO:monthly-backups-check:2026-05-20]": "2026-05-20T03:00:49.082Z",
-        "[AUTO:monthly-photos-files:2026-05-20]": "2026-05-20T03:00:49.082Z"
-      }
     }
   },
   "tags": [],
