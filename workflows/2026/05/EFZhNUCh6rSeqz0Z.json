@@ -2319,7 +2319,7 @@
     },
     "node:Schedule Trigger3": {
       "recurrenceRules": [
-        12
+        6
       ]
     },
     "global": {
