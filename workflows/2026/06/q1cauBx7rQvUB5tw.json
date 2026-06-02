@@ -1,0 +1,36 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {},
+  "createdAt": "2026-06-01T16:43:40.983Z",
+  "id": "q1cauBx7rQvUB5tw",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "📝 n8n Auto-Dokumentation → Obsidian",
+  "nodes": [],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-01T16:43:40.987Z",
+      "createdAt": "2026-06-01T16:43:40.987Z",
+      "role": "workflow:owner",
+      "workflowId": "q1cauBx7rQvUB5tw",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-06-01T16:47:38.988Z",
+  "versionId": "2a94fabd-ad6a-4ffa-80ce-1c15a542480d"
+}
