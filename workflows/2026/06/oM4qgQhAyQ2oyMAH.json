@@ -1,0 +1,258 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-03T21:36:01.718Z",
+    "createdAt": "2026-06-03T21:36:01.718Z",
+    "versionId": "9b7152ca-0b3a-4345-813d-72895471d521",
+    "workflowId": "oM4qgQhAyQ2oyMAH",
+    "nodes": [
+      {
+        "id": "node-schedule",
+        "name": "Täglich 7 Uhr",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          240,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 7 * * 1-6"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "node-http",
+        "name": "Globus Webseite laden",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          460,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://www.globus.de/braunschweig/unser-restaurant.php",
+          "options": {}
+        }
+      },
+      {
+        "id": "node-code",
+        "name": "Menü parsen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          680,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const html = $input.first().json.data;\n\nconst extract = (pattern) => {\n  const results = [];\n  const re = new RegExp(pattern, 'g');\n  let m;\n  while ((m = re.exec(html)) !== null) results.push(m[1].trim());\n  return results;\n};\n\nconst suppliers = extract('class=\"productSupplier\">([^<]+)<');\nconst dates     = extract('class=\"headline sub-bold\">([^<]+)<');\nconst dishes    = extract('class=\"dishInfo\">([^<]+)<');\nconst prices    = extract('class=\"productPrice\">([^<]+)<');\n\nconst today = new Date();\nconst dayNames = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];\nconst todayStr = today.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric'});\nconst todayFull = `${dayNames[today.getDay()]}, ${todayStr}`;\n\nconst items = dates.map((d, i) => ({\n  supplier: suppliers[i] || '',\n  date: d,\n  dish: (dishes[i] || '').replace(/\\s+/g, ' '),\n  price: prices[i] || ''\n}));\n\nconst wochengericht = items.find(i => i.supplier.includes('Wochengericht'));\nconst tagesgericht  = items.find(i => i.date === todayFull);\n\nlet message = `🍽️ Globus Mittagstisch Braunschweig\\n`;\nmessage += `📅 ${todayFull}\\n`;\nmessage += `──────────────────\\n\\n`;\n\nif (wochengericht) {\n  message += `🥘 Wochengericht\\n${wochengericht.dish}\\n💰 ${wochengericht.price}\\n\\n`;\n}\n\nif (tagesgericht) {\n  message += `🍳 Tagesgericht\\n${tagesgericht.dish}\\n💰 ${tagesgericht.price}\\n`;\n} else {\n  message += `ℹ️ Kein Tagesgericht für heute.\\nhttps://www.globus.de/braunschweig/unser-restaurant.php`;\n}\n\nreturn [{ json: { message } }];"
+        }
+      },
+      {
+        "id": "node-telegram",
+        "name": "Telegram senden",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          900,
+          300
+        ],
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.message }}",
+          "additionalFields": {}
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "b1bbe7a5-01fb-4d4b-877f-dffc380fff06"
+      }
+    ],
+    "connections": {
+      "Täglich 7 Uhr": {
+        "main": [
+          [
+            {
+              "node": "Globus Webseite laden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Globus Webseite laden": {
+        "main": [
+          [
+            {
+              "node": "Menü parsen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Menü parsen": {
+        "main": [
+          [
+            {
+              "node": "Telegram senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "9b7152ca-0b3a-4345-813d-72895471d521",
+  "connections": {
+    "Täglich 7 Uhr": {
+      "main": [
+        [
+          {
+            "node": "Globus Webseite laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Globus Webseite laden": {
+      "main": [
+        [
+          {
+            "node": "Menü parsen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Menü parsen": {
+      "main": [
+        [
+          {
+            "node": "Telegram senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-03T21:36:01.713Z",
+  "id": "oM4qgQhAyQ2oyMAH",
+  "isArchived": false,
+  "meta": null,
+  "name": "Globus Mittagsmenü täglich",
+  "nodes": [
+    {
+      "id": "node-schedule",
+      "name": "Täglich 7 Uhr",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * 1-6"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-http",
+      "name": "Globus Webseite laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.globus.de/braunschweig/unser-restaurant.php",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-code",
+      "name": "Menü parsen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const html = $input.first().json.data;\n\nconst extract = (pattern) => {\n  const results = [];\n  const re = new RegExp(pattern, 'g');\n  let m;\n  while ((m = re.exec(html)) !== null) results.push(m[1].trim());\n  return results;\n};\n\nconst suppliers = extract('class=\"productSupplier\">([^<]+)<');\nconst dates     = extract('class=\"headline sub-bold\">([^<]+)<');\nconst dishes    = extract('class=\"dishInfo\">([^<]+)<');\nconst prices    = extract('class=\"productPrice\">([^<]+)<');\n\nconst today = new Date();\nconst dayNames = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];\nconst todayStr = today.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric'});\nconst todayFull = `${dayNames[today.getDay()]}, ${todayStr}`;\n\nconst items = dates.map((d, i) => ({\n  supplier: suppliers[i] || '',\n  date: d,\n  dish: (dishes[i] || '').replace(/\\s+/g, ' '),\n  price: prices[i] || ''\n}));\n\nconst wochengericht = items.find(i => i.supplier.includes('Wochengericht'));\nconst tagesgericht  = items.find(i => i.date === todayFull);\n\nlet message = `🍽️ Globus Mittagstisch Braunschweig\\n`;\nmessage += `📅 ${todayFull}\\n`;\nmessage += `──────────────────\\n\\n`;\n\nif (wochengericht) {\n  message += `🥘 Wochengericht\\n${wochengericht.dish}\\n💰 ${wochengericht.price}\\n\\n`;\n}\n\nif (tagesgericht) {\n  message += `🍳 Tagesgericht\\n${tagesgericht.dish}\\n💰 ${tagesgericht.price}\\n`;\n} else {\n  message += `ℹ️ Kein Tagesgericht für heute.\\nhttps://www.globus.de/braunschweig/unser-restaurant.php`;\n}\n\nreturn [{ json: { message } }];"
+      }
+    },
+    {
+      "id": "node-telegram",
+      "name": "Telegram senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "b1bbe7a5-01fb-4d4b-877f-dffc380fff06"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-03T21:36:01.717Z",
+      "createdAt": "2026-06-03T21:36:01.717Z",
+      "role": "workflow:owner",
+      "workflowId": "oM4qgQhAyQ2oyMAH",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Täglich 7 Uhr": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-03T21:36:01.713Z",
+  "versionId": "9b7152ca-0b3a-4345-813d-72895471d521"
+}
