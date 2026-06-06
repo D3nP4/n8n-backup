@@ -1,0 +1,368 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Alle 5 Minuten": {
+      "main": [
+        [
+          {
+            "node": "Tandoor: Koch-Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tandoor: Koch-Log": {
+      "main": [
+        [
+          {
+            "node": "Grocy: Alle Produkte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grocy: Alle Produkte": {
+      "main": [
+        [
+          {
+            "node": "Neue Einträge filtern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neue Einträge filtern": {
+      "main": [
+        [
+          {
+            "node": "Neue Rezepte?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neue Rezepte?": {
+      "main": [
+        [
+          {
+            "node": "Tandoor: Rezept laden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Tandoor: Rezept laden": {
+      "main": [
+        [
+          {
+            "node": "Zutaten extrahieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zutaten extrahieren": {
+      "main": [
+        [
+          {
+            "node": "Zutat → Grocy zuordnen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zutat → Grocy zuordnen": {
+      "main": [
+        [
+          {
+            "node": "Grocy: Verbrauch buchen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grocy: Verbrauch buchen": {
+      "main": [
+        [
+          {
+            "node": "Ergebnis sammeln",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ergebnis sammeln": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Benachrichtigung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-05T16:47:01.097Z",
+  "id": "mwZ4BCH2yvOVZV7o",
+  "isArchived": false,
+  "meta": null,
+  "name": "Tandoor Kochen → Grocy Verbrauch",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Alle 5 Minuten",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        400,
+        400
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tandoor-log",
+      "name": "Tandoor: Koch-Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        620,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://rezepte.paun01.de/api/cook-log/?format=json&limit=20",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer tda_cebd3b92_cb58_4891_8f00_6a0e52151f29"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "grocy-all",
+      "name": "Grocy: Alle Produkte",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        840,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://grocy.paun01.de/api/objects/products",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "GROCY-API-KEY",
+              "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "filter-new",
+      "name": "Neue Einträge filtern",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        400
+      ],
+      "parameters": {
+        "jsCode": "\nconst staticData = $getWorkflowStaticData('global');\nconst lastCheck  = staticData.lastCookLogCheck\n  ? new Date(staticData.lastCookLogCheck)\n  : new Date(Date.now() - 10 * 60 * 1000); // 10min ago on first run\n\nconst logData    = $('Tandoor: Koch-Log').first().json;\nconst entries    = logData.results || [];\nconst grocyList  = $('Grocy: Alle Produkte').first().json;\n\nconst newEntries = entries.filter(e => new Date(e.created_at) > lastCheck);\nstaticData.lastCookLogCheck = new Date().toISOString();\n\nif (newEntries.length === 0) return [{json: {skip: true, message: 'Keine neuen Kochvorgänge'}}];\n\nreturn newEntries.map(e => ({json: {\n  recipeId:   e.recipe.id,\n  recipeName: e.recipe.name,\n  portions:   e.servings || 1,\n  grocyList\n}}));\n"
+      }
+    },
+    {
+      "id": "if-skip",
+      "name": "Neue Rezepte?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        400
+      ],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tandoor-recipe",
+      "name": "Tandoor: Rezept laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1500,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://rezepte.paun01.de/api/recipe/{{ $json.recipeId }}/?format=json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer tda_cebd3b92_cb58_4891_8f00_6a0e52151f29"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "extract-ingredients",
+      "name": "Zutaten extrahieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1720,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\nconst recipe   = $json;\nconst portions = $('Neue Einträge filtern').item.json.portions || 1;\nconst basePortions = recipe.servings || 1;\nconst factor   = portions / basePortions;\nconst grocyList = $('Neue Einträge filtern').item.json.grocyList;\n\nconst ingredients = [];\n(recipe.steps || []).forEach(step => {\n  (step.ingredients || []).forEach(ing => {\n    if (!ing.food || !ing.amount) return;\n    ingredients.push({\n      name:   ing.food.name,\n      amount: Math.round((ing.amount * factor) * 100) / 100,\n      unit:   ing.unit?.name || 'Stück',\n      grocyList\n    });\n  });\n});\n\nreturn ingredients.map(i => ({json: i}));\n"
+      }
+    },
+    {
+      "id": "match-ingredient",
+      "name": "Zutat → Grocy zuordnen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1940,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\nconst {name, amount, unit, grocyList} = $json;\nconst nameLow = name.toLowerCase();\nconst match = (grocyList || []).find(g =>\n  g.name.toLowerCase() === nameLow ||\n  g.name.toLowerCase().includes(nameLow) ||\n  nameLow.includes(g.name.toLowerCase())\n);\nif (!match) {\n  console.log(`Kein Grocy-Produkt für: ${name}`);\n  return [];\n}\nreturn [{json: {productId: match.id, productName: match.name, amount, unit}}];\n"
+      }
+    },
+    {
+      "id": "grocy-consume",
+      "name": "Grocy: Verbrauch buchen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2160,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://grocy.paun01.de/api/stock/products/{{ $json.productId }}/consume",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "GROCY-API-KEY",
+              "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\"amount\":{{ $json.amount }},\"transaction_type\":\"consume\",\"spoiled\":false}",
+        "options": {
+          "continueOnFail": true
+        }
+      }
+    },
+    {
+      "id": "aggregate",
+      "name": "Ergebnis sammeln",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2380,
+        300
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      }
+    },
+    {
+      "id": "tg-notify",
+      "name": "Telegram: Benachrichtigung",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        2600,
+        300
+      ],
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "=🍳 Gekocht! Grocy-Bestand aktualisiert:\n\n{{ $json.data.map(i => `• ${i.productName}: -${i.amount} ${i.unit}`).join('\\n') }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "a29031da-7d82-413f-b9bd-2b3eb0ecc016"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-05T16:47:01.099Z",
+      "createdAt": "2026-06-05T16:47:01.099Z",
+      "role": "workflow:owner",
+      "workflowId": "mwZ4BCH2yvOVZV7o",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-06-05T17:05:39.236Z",
+  "versionId": "d6e5251e-5e27-422a-a452-ecfd3ed98c05"
+}
