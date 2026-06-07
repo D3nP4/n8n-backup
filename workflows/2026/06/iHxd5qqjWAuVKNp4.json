@@ -1,0 +1,367 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-06T08:54:45.707Z",
+    "createdAt": "2026-06-06T08:54:45.707Z",
+    "versionId": "66edbc02-c68d-4643-9c81-6099d6c5f806",
+    "workflowId": "iHxd5qqjWAuVKNp4",
+    "nodes": [
+      {
+        "id": "wh",
+        "name": "Confirm Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          400,
+          400
+        ],
+        "parameters": {
+          "httpMethod": "GET",
+          "path": "staubsaugen-confirm",
+          "responseMode": "onReceived",
+          "options": {}
+        },
+        "webhookId": "1f461a48-d1f0-401b-b861-97eb5e83f889"
+      },
+      {
+        "id": "if",
+        "name": "Ja?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          620,
+          400
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false
+            },
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.query.a }}",
+                "rightValue": "ja",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "grocy",
+        "name": "Grocy: Chore abhaken",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          840,
+          280
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://grocy.paun01.de/api/chores/7/execute",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "GROCY-API-KEY",
+                "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "{}",
+          "options": {
+            "continueOnFail": true
+          }
+        }
+      },
+      {
+        "id": "tgja",
+        "name": "Telegram: Ja Bestätigung",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          1060,
+          280
+        ],
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "✅ Staubsaugen in Grocy abgehakt!",
+          "additionalFields": {}
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "58fd7b03-990b-40f3-abb8-5e94dea9e1ba"
+      },
+      {
+        "id": "tgnein",
+        "name": "Telegram: Nein Bestätigung",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          840,
+          520
+        ],
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "❌ OK, Staubsaugen nicht abgehakt.",
+          "additionalFields": {}
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "eb891e14-9bb2-4b73-9a9f-d7b1f6f08d9b"
+      }
+    ],
+    "connections": {
+      "Confirm Webhook": {
+        "main": [
+          [
+            {
+              "node": "Ja?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ja?": {
+        "main": [
+          [
+            {
+              "node": "Grocy: Chore abhaken",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Telegram: Nein Bestätigung",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grocy: Chore abhaken": {
+        "main": [
+          [
+            {
+              "node": "Telegram: Ja Bestätigung",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "66edbc02-c68d-4643-9c81-6099d6c5f806",
+  "connections": {
+    "Confirm Webhook": {
+      "main": [
+        [
+          {
+            "node": "Ja?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ja?": {
+      "main": [
+        [
+          {
+            "node": "Grocy: Chore abhaken",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Nein Bestätigung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grocy: Chore abhaken": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Ja Bestätigung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-06T08:54:45.704Z",
+  "id": "iHxd5qqjWAuVKNp4",
+  "isArchived": false,
+  "meta": null,
+  "name": "Staubsaugen-Confirm (Button → Grocy)",
+  "nodes": [
+    {
+      "id": "wh",
+      "name": "Confirm Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        400,
+        400
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "staubsaugen-confirm",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "1f461a48-d1f0-401b-b861-97eb5e83f889"
+    },
+    {
+      "id": "if",
+      "name": "Ja?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        620,
+        400
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.query.a }}",
+              "rightValue": "ja",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "grocy",
+      "name": "Grocy: Chore abhaken",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        840,
+        280
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://grocy.paun01.de/api/chores/7/execute",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "GROCY-API-KEY",
+              "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "continueOnFail": true
+        }
+      }
+    },
+    {
+      "id": "tgja",
+      "name": "Telegram: Ja Bestätigung",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        280
+      ],
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "✅ Staubsaugen in Grocy abgehakt!",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "58fd7b03-990b-40f3-abb8-5e94dea9e1ba"
+    },
+    {
+      "id": "tgnein",
+      "name": "Telegram: Nein Bestätigung",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        840,
+        520
+      ],
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "❌ OK, Staubsaugen nicht abgehakt.",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "eb891e14-9bb2-4b73-9a9f-d7b1f6f08d9b"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-06T08:54:45.706Z",
+      "createdAt": "2026-06-06T08:54:45.706Z",
+      "role": "workflow:owner",
+      "workflowId": "iHxd5qqjWAuVKNp4",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-06T08:54:45.704Z",
+  "versionId": "66edbc02-c68d-4643-9c81-6099d6c5f806"
+}
