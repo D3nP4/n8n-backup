@@ -1,0 +1,189 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-06T08:52:54.793Z",
+    "createdAt": "2026-06-06T08:52:54.793Z",
+    "versionId": "831e5225-8410-4d3e-9ca1-102a890b401e",
+    "workflowId": "ebIu93xecaIOozva",
+    "nodes": [
+      {
+        "id": "wh",
+        "name": "HA Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          400,
+          400
+        ],
+        "parameters": {
+          "httpMethod": "GET",
+          "path": "staubsaugen",
+          "responseMode": "onReceived",
+          "options": {}
+        },
+        "webhookId": "38b4e818-38cf-4ee2-a2f0-65f8d9323b5e"
+      },
+      {
+        "id": "tg",
+        "name": "Telegram: Frage senden",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          620,
+          400
+        ],
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "🧹 Vibration erkannt! Wurde die Wohnung gesaugt?",
+          "additionalFields": {
+            "replyMarkup": "inlineKeyboard",
+            "inlineKeyboardRows": [
+              {
+                "row": {
+                  "inlineKeyboardButtons": [
+                    {
+                      "text": "✅ Ja, gesaugt!",
+                      "url": "https://n8n.paun01.de/webhook/staubsaugen-confirm?a=ja",
+                      "additionalFields": {}
+                    },
+                    {
+                      "text": "❌ Nein",
+                      "url": "https://n8n.paun01.de/webhook/staubsaugen-confirm?a=nein",
+                      "additionalFields": {}
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "5c25cfb2-c5f7-43a7-a23b-ca95c85e4e1a"
+      }
+    ],
+    "connections": {
+      "HA Webhook": {
+        "main": [
+          [
+            {
+              "node": "Telegram: Frage senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "831e5225-8410-4d3e-9ca1-102a890b401e",
+  "connections": {
+    "HA Webhook": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Frage senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-06T08:52:54.790Z",
+  "id": "ebIu93xecaIOozva",
+  "isArchived": false,
+  "meta": null,
+  "name": "Staubsaugen-Frage (HA → Telegram)",
+  "nodes": [
+    {
+      "id": "wh",
+      "name": "HA Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        400,
+        400
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "staubsaugen",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "38b4e818-38cf-4ee2-a2f0-65f8d9323b5e"
+    },
+    {
+      "id": "tg",
+      "name": "Telegram: Frage senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        620,
+        400
+      ],
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "🧹 Vibration erkannt! Wurde die Wohnung gesaugt?",
+        "additionalFields": {
+          "replyMarkup": "inlineKeyboard",
+          "inlineKeyboardRows": [
+            {
+              "row": {
+                "inlineKeyboardButtons": [
+                  {
+                    "text": "✅ Ja, gesaugt!",
+                    "url": "https://n8n.paun01.de/webhook/staubsaugen-confirm?a=ja",
+                    "additionalFields": {}
+                  },
+                  {
+                    "text": "❌ Nein",
+                    "url": "https://n8n.paun01.de/webhook/staubsaugen-confirm?a=nein",
+                    "additionalFields": {}
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "5c25cfb2-c5f7-43a7-a23b-ca95c85e4e1a"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-06T08:52:54.792Z",
+      "createdAt": "2026-06-06T08:52:54.792Z",
+      "role": "workflow:owner",
+      "workflowId": "ebIu93xecaIOozva",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-06T08:52:54.790Z",
+  "versionId": "831e5225-8410-4d3e-9ca1-102a890b401e"
+}
