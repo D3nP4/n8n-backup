@@ -1,0 +1,461 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-07T19:13:12.793Z",
+    "createdAt": "2026-06-07T19:13:12.793Z",
+    "versionId": "8c360f44-d124-4988-9934-b966f9482516",
+    "workflowId": "TdN9vtXwPCjplpK2",
+    "nodes": [
+      {
+        "id": "n1",
+        "name": "Tour Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "tour-webhook-id",
+        "parameters": {
+          "path": "last-tour",
+          "responseMode": "responseNode",
+          "options": {}
+        }
+      },
+      {
+        "id": "n2",
+        "name": "Strava API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          240,
+          -120
+        ],
+        "credentials": {
+          "stravaOAuth2Api": {
+            "id": "XmPEc4l78f5iHNF7",
+            "name": "Strava account"
+          }
+        },
+        "parameters": {
+          "method": "GET",
+          "url": "https://www.strava.com/api/v3/athlete/activities",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "stravaOAuth2Api",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "per_page",
+                "value": "1"
+              },
+              {
+                "name": "page",
+                "value": "1"
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "n2b",
+        "name": "Komoot API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          240,
+          120
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://api.komoot.de/v007/users/3375434366279/tours/",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Basic a29tb290QHBhdW4wMS5kZTp0QXpweWctc2ljbWU1LWR5cHhveA=="
+              },
+              {
+                "name": "Accept",
+                "value": "application/hal+json"
+              }
+            ]
+          },
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "type",
+                "value": "tour_recorded"
+              },
+              {
+                "name": "sort_field",
+                "value": "date"
+              },
+              {
+                "name": "sort_direction",
+                "value": "desc"
+              },
+              {
+                "name": "limit",
+                "value": "1"
+              },
+              {
+                "name": "page",
+                "value": "0"
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "n_merge",
+        "name": "Zusammenfuehren",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 2,
+        "position": [
+          480,
+          0
+        ],
+        "parameters": {
+          "mode": "append"
+        }
+      },
+      {
+        "id": "n3",
+        "name": "Formatieren",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          720,
+          0
+        ],
+        "parameters": {
+          "jsCode": "\nconst items = $input.all();\n\nconst STRAVA_TYPES = {\n  'Ride':'Radtour','Run':'Lauf','Walk':'Spaziergang','Hike':'Wanderung',\n  'Swim':'Schwimmen','WeightTraining':'Krafttraining','Workout':'Workout',\n  'VirtualRide':'Virtual Ride','AlpineSki':'Skifahren','NordicSki':'Langlauf',\n  'Snowboard':'Snowboard','RockClimbing':'Klettern','Kayaking':'Kajak'\n};\nconst KOMOOT_TYPES = {\n  'hike':'Wanderung','hiking':'Wanderung',\n  'bike':'Radtour','cycling':'Radtour','road_cycling':'Radtour','citybike':'Radtour',\n  'mtb':'MTB','mtb_easy':'MTB','mtb_advanced':'MTB','mtb_enduro':'MTB',\n  'run':'Lauf','jogging':'Lauf','running':'Lauf',\n  'nordic_walking':'Nordic Walking','walking':'Spaziergang',\n  'climbing':'Klettern','ski_tour':'Skitouren','snowshoeing':'Schneeschuhwandern',\n  'e_bike':'E-Bike','gravel_cycling':'Gravel'\n};\nconst SPORT_EMOJI = {\n  'Radtour':'🚴','MTB':'🚵','E-Bike':'🚴','Gravel':'🚴','Virtual Ride':'🖥',\n  'Lauf':'🏃','Wanderung':'🥾','Spaziergang':'🚶','Nordic Walking':'🚶',\n  'Schwimmen':'🏊','Krafttraining':'🏋','Workout':'💪',\n  'Klettern':'🧗','Skifahren':'⛷️','Langlauf':'🏂','Skitouren':'⛷️',\n  'Snowboard':'🏂','Schneeschuhwandern':'❄️','Kajak':'🚣'\n};\n\nfunction fmtDuration(secs) {\n  const mins = Math.round(secs / 60);\n  const h = Math.floor(mins / 60), m = mins % 60;\n  return h > 0 ? h + 'h ' + m + 'min' : m + ' min';\n}\nfunction fmtLabel(type, fallback) {\n  const t = type || '';\n  return (SPORT_EMOJI[t] || '🏅') + ' ' + (t || fallback || 'Aktivitaet');\n}\n\n// --- Parse Strava (items[0]) ---\nlet stravaDate = null, stravaResult = null;\nif (items.length > 0 && items[0].json && items[0].json.start_date) {\n  const a = items[0].json;\n  const sportRaw = a.sport_type || a.type || 'Aktivitaet';\n  const sport = STRAVA_TYPES[sportRaw] || sportRaw;\n  stravaDate = new Date(a.start_date);\n  stravaResult = {\n    name: a.name || 'Unbekannte Tour',\n    sport: sportRaw, sportLabel: fmtLabel(sport, sportRaw),\n    km: parseFloat(((a.distance || 0) / 1000).toFixed(1)),\n    duration: fmtDuration(a.moving_time || 0),\n    durationMins: Math.round((a.moving_time || 0) / 60),\n    elevation: Math.round(a.total_elevation_gain || 0),\n    avgSpeed: parseFloat(((a.average_speed || 0) * 3.6).toFixed(1)),\n    heartrate: a.average_heartrate ? Math.round(a.average_heartrate) : null,\n    date: new Date(a.start_date_local || a.start_date).toLocaleDateString('de-DE', {weekday:'short',day:'numeric',month:'long'}),\n    startDate: a.start_date_local || a.start_date,\n    kudos: a.kudos_count || 0,\n    source: 'strava',\n    stravaId: a.id, komootId: null, komootUrl: null\n  };\n}\n\n// --- Parse Komoot (items[1]) ---\n// n8n wraps HAL+JSON body as string in .data field\nlet komootDate = null, komootResult = null;\nif (items.length > 1) {\n  let raw = items[1].json;\n  // Unwrap if n8n stored body as string\n  if (raw && typeof raw.data === 'string') {\n    try { raw = JSON.parse(raw.data); } catch(e) { raw = null; }\n  }\n  const tours = raw && raw._embedded && raw._embedded.tours;\n  if (tours && tours.length > 0) {\n    const t = tours[0];\n    const sportRaw = t.sport || 'hike';\n    const sport = KOMOOT_TYPES[sportRaw] || sportRaw;\n    komootDate = new Date(t.date);\n    komootResult = {\n      name: t.name || 'Unbekannte Tour',\n      sport: sportRaw, sportLabel: fmtLabel(sport, sportRaw),\n      km: parseFloat(((t.distance || 0) / 1000).toFixed(1)),\n      duration: fmtDuration(t.duration || 0),\n      durationMins: Math.round((t.duration || 0) / 60),\n      elevation: Math.round(t.elevation_up || 0),\n      avgSpeed: t.duration > 0 ? parseFloat(((t.distance / t.duration) * 3.6).toFixed(1)) : 0,\n      heartrate: null,\n      date: new Date(t.date).toLocaleDateString('de-DE', {weekday:'short',day:'numeric',month:'long'}),\n      startDate: t.date,\n      kudos: 0,\n      source: 'komoot',\n      stravaId: null,\n      komootId: t.id,\n      komootUrl: 'https://www.komoot.com/tour/' + t.id\n    };\n  }\n}\n\n// --- Vergleich: neuere Tour gewinnt ---\nlet result;\nif (stravaResult && komootResult) {\n  result = (stravaDate >= komootDate) ? stravaResult : komootResult;\n} else if (stravaResult) {\n  result = stravaResult;\n} else if (komootResult) {\n  result = komootResult;\n} else {\n  return [{ json: { error: 'Keine Aktivitaet gefunden' } }];\n}\n\nreturn [{ json: result }];\n"
+        }
+      },
+      {
+        "id": "n4",
+        "name": "Antworten",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          960,
+          0
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}",
+          "options": {}
+        }
+      }
+    ],
+    "connections": {
+      "Tour Webhook": {
+        "main": [
+          [
+            {
+              "node": "Strava API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Komoot API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Strava API": {
+        "main": [
+          [
+            {
+              "node": "Zusammenfuehren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Komoot API": {
+        "main": [
+          [
+            {
+              "node": "Zusammenfuehren",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Zusammenfuehren": {
+        "main": [
+          [
+            {
+              "node": "Formatieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Formatieren": {
+        "main": [
+          [
+            {
+              "node": "Antworten",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "8c360f44-d124-4988-9934-b966f9482516",
+  "connections": {
+    "Tour Webhook": {
+      "main": [
+        [
+          {
+            "node": "Strava API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Komoot API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strava API": {
+      "main": [
+        [
+          {
+            "node": "Zusammenfuehren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Komoot API": {
+      "main": [
+        [
+          {
+            "node": "Zusammenfuehren",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Zusammenfuehren": {
+      "main": [
+        [
+          {
+            "node": "Formatieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatieren": {
+      "main": [
+        [
+          {
+            "node": "Antworten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-07T18:34:31.539Z",
+  "id": "TdN9vtXwPCjplpK2",
+  "isArchived": false,
+  "meta": null,
+  "name": "Letzte Tour – Strava & Komoot",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Tour Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "tour-webhook-id",
+      "parameters": {
+        "path": "last-tour",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Strava API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        240,
+        -120
+      ],
+      "credentials": {
+        "stravaOAuth2Api": {
+          "id": "XmPEc4l78f5iHNF7",
+          "name": "Strava account"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.strava.com/api/v3/athlete/activities",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "stravaOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "per_page",
+              "value": "1"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n2b",
+      "name": "Komoot API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        240,
+        120
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.komoot.de/v007/users/3375434366279/tours/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Basic a29tb290QHBhdW4wMS5kZTp0QXpweWctc2ljbWU1LWR5cHhveA=="
+            },
+            {
+              "name": "Accept",
+              "value": "application/hal+json"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "tour_recorded"
+            },
+            {
+              "name": "sort_field",
+              "value": "date"
+            },
+            {
+              "name": "sort_direction",
+              "value": "desc"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            },
+            {
+              "name": "page",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n_merge",
+      "name": "Zusammenfuehren",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Formatieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nconst STRAVA_TYPES = {\n  'Ride':'Radtour','Run':'Lauf','Walk':'Spaziergang','Hike':'Wanderung',\n  'Swim':'Schwimmen','WeightTraining':'Krafttraining','Workout':'Workout',\n  'VirtualRide':'Virtual Ride','AlpineSki':'Skifahren','NordicSki':'Langlauf',\n  'Snowboard':'Snowboard','RockClimbing':'Klettern','Kayaking':'Kajak'\n};\nconst KOMOOT_TYPES = {\n  'hike':'Wanderung','hiking':'Wanderung',\n  'bike':'Radtour','cycling':'Radtour','road_cycling':'Radtour','citybike':'Radtour',\n  'mtb':'MTB','mtb_easy':'MTB','mtb_advanced':'MTB','mtb_enduro':'MTB',\n  'run':'Lauf','jogging':'Lauf','running':'Lauf',\n  'nordic_walking':'Nordic Walking','walking':'Spaziergang',\n  'climbing':'Klettern','ski_tour':'Skitouren','snowshoeing':'Schneeschuhwandern',\n  'e_bike':'E-Bike','gravel_cycling':'Gravel'\n};\nconst SPORT_EMOJI = {\n  'Radtour':'🚴','MTB':'🚵','E-Bike':'🚴','Gravel':'🚴','Virtual Ride':'🖥',\n  'Lauf':'🏃','Wanderung':'🥾','Spaziergang':'🚶','Nordic Walking':'🚶',\n  'Schwimmen':'🏊','Krafttraining':'🏋','Workout':'💪',\n  'Klettern':'🧗','Skifahren':'⛷️','Langlauf':'🏂','Skitouren':'⛷️',\n  'Snowboard':'🏂','Schneeschuhwandern':'❄️','Kajak':'🚣'\n};\n\nfunction fmtDuration(secs) {\n  const mins = Math.round(secs / 60);\n  const h = Math.floor(mins / 60), m = mins % 60;\n  return h > 0 ? h + 'h ' + m + 'min' : m + ' min';\n}\nfunction fmtLabel(type, fallback) {\n  const t = type || '';\n  return (SPORT_EMOJI[t] || '🏅') + ' ' + (t || fallback || 'Aktivitaet');\n}\n\n// --- Parse Strava (items[0]) ---\nlet stravaDate = null, stravaResult = null;\nif (items.length > 0 && items[0].json && items[0].json.start_date) {\n  const a = items[0].json;\n  const sportRaw = a.sport_type || a.type || 'Aktivitaet';\n  const sport = STRAVA_TYPES[sportRaw] || sportRaw;\n  stravaDate = new Date(a.start_date);\n  stravaResult = {\n    name: a.name || 'Unbekannte Tour',\n    sport: sportRaw, sportLabel: fmtLabel(sport, sportRaw),\n    km: parseFloat(((a.distance || 0) / 1000).toFixed(1)),\n    duration: fmtDuration(a.moving_time || 0),\n    durationMins: Math.round((a.moving_time || 0) / 60),\n    elevation: Math.round(a.total_elevation_gain || 0),\n    avgSpeed: parseFloat(((a.average_speed || 0) * 3.6).toFixed(1)),\n    heartrate: a.average_heartrate ? Math.round(a.average_heartrate) : null,\n    date: new Date(a.start_date_local || a.start_date).toLocaleDateString('de-DE', {weekday:'short',day:'numeric',month:'long'}),\n    startDate: a.start_date_local || a.start_date,\n    kudos: a.kudos_count || 0,\n    source: 'strava',\n    stravaId: a.id, komootId: null, komootUrl: null\n  };\n}\n\n// --- Parse Komoot (items[1]) ---\n// n8n wraps HAL+JSON body as string in .data field\nlet komootDate = null, komootResult = null;\nif (items.length > 1) {\n  let raw = items[1].json;\n  // Unwrap if n8n stored body as string\n  if (raw && typeof raw.data === 'string') {\n    try { raw = JSON.parse(raw.data); } catch(e) { raw = null; }\n  }\n  const tours = raw && raw._embedded && raw._embedded.tours;\n  if (tours && tours.length > 0) {\n    const t = tours[0];\n    const sportRaw = t.sport || 'hike';\n    const sport = KOMOOT_TYPES[sportRaw] || sportRaw;\n    komootDate = new Date(t.date);\n    komootResult = {\n      name: t.name || 'Unbekannte Tour',\n      sport: sportRaw, sportLabel: fmtLabel(sport, sportRaw),\n      km: parseFloat(((t.distance || 0) / 1000).toFixed(1)),\n      duration: fmtDuration(t.duration || 0),\n      durationMins: Math.round((t.duration || 0) / 60),\n      elevation: Math.round(t.elevation_up || 0),\n      avgSpeed: t.duration > 0 ? parseFloat(((t.distance / t.duration) * 3.6).toFixed(1)) : 0,\n      heartrate: null,\n      date: new Date(t.date).toLocaleDateString('de-DE', {weekday:'short',day:'numeric',month:'long'}),\n      startDate: t.date,\n      kudos: 0,\n      source: 'komoot',\n      stravaId: null,\n      komootId: t.id,\n      komootUrl: 'https://www.komoot.com/tour/' + t.id\n    };\n  }\n}\n\n// --- Vergleich: neuere Tour gewinnt ---\nlet result;\nif (stravaResult && komootResult) {\n  result = (stravaDate >= komootDate) ? stravaResult : komootResult;\n} else if (stravaResult) {\n  result = stravaResult;\n} else if (komootResult) {\n  result = komootResult;\n} else {\n  return [{ json: { error: 'Keine Aktivitaet gefunden' } }];\n}\n\nreturn [{ json: result }];\n"
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Antworten",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-07T18:34:31.551Z",
+      "createdAt": "2026-06-07T18:34:31.551Z",
+      "role": "workflow:owner",
+      "workflowId": "TdN9vtXwPCjplpK2",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-07T19:13:12.792Z",
+  "versionId": "8c360f44-d124-4988-9934-b966f9482516"
+}
