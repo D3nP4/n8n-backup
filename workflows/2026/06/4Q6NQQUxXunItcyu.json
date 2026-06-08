@@ -1,0 +1,312 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-07T16:52:28.173Z",
+    "createdAt": "2026-06-07T16:52:28.173Z",
+    "versionId": "69d096eb-aca0-4184-8896-70dafc6c6003",
+    "workflowId": "4Q6NQQUxXunItcyu",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "ankunft-zuhause",
+          "options": {}
+        },
+        "id": "webhook",
+        "name": "HA Webhook Ankunft",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          208,
+          256
+        ],
+        "webhookId": "aa382965-ead3-41a3-9a45-7627cdf7f0c0"
+      },
+      {
+        "parameters": {
+          "url": "https://grocy.paun01.de/api/chores",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "GROCY-API-KEY",
+                "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "get-chores",
+        "name": "Grocy Aufgaben holen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          432,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Grocy gibt Array zurueck; n8n teilt es in einzelne Items auf\nconst chores = $input.all().map(i => i.json);\nconst todayStr = new Date().toDateString();\nconst today = new Date(todayStr);\n\nconst icons = {\n  'Sauerteig':'🫙','Wisch':'🧹','Bad':'🚿','Toilette':'🚽',\n  'Staub':'🌫️','Staubsaug':'🧹','Auto':'🚗','Pflanzen':'🌿',\n  'Müll':'🗑️','Kühlschrank':'❄️','Küche':'🍳','Bett':'🛏️'\n};\nfunction icon(name) {\n  for (const [k,v] of Object.entries(icons)) if (name.includes(k)) return v;\n  return '📋';\n}\n\nconst due = chores.filter(c => {\n  if (!c.next_estimated_execution_time) return true;\n  return new Date(new Date(c.next_estimated_execution_time).toDateString()) <= today;\n}).sort((a,b) => {\n  const da = a.next_estimated_execution_time ? new Date(a.next_estimated_execution_time) : new Date(0);\n  const db = b.next_estimated_execution_time ? new Date(b.next_estimated_execution_time) : new Date(0);\n  return da - db;\n});\n\nif (due.length === 0) {\n  return [{ json: { message: '🏠 *Willkommen zuhause!*\\n\\n✅ Alles erledigt – keine fälligen Aufgaben heute!' } }];\n}\n\nconst overdue = due.filter(c => {\n  if (!c.next_estimated_execution_time) return true;\n  return new Date(new Date(c.next_estimated_execution_time).toDateString()) < today;\n});\n\nconst lines = due.map(c => {\n  const d = c.next_estimated_execution_time\n    ? Math.ceil((new Date(new Date(c.next_estimated_execution_time).toDateString()) - today) / 86400000)\n    : -999;\n  const badge = d < 0 ? ' _(' + Math.abs(d) + ' Tag' + (Math.abs(d)!==1?'e':'') + ' überfällig)_' : '';\n  return icon(c.chore_name) + ' ' + c.chore_name + badge;\n}).join('\\n');\n\nconst overdueNote = overdue.length > 0 ? ' _(' + overdue.length + ' überfällig)_' : '';\n\nreturn [{ json: {\n  message: '🏠 *Willkommen zuhause!*\\n📋 *' + due.length + ' Aufgabe' + (due.length!==1?'n':'') + ' heute*' + overdueNote + '\\n\\n' + lines\n}}];\n"
+        },
+        "id": "filter-format",
+        "name": "Filter & Formatieren",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          640,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.message }}",
+          "additionalFields": {
+            "disable_web_page_preview": true,
+            "parse_mode": "Markdown"
+          }
+        },
+        "id": "telegram",
+        "name": "Telegram Nachricht",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          864,
+          304
+        ],
+        "webhookId": "46f20be6-849e-4b0a-9a11-adce71b28647",
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          112,
+          400
+        ],
+        "id": "e7c3c4a5-b205-4c7e-b195-5c6a33e12a66",
+        "name": "When clicking ‘Execute workflow’"
+      }
+    ],
+    "connections": {
+      "HA Webhook Ankunft": {
+        "main": [
+          [
+            {
+              "node": "Grocy Aufgaben holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grocy Aufgaben holen": {
+        "main": [
+          [
+            {
+              "node": "Filter & Formatieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter & Formatieren": {
+        "main": [
+          [
+            {
+              "node": "Telegram Nachricht",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Grocy Aufgaben holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "69d096eb-aca0-4184-8896-70dafc6c6003",
+  "connections": {
+    "HA Webhook Ankunft": {
+      "main": [
+        [
+          {
+            "node": "Grocy Aufgaben holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grocy Aufgaben holen": {
+      "main": [
+        [
+          {
+            "node": "Filter & Formatieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter & Formatieren": {
+      "main": [
+        [
+          {
+            "node": "Telegram Nachricht",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Grocy Aufgaben holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-07T10:10:23.008Z",
+  "id": "4Q6NQQUxXunItcyu",
+  "isArchived": false,
+  "meta": null,
+  "name": "Ankunft Zuhause → Grocy Aufgaben",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ankunft-zuhause",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "HA Webhook Ankunft",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        208,
+        256
+      ],
+      "webhookId": "aa382965-ead3-41a3-9a45-7627cdf7f0c0"
+    },
+    {
+      "parameters": {
+        "url": "https://grocy.paun01.de/api/chores",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "GROCY-API-KEY",
+              "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-chores",
+      "name": "Grocy Aufgaben holen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        432,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Grocy gibt Array zurueck; n8n teilt es in einzelne Items auf\nconst chores = $input.all().map(i => i.json);\nconst todayStr = new Date().toDateString();\nconst today = new Date(todayStr);\n\nconst icons = {\n  'Sauerteig':'🫙','Wisch':'🧹','Bad':'🚿','Toilette':'🚽',\n  'Staub':'🌫️','Staubsaug':'🧹','Auto':'🚗','Pflanzen':'🌿',\n  'Müll':'🗑️','Kühlschrank':'❄️','Küche':'🍳','Bett':'🛏️'\n};\nfunction icon(name) {\n  for (const [k,v] of Object.entries(icons)) if (name.includes(k)) return v;\n  return '📋';\n}\n\nconst due = chores.filter(c => {\n  if (!c.next_estimated_execution_time) return true;\n  return new Date(new Date(c.next_estimated_execution_time).toDateString()) <= today;\n}).sort((a,b) => {\n  const da = a.next_estimated_execution_time ? new Date(a.next_estimated_execution_time) : new Date(0);\n  const db = b.next_estimated_execution_time ? new Date(b.next_estimated_execution_time) : new Date(0);\n  return da - db;\n});\n\nif (due.length === 0) {\n  return [{ json: { message: '🏠 *Willkommen zuhause!*\\n\\n✅ Alles erledigt – keine fälligen Aufgaben heute!' } }];\n}\n\nconst overdue = due.filter(c => {\n  if (!c.next_estimated_execution_time) return true;\n  return new Date(new Date(c.next_estimated_execution_time).toDateString()) < today;\n});\n\nconst lines = due.map(c => {\n  const d = c.next_estimated_execution_time\n    ? Math.ceil((new Date(new Date(c.next_estimated_execution_time).toDateString()) - today) / 86400000)\n    : -999;\n  const badge = d < 0 ? ' _(' + Math.abs(d) + ' Tag' + (Math.abs(d)!==1?'e':'') + ' überfällig)_' : '';\n  return icon(c.chore_name) + ' ' + c.chore_name + badge;\n}).join('\\n');\n\nconst overdueNote = overdue.length > 0 ? ' _(' + overdue.length + ' überfällig)_' : '';\n\nreturn [{ json: {\n  message: '🏠 *Willkommen zuhause!*\\n📋 *' + due.length + ' Aufgabe' + (due.length!==1?'n':'') + ' heute*' + overdueNote + '\\n\\n' + lines\n}}];\n"
+      },
+      "id": "filter-format",
+      "name": "Filter & Formatieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "disable_web_page_preview": true,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "telegram",
+      "name": "Telegram Nachricht",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        864,
+        304
+      ],
+      "webhookId": "46f20be6-849e-4b0a-9a11-adce71b28647",
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        112,
+        400
+      ],
+      "id": "e7c3c4a5-b205-4c7e-b195-5c6a33e12a66",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "pinData": {},
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-07T10:10:23.011Z",
+      "createdAt": "2026-06-07T10:10:23.011Z",
+      "role": "workflow:owner",
+      "workflowId": "4Q6NQQUxXunItcyu",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-07T16:52:28.173Z",
+  "versionId": "69d096eb-aca0-4184-8896-70dafc6c6003"
+}
