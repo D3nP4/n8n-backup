@@ -235,7 +235,12 @@
   "repo_owner": "D3nP4",
   "repo_path": "workflows/",
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Berlin",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "shared": [
     {
@@ -253,6 +258,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-03T21:36:01.713Z",
+  "updatedAt": "2026-06-07T16:42:36.952Z",
   "versionId": "9b7152ca-0b3a-4345-813d-72895471d521"
 }
