@@ -1,19 +1,797 @@
 {
-  "active": false,
-  "activeVersion": null,
-  "activeVersionId": null,
-  "connections": {
-    "Telegram: Foto empfangen": {
-      "main": [
-        [
-          {
-            "node": "Hat Foto?",
-            "type": "main",
-            "index": 0
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-08T10:14:00.328Z",
+    "createdAt": "2026-06-08T10:14:00.328Z",
+    "versionId": "86e2b503-300c-4726-b4f3-3a56bb2a5ae4",
+    "workflowId": "I4OMaTCZSAjTcOQl",
+    "nodes": [
+      {
+        "id": "check-photo",
+        "name": "Hat Foto?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          620,
+          400
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true
+            },
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.message.photo !== undefined }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ]
           }
+        }
+      },
+      {
+        "id": "tg-getfile",
+        "name": "Telegram: Datei-Info",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          840,
+          300
+        ],
+        "parameters": {
+          "resource": "file",
+          "operation": "get",
+          "fileId": "={{ $json.message.photo[$json.message.photo.length - 1].file_id }}"
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "44c3f049-6236-46a8-ab66-4b8dc950a4ba"
+      },
+      {
+        "id": "dl-photo",
+        "name": "Foto herunterladen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          1060,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://api.telegram.org/file/bot{{ $credentials.accessToken }}/{{ $json.result.file_path }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "telegramApi",
+          "responseFormat": "file",
+          "options": {}
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "id": "build-claude",
+        "name": "Claude Anfrage bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1280,
+          300
+        ],
+        "parameters": {
+          "jsCode": "\nconst item = $input.first();\nconst bin = item.binary?.data;\nif (!bin) throw new Error('Kein Bild gefunden');\nconst base64 = bin.data;\nconst mime   = bin.mimeType || 'image/jpeg';\n\nreturn [{json: {\n  model: 'claude-haiku-4-5-20251001',\n  max_tokens: 1024,\n  messages: [{\n    role: 'user',\n    content: [\n      {type:'image', source:{type:'base64', media_type: mime, data: base64}},\n      {type:'text', text:'Analysiere diesen Einkaufszettel (handgeschrieben oder gedruckt). Gib AUSSCHLIESSLICH ein JSON-Array zurück, kein anderer Text: [{\"name\":\"Produktname\",\"quantity\":Menge,\"unit\":\"Einheit\"}]. Erkenne alle Produkte und Mengen. Verwende als unit: Stück, g, kg, ml, L, Pack, Bund. Wenn keine Menge erkennbar: quantity:1.'}\n    ]\n  }]\n}}];\n"
+        }
+      },
+      {
+        "id": "claude-api",
+        "name": "Claude Vision API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          1500,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "anthropicApi",
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify($json) }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "credentials": {
+          "anthropicApi": {
+            "id": "9LB76hvnIilIJdFy",
+            "name": "Anthropic account"
+          }
+        }
+      },
+      {
+        "id": "parse-products",
+        "name": "Produkte parsen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1720,
+          300
+        ],
+        "parameters": {
+          "jsCode": "\nconst text = $json.content?.[0]?.text || '';\nconst match = text.match(/\\[\\s*\\{[\\s\\S]*?\\}\\s*\\]/);\nif (!match) return [{json:{products:[], raw: text}}];\nlet products;\ntry { products = JSON.parse(match[0]); } catch(e) { return [{json:{products:[], raw: text}}]; }\nreturn [{json: {products, chatId: $('Telegram: Foto empfangen').first().json.message.chat.id}}];\n"
+        }
+      },
+      {
+        "id": "grocy-products",
+        "name": "Grocy: Alle Produkte",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          1940,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://grocy.paun01.de/api/objects/products",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "GROCY-API-KEY",
+                "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "match-products",
+        "name": "Produkte zuordnen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2160,
+          300
+        ],
+        "parameters": {
+          "jsCode": "\nconst grocyList = Array.isArray($json) ? $json : ($json.data || []);\nconst parseNode = $('Produkte parsen').first().json;\nconst products  = parseNode.products || [];\nconst chatId    = parseNode.chatId;\n\nconst unitMap = {Stück:2, Piece:2, Pack:3, Packung:3, g:2, kg:2, ml:2, L:2};\n\nreturn products.map(p => {\n  const nameLow = p.name.toLowerCase();\n  const match   = grocyList.find(g =>\n    g.name.toLowerCase() === nameLow ||\n    g.name.toLowerCase().includes(nameLow) ||\n    nameLow.includes(g.name.toLowerCase())\n  );\n  return {json: {\n    name:      p.name,\n    quantity:  p.quantity || 1,\n    unit:      p.unit || 'Stück',\n    productId: match ? match.id : null,\n    qu_id:     match ? match.qu_id_stock : 2,\n    chatId\n  }};\n});\n"
+        }
+      },
+      {
+        "id": "split-batch",
+        "name": "Pro Produkt",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          2380,
+          300
+        ],
+        "parameters": {
+          "batchSize": 1,
+          "options": {}
+        }
+      },
+      {
+        "id": "if-found",
+        "name": "Produkt vorhanden?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          2600,
+          300
+        ],
+        "parameters": {
+          "conditions": {
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.productId }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "grocy-add-stock",
+        "name": "Grocy: Zur Einkaufsliste",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          2820,
+          200
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://grocy.paun01.de/api/objects/shopping_list",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "GROCY-API-KEY",
+                "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={\"product_id\":{{ $json.productId }},\"shopping_list_id\":1,\"amount\":{{ $json.quantity }},\"note\":\"{{ $json.unit }}\"}",
+          "options": {}
+        }
+      },
+      {
+        "id": "grocy-create",
+        "name": "Grocy: Produkt anlegen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          2820,
+          420
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://grocy.paun01.de/api/objects/products",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "GROCY-API-KEY",
+                "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={\"name\":\"{{ $json.name }}\",\"location_id\":2,\"qu_id_stock\":{{ $json.qu_id }},\"qu_id_purchase\":{{ $json.qu_id }},\"qu_factor_purchase_to_stock\":1.0}",
+          "options": {}
+        }
+      },
+      {
+        "id": "grocy-add-new",
+        "name": "Grocy: Neues Produkt → Einkaufsliste",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          3040,
+          420
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://grocy.paun01.de/api/objects/shopping_list",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "GROCY-API-KEY",
+                "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={\"product_id\":{{ $json.created_object_id }},\"shopping_list_id\":1,\"amount\":{{ $(\"Pro Produkt\").item.json.quantity }},\"note\":\"{{ $(\\\"Pro Produkt\\\").item.json.unit }}\"}",
+          "options": {}
+        }
+      },
+      {
+        "id": "merge",
+        "name": "Zusammenführen",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          3260,
+          300
+        ],
+        "parameters": {
+          "mode": "passThrough",
+          "output": "input1"
+        }
+      },
+      {
+        "id": "tg-reply",
+        "name": "Telegram: Zusammenfassung",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          2600,
+          560
+        ],
+        "parameters": {
+          "chatId": "={{ $('Produkte parsen').first().json.chatId }}",
+          "text": "=✅ Einkauf eingetragen!\n\n{{ $('Produkte parsen').first().json.products.map(p => `• ${p.name}: ${p.quantity} ${p.unit}`).join('\\n') }}",
+          "additionalFields": {}
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "1c788e0d-8e36-4d19-95c5-6c1f37aad16a"
+      },
+      {
+        "id": "fertig-check",
+        "name": "Fertig?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          820,
+          700
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false
+            },
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.message.text || '' }}",
+                "rightValue": "fertig",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "grocy-done",
+        "name": "Grocy: Einkaufsliste abschließen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1070,
+          640
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://grocy.paun01.de/api/stock/shoppinglist/done-items",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "GROCY-API-KEY",
+                "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "json",
+          "body": "{\"done_by\":null,\"list_id\":1}",
+          "options": {}
+        }
+      },
+      {
+        "id": "tg-fertig",
+        "name": "Telegram: Fertig bestätigen",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1320,
+          640
+        ],
+        "parameters": {
+          "chatId": "={{ $('Fertig?').first().json.message.chat.id }}",
+          "text": "✅ Einkaufsliste abgehakt! Guten Appetit 🍽️",
+          "additionalFields": {}
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "1b25aec8-3873-4354-88a4-5f34e3b85323"
+      },
+      {
+        "id": "sched-trigger",
+        "name": "Alle 30 Sekunden",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -280,
+          400
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "seconds",
+                "secondsInterval": 30
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "offset-read",
+        "name": "Offset lesen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -60,
+          400
+        ],
+        "parameters": {
+          "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst offset = staticData.telegramOffset || 0;\nreturn [{json: {offset}}];"
+        }
+      },
+      {
+        "id": "tg-getupdates",
+        "name": "Telegram: getUpdates",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          160,
+          400
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://api.telegram.org/bot{{ $json.token }}/getUpdates?offset={{ $json.offset }}&timeout=0&allowed_updates=%5B%22message%22%5D",
+          "options": {}
+        }
+      },
+      {
+        "id": "updates-filter",
+        "name": "Updates verarbeiten",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          380,
+          400
+        ],
+        "parameters": {
+          "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst updates = ($input.first().json.result || []);\n\nif (updates.length > 0) {\n  staticData.telegramOffset = updates[updates.length - 1].update_id + 1;\n}\n\n// Only messages (not edits etc.)\nconst messages = updates\n  .filter(u => u.message)\n  .map(u => ({json: {message: u.message}}));\n\nif (messages.length === 0) return [{json: {noMessages: true}}];\nreturn messages;"
+        }
+      },
+      {
+        "id": "has-messages",
+        "name": "Nachrichten vorhanden?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          600,
+          400
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {},
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.noMessages }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "notTrue"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "token-get",
+        "name": "Token holen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          50,
+          400
+        ],
+        "parameters": {
+          "jsCode": "const creds = await this.getCredentials('telegramApi');\nconst data = $input.first().json;\nreturn [{json: {\n  offset: data.offset,\n  token: creds.accessToken\n}}];"
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Hat Foto?": {
+        "main": [
+          [
+            {
+              "node": "Telegram: Datei-Info",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Fertig?",
+              "type": "main",
+              "index": 0
+            }
+          ]
         ]
-      ]
+      },
+      "Telegram: Datei-Info": {
+        "main": [
+          [
+            {
+              "node": "Foto herunterladen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Foto herunterladen": {
+        "main": [
+          [
+            {
+              "node": "Claude Anfrage bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Claude Anfrage bauen": {
+        "main": [
+          [
+            {
+              "node": "Claude Vision API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Claude Vision API": {
+        "main": [
+          [
+            {
+              "node": "Produkte parsen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Produkte parsen": {
+        "main": [
+          [
+            {
+              "node": "Grocy: Alle Produkte",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grocy: Alle Produkte": {
+        "main": [
+          [
+            {
+              "node": "Produkte zuordnen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Produkte zuordnen": {
+        "main": [
+          [
+            {
+              "node": "Pro Produkt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Pro Produkt": {
+        "main": [
+          [
+            {
+              "node": "Produkt vorhanden?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Telegram: Zusammenfassung",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Produkt vorhanden?": {
+        "main": [
+          [
+            {
+              "node": "Grocy: Zur Einkaufsliste",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Grocy: Produkt anlegen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grocy: Zur Einkaufsliste": {
+        "main": [
+          [
+            {
+              "node": "Zusammenführen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grocy: Produkt anlegen": {
+        "main": [
+          [
+            {
+              "node": "Grocy: Neues Produkt → Einkaufsliste",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grocy: Neues Produkt → Einkaufsliste": {
+        "main": [
+          [
+            {
+              "node": "Zusammenführen",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Zusammenführen": {
+        "main": [
+          [
+            {
+              "node": "Pro Produkt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fertig?": {
+        "main": [
+          [
+            {
+              "node": "Grocy: Einkaufsliste abschließen",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Grocy: Einkaufsliste abschließen": {
+        "main": [
+          [
+            {
+              "node": "Telegram: Fertig bestätigen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Alle 30 Sekunden": {
+        "main": [
+          [
+            {
+              "node": "Offset lesen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Offset lesen": {
+        "main": [
+          [
+            {
+              "node": "Token holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Telegram: getUpdates": {
+        "main": [
+          [
+            {
+              "node": "Updates verarbeiten",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Updates verarbeiten": {
+        "main": [
+          [
+            {
+              "node": "Nachrichten vorhanden?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Nachrichten vorhanden?": {
+        "main": [
+          [
+            {
+              "node": "Hat Foto?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Token holen": {
+        "main": [
+          [
+            {
+              "node": "Telegram: getUpdates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
     },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "86e2b503-300c-4726-b4f3-3a56bb2a5ae4",
+  "connections": {
     "Hat Foto?": {
       "main": [
         [
@@ -23,7 +801,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Fertig?",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Telegram: Datei-Info": {
@@ -125,7 +909,7 @@
       "main": [
         [
           {
-            "node": "Grocy: Bestand hinzufügen",
+            "node": "Grocy: Zur Einkaufsliste",
             "type": "main",
             "index": 0
           }
@@ -139,7 +923,7 @@
         ]
       ]
     },
-    "Grocy: Bestand hinzufügen": {
+    "Grocy: Zur Einkaufsliste": {
       "main": [
         [
           {
@@ -154,14 +938,14 @@
       "main": [
         [
           {
-            "node": "Grocy: Neuen Bestand buchen",
+            "node": "Grocy: Neues Produkt → Einkaufsliste",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Grocy: Neuen Bestand buchen": {
+    "Grocy: Neues Produkt → Einkaufsliste": {
       "main": [
         [
           {
@@ -182,6 +966,96 @@
           }
         ]
       ]
+    },
+    "Fertig?": {
+      "main": [
+        [
+          {
+            "node": "Grocy: Einkaufsliste abschließen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Grocy: Einkaufsliste abschließen": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Fertig bestätigen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alle 30 Sekunden": {
+      "main": [
+        [
+          {
+            "node": "Offset lesen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Offset lesen": {
+      "main": [
+        [
+          {
+            "node": "Token holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: getUpdates": {
+      "main": [
+        [
+          {
+            "node": "Updates verarbeiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Updates verarbeiten": {
+      "main": [
+        [
+          {
+            "node": "Nachrichten vorhanden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nachrichten vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "Hat Foto?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Token holen": {
+      "main": [
+        [
+          {
+            "node": "Telegram: getUpdates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "createdAt": "2026-06-05T16:47:01.043Z",
@@ -190,28 +1064,6 @@
   "meta": null,
   "name": "Einkaufszettel → Grocy",
   "nodes": [
-    {
-      "id": "tg-trigger",
-      "name": "Telegram: Foto empfangen",
-      "type": "n8n-nodes-base.telegramTrigger",
-      "typeVersion": 1,
-      "position": [
-        400,
-        400
-      ],
-      "parameters": {
-        "updates": [
-          "message"
-        ]
-      },
-      "credentials": {
-        "telegramApi": {
-          "id": "qBKlXY3RPqAi76pW",
-          "name": "Telegram account"
-        }
-      },
-      "webhookId": "515bdeeb-15ae-4ee5-9012-9a7b70cecc74"
-    },
     {
       "id": "check-photo",
       "name": "Hat Foto?",
@@ -296,7 +1148,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "\nconst item = $input.first();\nconst bin = item.binary?.data;\nif (!bin) throw new Error('Kein Bild gefunden');\nconst base64 = bin.data;\nconst mime   = bin.mimeType || 'image/jpeg';\n\nreturn [{json: {\n  model: 'claude-haiku-4-5-20251001',\n  max_tokens: 1024,\n  messages: [{\n    role: 'user',\n    content: [\n      {type:'image', source:{type:'base64', media_type: mime, data: base64}},\n      {type:'text', text:'Analysiere diesen deutschen Kassenbon. Gib AUSSCHLIESSLICH ein JSON-Array zurück, kein anderer Text: [{\"name\":\"Produktname\",\"quantity\":Menge,\"unit\":\"Stück\"}]. Erkenne Produktnamen (ohne Preise). Verwende als unit: Stück, g, kg, ml, L, Pack.'}\n    ]\n  }]\n}}];\n"
+        "jsCode": "\nconst item = $input.first();\nconst bin = item.binary?.data;\nif (!bin) throw new Error('Kein Bild gefunden');\nconst base64 = bin.data;\nconst mime   = bin.mimeType || 'image/jpeg';\n\nreturn [{json: {\n  model: 'claude-haiku-4-5-20251001',\n  max_tokens: 1024,\n  messages: [{\n    role: 'user',\n    content: [\n      {type:'image', source:{type:'base64', media_type: mime, data: base64}},\n      {type:'text', text:'Analysiere diesen Einkaufszettel (handgeschrieben oder gedruckt). Gib AUSSCHLIESSLICH ein JSON-Array zurück, kein anderer Text: [{\"name\":\"Produktname\",\"quantity\":Menge,\"unit\":\"Einheit\"}]. Erkenne alle Produkte und Mengen. Verwende als unit: Stück, g, kg, ml, L, Pack, Bund. Wenn keine Menge erkennbar: quantity:1.'}\n    ]\n  }]\n}}];\n"
       }
     },
     {
@@ -425,7 +1277,7 @@
     },
     {
       "id": "grocy-add-stock",
-      "name": "Grocy: Bestand hinzufügen",
+      "name": "Grocy: Zur Einkaufsliste",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
@@ -434,7 +1286,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "=https://grocy.paun01.de/api/stock/products/{{ $json.productId }}/add",
+        "url": "https://grocy.paun01.de/api/objects/shopping_list",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -446,7 +1298,7 @@
         },
         "sendBody": true,
         "contentType": "json",
-        "body": "={{ JSON.stringify({amount: $json.quantity, transaction_type: 'purchase', price: null}) }}",
+        "body": "={\"product_id\":{{ $json.productId }},\"shopping_list_id\":1,\"amount\":{{ $json.quantity }},\"note\":\"{{ $json.unit }}\"}",
         "options": {}
       }
     },
@@ -479,7 +1331,7 @@
     },
     {
       "id": "grocy-add-new",
-      "name": "Grocy: Neuen Bestand buchen",
+      "name": "Grocy: Neues Produkt → Einkaufsliste",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
@@ -488,7 +1340,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "=https://grocy.paun01.de/api/stock/products/{{ $json.created_object_id }}/add",
+        "url": "https://grocy.paun01.de/api/objects/shopping_list",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -500,7 +1352,7 @@
         },
         "sendBody": true,
         "contentType": "json",
-        "body": "={\"amount\":{{ $(\"Pro Produkt\").item.json.quantity }},\"transaction_type\":\"purchase\",\"price\":null}",
+        "body": "={\"product_id\":{{ $json.created_object_id }},\"shopping_list_id\":1,\"amount\":{{ $(\"Pro Produkt\").item.json.quantity }},\"note\":\"{{ $(\\\"Pro Produkt\\\").item.json.unit }}\"}",
         "options": {}
       }
     },
@@ -539,6 +1391,189 @@
         }
       },
       "webhookId": "1c788e0d-8e36-4d19-95c5-6c1f37aad16a"
+    },
+    {
+      "id": "fertig-check",
+      "name": "Fertig?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        820,
+        700
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.message.text || '' }}",
+              "rightValue": "fertig",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "grocy-done",
+      "name": "Grocy: Einkaufsliste abschließen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1070,
+        640
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://grocy.paun01.de/api/stock/shoppinglist/done-items",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "GROCY-API-KEY",
+              "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "{\"done_by\":null,\"list_id\":1}",
+        "options": {}
+      }
+    },
+    {
+      "id": "tg-fertig",
+      "name": "Telegram: Fertig bestätigen",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        640
+      ],
+      "parameters": {
+        "chatId": "={{ $('Fertig?').first().json.message.chat.id }}",
+        "text": "✅ Einkaufsliste abgehakt! Guten Appetit 🍽️",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "1b25aec8-3873-4354-88a4-5f34e3b85323"
+    },
+    {
+      "id": "sched-trigger",
+      "name": "Alle 30 Sekunden",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -280,
+        400
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "offset-read",
+      "name": "Offset lesen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -60,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst offset = staticData.telegramOffset || 0;\nreturn [{json: {offset}}];"
+      }
+    },
+    {
+      "id": "tg-getupdates",
+      "name": "Telegram: getUpdates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.telegram.org/bot{{ $json.token }}/getUpdates?offset={{ $json.offset }}&timeout=0&allowed_updates=%5B%22message%22%5D",
+        "options": {}
+      }
+    },
+    {
+      "id": "updates-filter",
+      "name": "Updates verarbeiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        380,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst updates = ($input.first().json.result || []);\n\nif (updates.length > 0) {\n  staticData.telegramOffset = updates[updates.length - 1].update_id + 1;\n}\n\n// Only messages (not edits etc.)\nconst messages = updates\n  .filter(u => u.message)\n  .map(u => ({json: {message: u.message}}));\n\nif (messages.length === 0) return [{json: {noMessages: true}}];\nreturn messages;"
+      }
+    },
+    {
+      "id": "has-messages",
+      "name": "Nachrichten vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        400
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.noMessages }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notTrue"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "token-get",
+      "name": "Token holen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        50,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const creds = await this.getCredentials('telegramApi');\nconst data = $input.first().json;\nreturn [{json: {\n  offset: data.offset,\n  token: creds.accessToken\n}}];"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      }
     }
   ],
   "pinData": null,
@@ -558,9 +1593,14 @@
       "projectId": "Iyrtd5xOBA8QCG1f"
     }
   ],
-  "staticData": null,
+  "staticData": {
+    "node:Alle 30 Sekunden": {
+      "recurrenceRules": []
+    },
+    "global": {}
+  },
   "tags": [],
-  "triggerCount": 0,
-  "updatedAt": "2026-06-05T16:47:01.043Z",
-  "versionId": "186fe6f5-22a4-4e8a-a7ef-8544fcd07b02"
+  "triggerCount": 1,
+  "updatedAt": "2026-06-08T10:14:00.326Z",
+  "versionId": "86e2b503-300c-4726-b4f3-3a56bb2a5ae4"
 }
