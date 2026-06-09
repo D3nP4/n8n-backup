@@ -1,0 +1,348 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-08T15:44:33.509Z",
+    "createdAt": "2026-06-08T15:44:33.509Z",
+    "versionId": "fb61490c-2707-4ffe-a7ab-c990f0c81bce",
+    "workflowId": "UbXlVstxUToacMci",
+    "nodes": [
+      {
+        "id": "webhook1",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {
+          "httpMethod": "GET",
+          "path": "ankommen-aufgaben",
+          "responseMode": "lastNode",
+          "responseData": "noData"
+        },
+        "webhookId": "1d46e629-cc68-4f0b-8a24-01c8d734aa7f"
+      },
+      {
+        "id": "grocy-tasks",
+        "name": "Grocy: Offene Tasks",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          500,
+          200
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://grocy.paun01.de/api/objects/tasks?query[]=done=0",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "GROCY-API-KEY",
+                "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "grocy-chores",
+        "name": "Grocy: Fällige Chores",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          500,
+          400
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://grocy.paun01.de/api/chores",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "GROCY-API-KEY",
+                "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "build-msg",
+        "name": "Nachricht bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          750,
+          300
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const today = new Date();\ntoday.setHours(0,0,0,0);\n\nconst rawTasks  = Array.isArray($node[\"Grocy: Offene Tasks\"].json)  ? $node[\"Grocy: Offene Tasks\"].json  : [];\nconst rawChores = Array.isArray($node[\"Grocy: Fällige Chores\"].json) ? $node[\"Grocy: Fällige Chores\"].json : [];\n\nconst dueTasks = rawTasks.filter(t => {\n  if (t.done == 1) return false;\n  if (!t.due_date) return true;\n  return new Date(t.due_date + \"T00:00:00\") <= today;\n});\n\nconst dueChores = rawChores.filter(c => {\n  if (!c.next_estimated_execution_time) return true;\n  return new Date(new Date(c.next_estimated_execution_time).toDateString()) <= today;\n});\n\nlet lines = [\"🏠 *Willkommen zuhause, Dennis!*\", \"\"];\n\nif (dueTasks.length === 0 && dueChores.length === 0) {\n  lines.push(\"✅ Keine offenen Aufgaben – genieß den Abend!\");\n} else {\n  if (dueTasks.length > 0) {\n    lines.push(\"📋 *Aufgaben:*\");\n    dueTasks.forEach(t => lines.push(\"• \" + t.name));\n    lines.push(\"\");\n  }\n  if (dueChores.length > 0) {\n    lines.push(\"🔄 *Wiederkehrend:*\");\n    dueChores.forEach(c => lines.push(\"• \" + c.chore_name));\n  }\n}\n\nreturn [{ json: { text: lines.join(\"\\n\") } }];"
+        }
+      },
+      {
+        "id": "telegram1",
+        "name": "Telegram: Senden",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          1000,
+          300
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.text }}",
+          "additionalFields": {
+            "parse_mode": "Markdown"
+          }
+        },
+        "webhookId": "da835fac-9874-4de1-9c4c-c029a0eb6854"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Grocy: Offene Tasks",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Grocy: Fällige Chores",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grocy: Offene Tasks": {
+        "main": [
+          [
+            {
+              "node": "Nachricht bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grocy: Fällige Chores": {
+        "main": [
+          [
+            {
+              "node": "Nachricht bauen",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Nachricht bauen": {
+        "main": [
+          [
+            {
+              "node": "Telegram: Senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "fb61490c-2707-4ffe-a7ab-c990f0c81bce",
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Grocy: Offene Tasks",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Grocy: Fällige Chores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grocy: Offene Tasks": {
+      "main": [
+        [
+          {
+            "node": "Nachricht bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grocy: Fällige Chores": {
+      "main": [
+        [
+          {
+            "node": "Nachricht bauen",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Nachricht bauen": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-08T15:03:49.966Z",
+  "id": "UbXlVstxUToacMci",
+  "isArchived": false,
+  "meta": null,
+  "name": "Ankommen – Aufgaben per Telegram",
+  "nodes": [
+    {
+      "id": "webhook1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "ankommen-aufgaben",
+        "responseMode": "lastNode",
+        "responseData": "noData"
+      },
+      "webhookId": "1d46e629-cc68-4f0b-8a24-01c8d734aa7f"
+    },
+    {
+      "id": "grocy-tasks",
+      "name": "Grocy: Offene Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        500,
+        200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://grocy.paun01.de/api/objects/tasks?query[]=done=0",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "GROCY-API-KEY",
+              "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "grocy-chores",
+      "name": "Grocy: Fällige Chores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        500,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://grocy.paun01.de/api/chores",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "GROCY-API-KEY",
+              "value": "OGILHrpLi2wVQRb3ZvilbeyKR9oA3PRm6X1REEJe7MRjOfYMy3"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "build-msg",
+      "name": "Nachricht bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        750,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const today = new Date();\ntoday.setHours(0,0,0,0);\n\nconst rawTasks  = Array.isArray($node[\"Grocy: Offene Tasks\"].json)  ? $node[\"Grocy: Offene Tasks\"].json  : [];\nconst rawChores = Array.isArray($node[\"Grocy: Fällige Chores\"].json) ? $node[\"Grocy: Fällige Chores\"].json : [];\n\nconst dueTasks = rawTasks.filter(t => {\n  if (t.done == 1) return false;\n  if (!t.due_date) return true;\n  return new Date(t.due_date + \"T00:00:00\") <= today;\n});\n\nconst dueChores = rawChores.filter(c => {\n  if (!c.next_estimated_execution_time) return true;\n  return new Date(new Date(c.next_estimated_execution_time).toDateString()) <= today;\n});\n\nlet lines = [\"🏠 *Willkommen zuhause, Dennis!*\", \"\"];\n\nif (dueTasks.length === 0 && dueChores.length === 0) {\n  lines.push(\"✅ Keine offenen Aufgaben – genieß den Abend!\");\n} else {\n  if (dueTasks.length > 0) {\n    lines.push(\"📋 *Aufgaben:*\");\n    dueTasks.forEach(t => lines.push(\"• \" + t.name));\n    lines.push(\"\");\n  }\n  if (dueChores.length > 0) {\n    lines.push(\"🔄 *Wiederkehrend:*\");\n    dueChores.forEach(c => lines.push(\"• \" + c.chore_name));\n  }\n}\n\nreturn [{ json: { text: lines.join(\"\\n\") } }];"
+      }
+    },
+    {
+      "id": "telegram1",
+      "name": "Telegram: Senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "webhookId": "da835fac-9874-4de1-9c4c-c029a0eb6854"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-08T15:03:49.977Z",
+      "createdAt": "2026-06-08T15:03:49.977Z",
+      "role": "workflow:owner",
+      "workflowId": "UbXlVstxUToacMci",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-08T15:44:33.509Z",
+  "versionId": "fb61490c-2707-4ffe-a7ab-c990f0c81bce"
+}
