@@ -1,0 +1,544 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-10T04:32:57.343Z",
+    "createdAt": "2026-06-10T04:32:57.343Z",
+    "versionId": "8265145d-ed7e-4c74-9ec9-18933327552c",
+    "workflowId": "bHKkbvEO1lwmil5k",
+    "nodes": [
+      {
+        "id": "sched-1",
+        "name": "Schedule",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 6 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "wett-1",
+        "name": "Wetter",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://api.open-meteo.com/v1/forecast",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "latitude",
+                "value": "52.27"
+              },
+              {
+                "name": "longitude",
+                "value": "10.52"
+              },
+              {
+                "name": "daily",
+                "value": "temperature_2m_max,precipitation_sum,wind_speed_10m_max"
+              },
+              {
+                "name": "timezone",
+                "value": "Europe/Berlin"
+              },
+              {
+                "name": "forecast_days",
+                "value": "2"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "prue-1",
+        "name": "Prüfen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const d = items[0].json;\nconst temp = Math.round(d.daily.temperature_2m_max[1]);\nconst rain = Math.round((d.daily.precipitation_sum[1] || 0) * 10) / 10;\nconst wind = Math.round(d.daily.wind_speed_10m_max[1]);\nconst icon = temp >= 22 ? '☀️' : temp >= 16 ? '⛅' : '🌥️';\nconst ok = temp >= 14 && rain < 3 && wind < 35;\nreturn [{ json: { ok, temp, rain, wind, icon } }];"
+        }
+      },
+      {
+        "id": "if-1",
+        "name": "IF",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          660,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "cond-a",
+                "leftValue": "={{ $json.ok }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equal"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "komo-1",
+        "name": "Komoot",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          -100
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://api.komoot.de/v007/users/3375434366279/tours/",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "type",
+                "value": "planned"
+              },
+              {
+                "name": "page",
+                "value": "0"
+              },
+              {
+                "name": "limit",
+                "value": "100"
+              }
+            ]
+          },
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "httpBasicAuth"
+        },
+        "credentials": {
+          "httpBasicAuth": {
+            "id": "qgtv8f6IAxRymtmR",
+            "name": "Komoot Basic Auth"
+          }
+        }
+      },
+      {
+        "id": "nach-1",
+        "name": "Nachricht",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1100,
+          -100
+        ],
+        "parameters": {
+          "jsCode": "const BIKE = [\"racebike\", \"mtb\", \"touringbicycle\", \"electricbike\", \"citybike\"];\nconst w = $(\"Prüfen\").first().json;\nlet r = null;\ntry {\n  const all = items[0].json._embedded?.tours || [];\n  const bikes = all.filter(x => BIKE.includes(x.sport));\n  if (bikes.length) {\n    const p = bikes[Math.floor(Math.random() * Math.min(bikes.length, 10))];\n    r = { name: p.name, km: Math.round((p.distance || 0) / 100) / 10, el: Math.round(p.elevation_up || 0), url: \"https://www.komoot.de/tour/\" + p.id };\n  }\n} catch(e) {}\nconst sp = w.temp >= 20 ? \"Rennrad\" : \"MTB oder Rennrad\";\nlet txt = \"🚴 *Morgen perfektes Fahrrad-Wetter!*\\n\\n\" + w.icon + \" *\" + w.temp + \"°C* · Regen: \" + w.rain + \" mm\\n\\nIdeal für: \" + sp;\nif (r) txt += \"\\n\\n📍 *Route-Vorschlag:*\\n\" + r.name + \"\\n\" + r.km + \" km · ↑ \" + r.el + \" m\\n\" + r.url;\nelse txt += \"\\n\\n_(Keine Fahrrad-Touren geplant)_\";\nreturn [{ json: { txt } }];"
+        }
+      },
+      {
+        "id": "tele-1",
+        "name": "Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1320,
+          -100
+        ],
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.txt }}",
+          "additionalFields": {
+            "parse_mode": "Markdown"
+          }
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "ea4b8e0b-fdaa-46b2-a4dd-debfddadf9c5"
+      }
+    ],
+    "connections": {
+      "Schedule": {
+        "main": [
+          [
+            {
+              "node": "Wetter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wetter": {
+        "main": [
+          [
+            {
+              "node": "Prüfen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prüfen": {
+        "main": [
+          [
+            {
+              "node": "IF",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IF": {
+        "main": [
+          [
+            {
+              "node": "Komoot",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Komoot": {
+        "main": [
+          [
+            {
+              "node": "Nachricht",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Nachricht": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "8265145d-ed7e-4c74-9ec9-18933327552c",
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Wetter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wetter": {
+      "main": [
+        [
+          {
+            "node": "Prüfen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prüfen": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "Komoot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Komoot": {
+      "main": [
+        [
+          {
+            "node": "Nachricht",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nachricht": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-10T04:32:57.340Z",
+  "id": "bHKkbvEO1lwmil5k",
+  "isArchived": false,
+  "meta": null,
+  "name": "10 - Wetter Fahrrad-Tipp mit Komoot Route",
+  "nodes": [
+    {
+      "id": "sched-1",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wett-1",
+      "name": "Wetter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "52.27"
+            },
+            {
+              "name": "longitude",
+              "value": "10.52"
+            },
+            {
+              "name": "daily",
+              "value": "temperature_2m_max,precipitation_sum,wind_speed_10m_max"
+            },
+            {
+              "name": "timezone",
+              "value": "Europe/Berlin"
+            },
+            {
+              "name": "forecast_days",
+              "value": "2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "prue-1",
+      "name": "Prüfen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const d = items[0].json;\nconst temp = Math.round(d.daily.temperature_2m_max[1]);\nconst rain = Math.round((d.daily.precipitation_sum[1] || 0) * 10) / 10;\nconst wind = Math.round(d.daily.wind_speed_10m_max[1]);\nconst icon = temp >= 22 ? '☀️' : temp >= 16 ? '⛅' : '🌥️';\nconst ok = temp >= 14 && rain < 3 && wind < 35;\nreturn [{ json: { ok, temp, rain, wind, icon } }];"
+      }
+    },
+    {
+      "id": "if-1",
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-a",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "komo-1",
+      "name": "Komoot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -100
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.komoot.de/v007/users/3375434366279/tours/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "planned"
+            },
+            {
+              "name": "page",
+              "value": "0"
+            },
+            {
+              "name": "limit",
+              "value": "100"
+            }
+          ]
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBasicAuth"
+      },
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "qgtv8f6IAxRymtmR",
+          "name": "Komoot Basic Auth"
+        }
+      }
+    },
+    {
+      "id": "nach-1",
+      "name": "Nachricht",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const BIKE = [\"racebike\", \"mtb\", \"touringbicycle\", \"electricbike\", \"citybike\"];\nconst w = $(\"Prüfen\").first().json;\nlet r = null;\ntry {\n  const all = items[0].json._embedded?.tours || [];\n  const bikes = all.filter(x => BIKE.includes(x.sport));\n  if (bikes.length) {\n    const p = bikes[Math.floor(Math.random() * Math.min(bikes.length, 10))];\n    r = { name: p.name, km: Math.round((p.distance || 0) / 100) / 10, el: Math.round(p.elevation_up || 0), url: \"https://www.komoot.de/tour/\" + p.id };\n  }\n} catch(e) {}\nconst sp = w.temp >= 20 ? \"Rennrad\" : \"MTB oder Rennrad\";\nlet txt = \"🚴 *Morgen perfektes Fahrrad-Wetter!*\\n\\n\" + w.icon + \" *\" + w.temp + \"°C* · Regen: \" + w.rain + \" mm\\n\\nIdeal für: \" + sp;\nif (r) txt += \"\\n\\n📍 *Route-Vorschlag:*\\n\" + r.name + \"\\n\" + r.km + \" km · ↑ \" + r.el + \" m\\n\" + r.url;\nelse txt += \"\\n\\n_(Keine Fahrrad-Touren geplant)_\";\nreturn [{ json: { txt } }];"
+      }
+    },
+    {
+      "id": "tele-1",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        -100
+      ],
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.txt }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "ea4b8e0b-fdaa-46b2-a4dd-debfddadf9c5"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-10T04:32:57.342Z",
+      "createdAt": "2026-06-10T04:32:57.342Z",
+      "role": "workflow:owner",
+      "workflowId": "bHKkbvEO1lwmil5k",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Schedule": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-10T04:32:57.340Z",
+  "versionId": "8265145d-ed7e-4c74-9ec9-18933327552c"
+}
