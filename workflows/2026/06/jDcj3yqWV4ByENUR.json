@@ -1,0 +1,342 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-09T22:33:06.327Z",
+    "createdAt": "2026-06-09T22:33:06.327Z",
+    "versionId": "e06ff252-77e5-49f2-8875-1c16e30ae5a0",
+    "workflowId": "jDcj3yqWV4ByENUR",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 6
+              }
+            ]
+          }
+        },
+        "id": "cron-1",
+        "name": "Alle 6h",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://finanzen.paun01.de/api/transactions/1",
+          "options": {}
+        },
+        "id": "http-1",
+        "name": "Transaktionen heute",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const txs = items.map(i=>i.json);\nconst big = txs.filter(t => Math.abs(t.amount) >= 100);\nif (!big.length) return [];\nconst lines = big.map(t => {\n  const sign = t.amount > 0 ? '+' : '-';\n  const amt = Math.abs(t.amount).toFixed(2).replace('.',',');\n  const shop = t.applicant_name || 'Unbekannt';\n  return `${sign}${amt} € — ${shop}`;\n});\nreturn [{ json: { text: '💳 *Große Transaktion heute:*\\n\\n' + lines.join('\\n') + '\\n\\n_Warst du das?_', count: big.length } }];"
+        },
+        "id": "code-1",
+        "name": "Filtern >100€",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true
+            },
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.count }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-1",
+        "name": "Hat große Tx?",
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2,
+        "position": [
+          660,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.text }}",
+          "additionalFields": {
+            "parse_mode": "Markdown"
+          }
+        },
+        "id": "tg-1",
+        "name": "Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          880,
+          0
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "20f4a6e3-bf83-42b0-a045-c8e58d709395"
+      }
+    ],
+    "connections": {
+      "Alle 6h": {
+        "main": [
+          [
+            {
+              "node": "Transaktionen heute",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Transaktionen heute": {
+        "main": [
+          [
+            {
+              "node": "Filtern >100€",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filtern >100€": {
+        "main": [
+          [
+            {
+              "node": "Hat große Tx?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Hat große Tx?": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "e06ff252-77e5-49f2-8875-1c16e30ae5a0",
+  "connections": {
+    "Alle 6h": {
+      "main": [
+        [
+          {
+            "node": "Transaktionen heute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transaktionen heute": {
+      "main": [
+        [
+          {
+            "node": "Filtern >100€",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtern >100€": {
+      "main": [
+        [
+          {
+            "node": "Hat große Tx?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hat große Tx?": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-09T22:33:06.322Z",
+  "id": "jDcj3yqWV4ByENUR",
+  "isArchived": false,
+  "meta": null,
+  "name": "💳 Große Transaktion Alert (>100€)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "cron-1",
+      "name": "Alle 6h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://finanzen.paun01.de/api/transactions/1",
+        "options": {}
+      },
+      "id": "http-1",
+      "name": "Transaktionen heute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const txs = items.map(i=>i.json);\nconst big = txs.filter(t => Math.abs(t.amount) >= 100);\nif (!big.length) return [];\nconst lines = big.map(t => {\n  const sign = t.amount > 0 ? '+' : '-';\n  const amt = Math.abs(t.amount).toFixed(2).replace('.',',');\n  const shop = t.applicant_name || 'Unbekannt';\n  return `${sign}${amt} € — ${shop}`;\n});\nreturn [{ json: { text: '💳 *Große Transaktion heute:*\\n\\n' + lines.join('\\n') + '\\n\\n_Warst du das?_', count: big.length } }];"
+      },
+      "id": "code-1",
+      "name": "Filtern >100€",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-1",
+      "name": "Hat große Tx?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "tg-1",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        0
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "20f4a6e3-bf83-42b0-a045-c8e58d709395"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-09T22:33:06.325Z",
+      "createdAt": "2026-06-09T22:33:06.325Z",
+      "role": "workflow:owner",
+      "workflowId": "jDcj3yqWV4ByENUR",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Alle 6h": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-09T22:33:06.322Z",
+  "versionId": "e06ff252-77e5-49f2-8875-1c16e30ae5a0"
+}
