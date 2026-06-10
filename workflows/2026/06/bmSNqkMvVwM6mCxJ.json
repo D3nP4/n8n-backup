@@ -1,0 +1,270 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-09T08:56:21.135Z",
+    "createdAt": "2026-06-09T08:56:21.135Z",
+    "versionId": "8843f4ab-330c-4d82-af34-cd6f2c1cd4a8",
+    "workflowId": "bmSNqkMvVwM6mCxJ",
+    "nodes": [
+      {
+        "id": "wh1",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          200,
+          300
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "kassenbon-scan",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "webhookId": "bebde7af-b7b6-4998-a295-767794993a8d"
+      },
+      {
+        "id": "code1",
+        "name": "Request bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          450,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst base64 = body.image;\nconst mime = body.mime || 'image/jpeg';\nif (!base64) throw new Error('Kein Bild');\nreturn [{ json: {\n  model: 'claude-haiku-4-5-20251001', max_tokens: 1024,\n  messages: [{ role: 'user', content: [\n    { type: 'image', source: { type: 'base64', media_type: mime, data: base64 } },\n    { type: 'text', text: 'Analysiere diesen Kassenbon. Gib NUR ein JSON-Array zurueck, kein anderer Text:\\n[{\"name\":\"Produktname\",\"quantity\":1,\"unit\":\"Stueck\"}]\\nErkenne alle Produkte/Mengen. Einheiten: Stueck, g, kg, ml, L, Pack. Keine Pfand/Rabatt-Zeilen.' }\n  ]}]\n}}];"
+        }
+      },
+      {
+        "id": "http1",
+        "name": "Claude Vision API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          700,
+          300
+        ],
+        "credentials": {
+          "anthropicApi": {
+            "id": "9LB76hvnIilIJdFy",
+            "name": "Anthropic account"
+          }
+        },
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "anthropicApi",
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify($json) }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "code2",
+        "name": "Antwort parsen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          950,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const resp = $input.first().json;\nconst text = resp?.content?.[0]?.text || '';\nlet products = [];\ntry {\n  const match = text.match(/\\[\\s*\\{[\\s\\S]*?\\}\\s*\\]/);\n  if (match) products = JSON.parse(match[0]);\n} catch(e) {}\nreturn [{ json: { products, raw: text } }];"
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Request bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Request bauen": {
+        "main": [
+          [
+            {
+              "node": "Claude Vision API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Claude Vision API": {
+        "main": [
+          [
+            {
+              "node": "Antwort parsen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "8843f4ab-330c-4d82-af34-cd6f2c1cd4a8",
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Request bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request bauen": {
+      "main": [
+        [
+          {
+            "node": "Claude Vision API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Vision API": {
+      "main": [
+        [
+          {
+            "node": "Antwort parsen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-09T08:56:21.131Z",
+  "id": "bmSNqkMvVwM6mCxJ",
+  "isArchived": false,
+  "meta": null,
+  "name": "Kassenbon Scan – Claude Vision",
+  "nodes": [
+    {
+      "id": "wh1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kassenbon-scan",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "bebde7af-b7b6-4998-a295-767794993a8d"
+    },
+    {
+      "id": "code1",
+      "name": "Request bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst base64 = body.image;\nconst mime = body.mime || 'image/jpeg';\nif (!base64) throw new Error('Kein Bild');\nreturn [{ json: {\n  model: 'claude-haiku-4-5-20251001', max_tokens: 1024,\n  messages: [{ role: 'user', content: [\n    { type: 'image', source: { type: 'base64', media_type: mime, data: base64 } },\n    { type: 'text', text: 'Analysiere diesen Kassenbon. Gib NUR ein JSON-Array zurueck, kein anderer Text:\\n[{\"name\":\"Produktname\",\"quantity\":1,\"unit\":\"Stueck\"}]\\nErkenne alle Produkte/Mengen. Einheiten: Stueck, g, kg, ml, L, Pack. Keine Pfand/Rabatt-Zeilen.' }\n  ]}]\n}}];"
+      }
+    },
+    {
+      "id": "http1",
+      "name": "Claude Vision API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        700,
+        300
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "9LB76hvnIilIJdFy",
+          "name": "Anthropic account"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify($json) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "code2",
+      "name": "Antwort parsen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        950,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst text = resp?.content?.[0]?.text || '';\nlet products = [];\ntry {\n  const match = text.match(/\\[\\s*\\{[\\s\\S]*?\\}\\s*\\]/);\n  if (match) products = JSON.parse(match[0]);\n} catch(e) {}\nreturn [{ json: { products, raw: text } }];"
+      }
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-09T08:56:21.133Z",
+      "createdAt": "2026-06-09T08:56:21.133Z",
+      "role": "workflow:owner",
+      "workflowId": "bmSNqkMvVwM6mCxJ",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-09T08:56:21.131Z",
+  "versionId": "8843f4ab-330c-4d82-af34-cd6f2c1cd4a8"
+}
