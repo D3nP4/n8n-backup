@@ -1,0 +1,452 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-09T22:34:11.309Z",
+    "createdAt": "2026-06-09T22:34:11.309Z",
+    "versionId": "0ba17b1f-7c2e-4736-95e2-763ae485c5f1",
+    "workflowId": "4hS1g3ypH4TLdQQM",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 18 * * *"
+              }
+            ]
+          }
+        },
+        "id": "cron-10",
+        "name": "Täglich 18h",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://api.open-meteo.com/v1/forecast?latitude=52.27&longitude=10.52&daily=weathercode,temperature_2m_max,precipitation_sum&timezone=Europe/Berlin&forecast_days=2",
+          "options": {}
+        },
+        "id": "http-weather",
+        "name": "Wetter morgen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = items[0].json.daily;\nconst code = d.weathercode[1];\nconst temp = d.temperature_2m_max[1];\nconst rain = d.precipitation_sum[1];\nconst goodCodes = [0,1,2];\nconst good = goodCodes.includes(code) && temp >= 15 && rain < 1;\nconst icons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',61:'🌧️',80:'🌦️',95:'⛈️'};\nconst icon = icons[code] || '🌡️';\nreturn [{ json: { good, code, temp: Math.round(temp), rain: Math.round(rain*10)/10, icon } }];"
+        },
+        "id": "code-weather",
+        "name": "Wetter prüfen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {},
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.good }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-10",
+        "name": "Gutes Wetter?",
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2,
+        "position": [
+          660,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://api.komoot.de/v007/users/3375434366279/tours/?type=planned&page=0&limit=50&sport_types=racebike,mtb,touringbicycle",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBasicAuth",
+          "options": {}
+        },
+        "id": "http-komoot",
+        "name": "Komoot Routen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          0
+        ],
+        "credentials": {
+          "httpBasicAuth": {
+            "id": "komoot-basic",
+            "name": "Komoot Basic Auth"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const weather = $('Wetter prüfen').first().json;\nlet route = null;\ntry {\n  const tours = items[0].json._embedded?.tours?.items || items[0].json.items || [];\n  if (tours.length) {\n    const pick = tours[Math.floor(Math.random() * Math.min(tours.length, 10))];\n    route = { name: pick.name, km: Math.round((pick.distance||0)/100)/10, elevation: Math.round(pick.elevation_up||0), url: `https://www.komoot.de/tour/${pick.id}` };\n  }\n} catch(e) {}\nconst sportLabel = weather.temp >= 22 ? 'Rennrad' : 'MTB oder Rennrad';\nlet text = `🚴 *Morgen perfektes Fahrrad-Wetter!*\\n\\n${weather.icon} ${weather.temp}°C · ${weather.rain} mm Regen\\n\\nIdeal für: ${sportLabel}`;\nif (route) text += `\\n\\n📍 *Route-Vorschlag:*\\n${route.name}\\n${route.km} km · ↑ ${route.elevation} m\\n${route.url}`;\nreturn [{ json: { text } }];"
+        },
+        "id": "code-msg",
+        "name": "Nachricht + Route",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1100,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.text }}",
+          "additionalFields": {
+            "parse_mode": "Markdown"
+          }
+        },
+        "id": "tg-10",
+        "name": "Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1320,
+          0
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "9ca6890f-af6a-4001-8f1f-f656a4abdc49"
+      }
+    ],
+    "connections": {
+      "Täglich 18h": {
+        "main": [
+          [
+            {
+              "node": "Wetter morgen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wetter morgen": {
+        "main": [
+          [
+            {
+              "node": "Wetter prüfen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wetter prüfen": {
+        "main": [
+          [
+            {
+              "node": "Gutes Wetter?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gutes Wetter?": {
+        "main": [
+          [
+            {
+              "node": "Komoot Routen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Komoot Routen": {
+        "main": [
+          [
+            {
+              "node": "Nachricht + Route",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Nachricht + Route": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "0ba17b1f-7c2e-4736-95e2-763ae485c5f1",
+  "connections": {
+    "Täglich 18h": {
+      "main": [
+        [
+          {
+            "node": "Wetter morgen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wetter morgen": {
+      "main": [
+        [
+          {
+            "node": "Wetter prüfen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wetter prüfen": {
+      "main": [
+        [
+          {
+            "node": "Gutes Wetter?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gutes Wetter?": {
+      "main": [
+        [
+          {
+            "node": "Komoot Routen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Komoot Routen": {
+      "main": [
+        [
+          {
+            "node": "Nachricht + Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nachricht + Route": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-09T22:34:11.306Z",
+  "id": "4hS1g3ypH4TLdQQM",
+  "isArchived": false,
+  "meta": null,
+  "name": "🚴 Wetter-Fahrrad-Tipp + Komoot Route",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 18 * * *"
+            }
+          ]
+        }
+      },
+      "id": "cron-10",
+      "name": "Täglich 18h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=52.27&longitude=10.52&daily=weathercode,temperature_2m_max,precipitation_sum&timezone=Europe/Berlin&forecast_days=2",
+        "options": {}
+      },
+      "id": "http-weather",
+      "name": "Wetter morgen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = items[0].json.daily;\nconst code = d.weathercode[1];\nconst temp = d.temperature_2m_max[1];\nconst rain = d.precipitation_sum[1];\nconst goodCodes = [0,1,2];\nconst good = goodCodes.includes(code) && temp >= 15 && rain < 1;\nconst icons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',61:'🌧️',80:'🌦️',95:'⛈️'};\nconst icon = icons[code] || '🌡️';\nreturn [{ json: { good, code, temp: Math.round(temp), rain: Math.round(rain*10)/10, icon } }];"
+      },
+      "id": "code-weather",
+      "name": "Wetter prüfen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.good }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-10",
+      "name": "Gutes Wetter?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.komoot.de/v007/users/3375434366279/tours/?type=planned&page=0&limit=50&sport_types=racebike,mtb,touringbicycle",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "id": "http-komoot",
+      "name": "Komoot Routen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "komoot-basic",
+          "name": "Komoot Basic Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const weather = $('Wetter prüfen').first().json;\nlet route = null;\ntry {\n  const tours = items[0].json._embedded?.tours?.items || items[0].json.items || [];\n  if (tours.length) {\n    const pick = tours[Math.floor(Math.random() * Math.min(tours.length, 10))];\n    route = { name: pick.name, km: Math.round((pick.distance||0)/100)/10, elevation: Math.round(pick.elevation_up||0), url: `https://www.komoot.de/tour/${pick.id}` };\n  }\n} catch(e) {}\nconst sportLabel = weather.temp >= 22 ? 'Rennrad' : 'MTB oder Rennrad';\nlet text = `🚴 *Morgen perfektes Fahrrad-Wetter!*\\n\\n${weather.icon} ${weather.temp}°C · ${weather.rain} mm Regen\\n\\nIdeal für: ${sportLabel}`;\nif (route) text += `\\n\\n📍 *Route-Vorschlag:*\\n${route.name}\\n${route.km} km · ↑ ${route.elevation} m\\n${route.url}`;\nreturn [{ json: { text } }];"
+      },
+      "id": "code-msg",
+      "name": "Nachricht + Route",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "tg-10",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1320,
+        0
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "9ca6890f-af6a-4001-8f1f-f656a4abdc49"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-09T22:34:11.308Z",
+      "createdAt": "2026-06-09T22:34:11.308Z",
+      "role": "workflow:owner",
+      "workflowId": "4hS1g3ypH4TLdQQM",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Täglich 18h": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-09T22:34:11.306Z",
+  "versionId": "0ba17b1f-7c2e-4736-95e2-763ae485c5f1"
+}
