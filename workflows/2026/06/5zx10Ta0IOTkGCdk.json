@@ -1,0 +1,408 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-09T13:41:13.117Z",
+    "createdAt": "2026-06-09T13:41:13.117Z",
+    "versionId": "12272b02-e730-46cd-9ccd-c80e9e963e57",
+    "workflowId": "5zx10Ta0IOTkGCdk",
+    "nodes": [
+      {
+        "id": "sched",
+        "name": "Alle 30 Minuten",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          200,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 30
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "cfg",
+        "name": "Konfiguration",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          420,
+          300
+        ],
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a1",
+                "name": "api_key",
+                "value": "28c3f4b711014206983da17dc2e0dfd2",
+                "type": "string"
+              },
+              {
+                "id": "a2",
+                "name": "sync_key",
+                "value": "tipp-sync-2026",
+                "type": "string"
+              },
+              {
+                "id": "a3",
+                "name": "tipp_url",
+                "value": "https://tipp.paun01.de/api/sync",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "fetch",
+        "name": "Ergebnisse von football-data.org",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          640,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://api.football-data.org/v4/competitions/WC/matches?status=FINISHED",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Auth-Token",
+                "value": "={{ $('Konfiguration').item.json.api_key }}"
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "map",
+        "name": "Teams auf Deutsch mappen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          860,
+          300
+        ],
+        "parameters": {
+          "jsCode": "\nconst teamMap = {\n  'Mexico': 'Mexiko', 'Korea Republic': 'Südkorea', 'South Korea': 'Südkorea',\n  'Czech Republic': 'Tschechien', 'Czechia': 'Tschechien', 'South Africa': 'Südafrika',\n  'Canada': 'Kanada', 'Bosnia and Herzegovina': 'Bosnien-Herzegowina',\n  'Bosnia-Herzegovina': 'Bosnien-Herzegowina', 'Qatar': 'Katar', 'Switzerland': 'Schweiz',\n  'Brazil': 'Brasilien', 'Morocco': 'Marokko', 'Haiti': 'Haiti', 'Scotland': 'Schottland',\n  'USA': 'USA', 'United States': 'USA', 'Paraguay': 'Paraguay',\n  'Australia': 'Australien', 'Turkey': 'Türkei', 'Türkiye': 'Türkei',\n  'Germany': 'Deutschland', 'Curaçao': 'Curaçao', \"Côte d'Ivoire\": 'Elfenbeinküste',\n  'Ivory Coast': 'Elfenbeinküste', 'Ecuador': 'Ecuador', 'Netherlands': 'Niederlande',\n  'Japan': 'Japan', 'Sweden': 'Schweden', 'Tunisia': 'Tunesien', 'Belgium': 'Belgien',\n  'Egypt': 'Ägypten', 'Iran': 'Iran', 'IR Iran': 'Iran', 'New Zealand': 'Neuseeland',\n  'Spain': 'Spanien', 'Cape Verde': 'Kap Verde', 'Cabo Verde': 'Kap Verde',\n  'Saudi Arabia': 'Saudi-Arabien', 'Uruguay': 'Uruguay', 'France': 'Frankreich',\n  'Senegal': 'Senegal', 'Iraq': 'Irak', 'Norway': 'Norwegen', 'Argentina': 'Argentinien',\n  'Algeria': 'Algerien', 'Austria': 'Österreich', 'Jordan': 'Jordanien',\n  'Portugal': 'Portugal', 'Congo DR': 'DR Kongo', 'DR Congo': 'DR Kongo',\n  'Democratic Republic of Congo': 'DR Kongo', 'Uzbekistan': 'Usbekistan',\n  'Colombia': 'Kolumbien', 'England': 'England', 'Croatia': 'Kroatien',\n  'Ghana': 'Ghana', 'Panama': 'Panama',\n};\n\nconst matches = $input.first().json.matches || [];\nconst result = [];\nfor (const m of matches) {\n  if (m.status !== 'FINISHED') continue;\n  const score = m.score?.fullTime;\n  if (score?.home === null || score?.home === undefined) continue;\n  const home = teamMap[m.homeTeam?.name] || m.homeTeam?.name;\n  const away = teamMap[m.awayTeam?.name] || m.awayTeam?.name;\n  result.push({ home, away, home_score: score.home, away_score: score.away });\n}\nreturn [{ json: { matches: result, count: result.length } }];\n"
+        }
+      },
+      {
+        "id": "sync",
+        "name": "Tippspiel aktualisieren",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          1080,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $('Konfiguration').item.json.tipp_url }}",
+          "sendBody": true,
+          "contentType": "json",
+          "body": "={{ JSON.stringify($json.matches) }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Sync-Key",
+                "value": "={{ $('Konfiguration').item.json.sync_key }}"
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "note",
+        "name": "Hinweis",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          420,
+          160
+        ],
+        "parameters": {
+          "content": "## API-Key eintragen\n1. Kostenlos registrieren: **football-data.org**\n2. Key aus der E-Mail kopieren\n3. Im Node **Konfiguration** bei `api_key` eintragen\n4. Workflow aktivieren",
+          "height": 120,
+          "width": 320
+        }
+      }
+    ],
+    "connections": {
+      "Alle 30 Minuten": {
+        "main": [
+          [
+            {
+              "node": "Konfiguration",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Konfiguration": {
+        "main": [
+          [
+            {
+              "node": "Ergebnisse von football-data.org",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ergebnisse von football-data.org": {
+        "main": [
+          [
+            {
+              "node": "Teams auf Deutsch mappen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Teams auf Deutsch mappen": {
+        "main": [
+          [
+            {
+              "node": "Tippspiel aktualisieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "12272b02-e730-46cd-9ccd-c80e9e963e57",
+  "connections": {
+    "Alle 30 Minuten": {
+      "main": [
+        [
+          {
+            "node": "Konfiguration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Konfiguration": {
+      "main": [
+        [
+          {
+            "node": "Ergebnisse von football-data.org",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ergebnisse von football-data.org": {
+      "main": [
+        [
+          {
+            "node": "Teams auf Deutsch mappen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Teams auf Deutsch mappen": {
+      "main": [
+        [
+          {
+            "node": "Tippspiel aktualisieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-09T13:37:09.465Z",
+  "id": "5zx10Ta0IOTkGCdk",
+  "isArchived": false,
+  "meta": null,
+  "name": "WM 2026 – Ergebnisse Auto-Sync",
+  "nodes": [
+    {
+      "id": "sched",
+      "name": "Alle 30 Minuten",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "cfg",
+      "name": "Konfiguration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        420,
+        300
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "api_key",
+              "value": "28c3f4b711014206983da17dc2e0dfd2",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "sync_key",
+              "value": "tipp-sync-2026",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "tipp_url",
+              "value": "https://tipp.paun01.de/api/sync",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "fetch",
+      "name": "Ergebnisse von football-data.org",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        640,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.football-data.org/v4/competitions/WC/matches?status=FINISHED",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "={{ $('Konfiguration').item.json.api_key }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "map",
+      "name": "Teams auf Deutsch mappen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        300
+      ],
+      "parameters": {
+        "jsCode": "\nconst teamMap = {\n  'Mexico': 'Mexiko', 'Korea Republic': 'Südkorea', 'South Korea': 'Südkorea',\n  'Czech Republic': 'Tschechien', 'Czechia': 'Tschechien', 'South Africa': 'Südafrika',\n  'Canada': 'Kanada', 'Bosnia and Herzegovina': 'Bosnien-Herzegowina',\n  'Bosnia-Herzegovina': 'Bosnien-Herzegowina', 'Qatar': 'Katar', 'Switzerland': 'Schweiz',\n  'Brazil': 'Brasilien', 'Morocco': 'Marokko', 'Haiti': 'Haiti', 'Scotland': 'Schottland',\n  'USA': 'USA', 'United States': 'USA', 'Paraguay': 'Paraguay',\n  'Australia': 'Australien', 'Turkey': 'Türkei', 'Türkiye': 'Türkei',\n  'Germany': 'Deutschland', 'Curaçao': 'Curaçao', \"Côte d'Ivoire\": 'Elfenbeinküste',\n  'Ivory Coast': 'Elfenbeinküste', 'Ecuador': 'Ecuador', 'Netherlands': 'Niederlande',\n  'Japan': 'Japan', 'Sweden': 'Schweden', 'Tunisia': 'Tunesien', 'Belgium': 'Belgien',\n  'Egypt': 'Ägypten', 'Iran': 'Iran', 'IR Iran': 'Iran', 'New Zealand': 'Neuseeland',\n  'Spain': 'Spanien', 'Cape Verde': 'Kap Verde', 'Cabo Verde': 'Kap Verde',\n  'Saudi Arabia': 'Saudi-Arabien', 'Uruguay': 'Uruguay', 'France': 'Frankreich',\n  'Senegal': 'Senegal', 'Iraq': 'Irak', 'Norway': 'Norwegen', 'Argentina': 'Argentinien',\n  'Algeria': 'Algerien', 'Austria': 'Österreich', 'Jordan': 'Jordanien',\n  'Portugal': 'Portugal', 'Congo DR': 'DR Kongo', 'DR Congo': 'DR Kongo',\n  'Democratic Republic of Congo': 'DR Kongo', 'Uzbekistan': 'Usbekistan',\n  'Colombia': 'Kolumbien', 'England': 'England', 'Croatia': 'Kroatien',\n  'Ghana': 'Ghana', 'Panama': 'Panama',\n};\n\nconst matches = $input.first().json.matches || [];\nconst result = [];\nfor (const m of matches) {\n  if (m.status !== 'FINISHED') continue;\n  const score = m.score?.fullTime;\n  if (score?.home === null || score?.home === undefined) continue;\n  const home = teamMap[m.homeTeam?.name] || m.homeTeam?.name;\n  const away = teamMap[m.awayTeam?.name] || m.awayTeam?.name;\n  result.push({ home, away, home_score: score.home, away_score: score.away });\n}\nreturn [{ json: { matches: result, count: result.length } }];\n"
+      }
+    },
+    {
+      "id": "sync",
+      "name": "Tippspiel aktualisieren",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1080,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Konfiguration').item.json.tipp_url }}",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify($json.matches) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Sync-Key",
+              "value": "={{ $('Konfiguration').item.json.sync_key }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "note",
+      "name": "Hinweis",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        160
+      ],
+      "parameters": {
+        "content": "## API-Key eintragen\n1. Kostenlos registrieren: **football-data.org**\n2. Key aus der E-Mail kopieren\n3. Im Node **Konfiguration** bei `api_key` eintragen\n4. Workflow aktivieren",
+        "height": 120,
+        "width": 320
+      }
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-09T13:37:09.476Z",
+      "createdAt": "2026-06-09T13:37:09.476Z",
+      "role": "workflow:owner",
+      "workflowId": "5zx10Ta0IOTkGCdk",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Alle 30 Minuten": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-09T13:41:13.116Z",
+  "versionId": "12272b02-e730-46cd-9ccd-c80e9e963e57"
+}
