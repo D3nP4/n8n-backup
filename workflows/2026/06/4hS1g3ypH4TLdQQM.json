@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-09T22:34:11.309Z",
-    "createdAt": "2026-06-09T22:34:11.309Z",
-    "versionId": "0ba17b1f-7c2e-4736-95e2-763ae485c5f1",
+    "updatedAt": "2026-06-10T16:51:49.000Z",
+    "createdAt": "2026-06-10T16:51:47.155Z",
+    "versionId": "5b24287e-adaf-410f-98da-d2b1a2f3b09c",
     "workflowId": "4hS1g3ypH4TLdQQM",
     "nodes": [
       {
@@ -36,7 +36,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          220,
+          224,
           0
         ]
       },
@@ -49,14 +49,19 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          440,
+          448,
           0
         ]
       },
       {
         "parameters": {
           "conditions": {
-            "options": {},
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 1
+            },
             "conditions": [
               {
                 "id": "c1",
@@ -77,7 +82,7 @@
         "type": "n8n-nodes-base.filter",
         "typeVersion": 2,
         "position": [
-          660,
+          672,
           0
         ]
       },
@@ -98,7 +103,7 @@
         ],
         "credentials": {
           "httpBasicAuth": {
-            "id": "komoot-basic",
+            "id": "qgtv8f6IAxRymtmR",
             "name": "Komoot Basic Auth"
           }
         }
@@ -112,7 +117,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1100,
+          1104,
           0
         ]
       },
@@ -129,16 +134,16 @@
         "type": "n8n-nodes-base.telegram",
         "typeVersion": 1.2,
         "position": [
-          1320,
+          1328,
           0
         ],
+        "webhookId": "9ca6890f-af6a-4001-8f1f-f656a4abdc49",
         "credentials": {
           "telegramApi": {
             "id": "qBKlXY3RPqAi76pW",
             "name": "Telegram account"
           }
-        },
-        "webhookId": "9ca6890f-af6a-4001-8f1f-f656a4abdc49"
+        }
       }
     ],
     "connections": {
@@ -210,11 +215,11 @@
       }
     },
     "authors": "Dennis Paun",
-    "name": null,
-    "description": null,
-    "autosaved": false
+    "name": "Version 5b24287e",
+    "description": "",
+    "autosaved": true
   },
-  "activeVersionId": "0ba17b1f-7c2e-4736-95e2-763ae485c5f1",
+  "activeVersionId": "5b24287e-adaf-410f-98da-d2b1a2f3b09c",
   "connections": {
     "Täglich 18h": {
       "main": [
@@ -319,7 +324,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        220,
+        224,
         0
       ]
     },
@@ -332,14 +337,19 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        440,
+        448,
         0
       ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {},
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
           "conditions": [
             {
               "id": "c1",
@@ -360,7 +370,7 @@
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2,
       "position": [
-        660,
+        672,
         0
       ]
     },
@@ -381,7 +391,7 @@
       ],
       "credentials": {
         "httpBasicAuth": {
-          "id": "komoot-basic",
+          "id": "qgtv8f6IAxRymtmR",
           "name": "Komoot Basic Auth"
         }
       }
@@ -395,7 +405,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1100,
+        1104,
         0
       ]
     },
@@ -412,24 +422,29 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1320,
+        1328,
         0
       ],
+      "webhookId": "9ca6890f-af6a-4001-8f1f-f656a4abdc49",
       "credentials": {
         "telegramApi": {
           "id": "qBKlXY3RPqAi76pW",
           "name": "Telegram account"
         }
-      },
-      "webhookId": "9ca6890f-af6a-4001-8f1f-f656a4abdc49"
+      }
     }
   ],
-  "pinData": null,
+  "pinData": {},
   "repo_name": "n8n-backup",
   "repo_owner": "D3nP4",
   "repo_path": "workflows/",
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Berlin",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "shared": [
     {
@@ -447,6 +462,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-09T22:34:11.306Z",
-  "versionId": "0ba17b1f-7c2e-4736-95e2-763ae485c5f1"
+  "updatedAt": "2026-06-10T16:51:47.154Z",
+  "versionId": "5b24287e-adaf-410f-98da-d2b1a2f3b09c"
 }
