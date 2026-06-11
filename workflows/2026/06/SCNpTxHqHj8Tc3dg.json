@@ -1,0 +1,254 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-10T16:42:04.309Z",
+    "createdAt": "2026-06-10T16:42:04.309Z",
+    "versionId": "a9434e95-ffe6-43b2-bbf1-56ca8a5f250b",
+    "workflowId": "SCNpTxHqHj8Tc3dg",
+    "nodes": [
+      {
+        "id": "ha-webhook",
+        "name": "HA Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "staubsaugen-vibration",
+          "responseMode": "onReceived",
+          "options": {}
+        },
+        "webhookId": "staubsaugen-vibration-ha"
+      },
+      {
+        "id": "debounce",
+        "name": "Debounce 30min",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const sd = $getWorkflowStaticData('global');\nconst now = Date.now();\nconst last = sd.lastSent || 0;\nif (now - last < 30 * 60 * 1000) {\n  return [];\n}\nsd.lastSent = now;\nreturn items;"
+        }
+      },
+      {
+        "id": "tg-frage",
+        "name": "Telegram: Frage senden",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendMessage",
+          "chatId": "6422093154",
+          "text": "🧹 Vibration erkannt! Wurde die Wohnung gesaugt?",
+          "replyMarkup": "inlineKeyboard",
+          "inlineKeyboard": {
+            "rows": [
+              {
+                "row": {
+                  "buttons": [
+                    {
+                      "text": "✅ Ja, gesaugt!",
+                      "additionalFields": {
+                        "callback_data": "staubsaugen_ja"
+                      }
+                    },
+                    {
+                      "text": "❌ Nein",
+                      "additionalFields": {
+                        "callback_data": "staubsaugen_nein"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "b07f4e72-84c0-4912-8f95-1ea3ba123cdc"
+      }
+    ],
+    "connections": {
+      "HA Webhook": {
+        "main": [
+          [
+            {
+              "node": "Debounce 30min",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Debounce 30min": {
+        "main": [
+          [
+            {
+              "node": "Telegram: Frage senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "a9434e95-ffe6-43b2-bbf1-56ca8a5f250b",
+  "connections": {
+    "HA Webhook": {
+      "main": [
+        [
+          {
+            "node": "Debounce 30min",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debounce 30min": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Frage senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-10T16:42:04.306Z",
+  "id": "SCNpTxHqHj8Tc3dg",
+  "isArchived": false,
+  "meta": null,
+  "name": "Staubsaugen-Frage (HA → Telegram)",
+  "nodes": [
+    {
+      "id": "ha-webhook",
+      "name": "HA Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "staubsaugen-vibration",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "staubsaugen-vibration-ha"
+    },
+    {
+      "id": "debounce",
+      "name": "Debounce 30min",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nconst now = Date.now();\nconst last = sd.lastSent || 0;\nif (now - last < 30 * 60 * 1000) {\n  return [];\n}\nsd.lastSent = now;\nreturn items;"
+      }
+    },
+    {
+      "id": "tg-frage",
+      "name": "Telegram: Frage senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "6422093154",
+        "text": "🧹 Vibration erkannt! Wurde die Wohnung gesaugt?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Ja, gesaugt!",
+                    "additionalFields": {
+                      "callback_data": "staubsaugen_ja"
+                    }
+                  },
+                  {
+                    "text": "❌ Nein",
+                    "additionalFields": {
+                      "callback_data": "staubsaugen_nein"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "b07f4e72-84c0-4912-8f95-1ea3ba123cdc"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-10T16:42:04.307Z",
+      "createdAt": "2026-06-10T16:42:04.307Z",
+      "role": "workflow:owner",
+      "workflowId": "SCNpTxHqHj8Tc3dg",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "global": {
+      "lastSent": 1781109725581
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-10T16:42:04.306Z",
+  "versionId": "a9434e95-ffe6-43b2-bbf1-56ca8a5f250b"
+}
