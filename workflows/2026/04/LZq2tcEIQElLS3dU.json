@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-30T11:08:52.191Z",
-    "createdAt": "2026-05-30T11:08:52.191Z",
-    "versionId": "697f96f4-4331-4be7-977b-d9693f0e14a3",
+    "updatedAt": "2026-06-11T21:41:31.141Z",
+    "createdAt": "2026-06-11T21:41:31.141Z",
+    "versionId": "2fe097c7-b170-49e6-89d5-45f807f2392d",
     "workflowId": "LZq2tcEIQElLS3dU",
     "nodes": [
       {
@@ -396,6 +396,23 @@
           }
         },
         "webhookId": "a9c285fd-e611-4707-9d62-8aa8e99c3fb9"
+      },
+      {
+        "id": "hc-ping-4e634337",
+        "name": "HC Ping",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          9000,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://hc.paun01.de/ping/4e634337-f4f7-4740-8933-4ee0715786f6",
+          "options": {
+            "continueOnFail": true
+          }
+        }
       }
     ],
     "connections": {
@@ -558,6 +575,28 @@
             }
           ]
         ]
+      },
+      "Push a message": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Paperless - Tags holen": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
@@ -565,7 +604,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "697f96f4-4331-4be7-977b-d9693f0e14a3",
+  "activeVersionId": "2fe097c7-b170-49e6-89d5-45f807f2392d",
   "connections": {
     "Konfiguration": {
       "main": [
@@ -721,6 +760,28 @@
         [
           {
             "node": "Konfiguration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push a message": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paperless - Tags holen": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
             "type": "main",
             "index": 0
           }
@@ -1126,6 +1187,23 @@
         }
       },
       "webhookId": "a9c285fd-e611-4707-9d62-8aa8e99c3fb9"
+    },
+    {
+      "id": "hc-ping-4e634337",
+      "name": "HC Ping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9000,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://hc.paun01.de/ping/4e634337-f4f7-4740-8933-4ee0715786f6",
+        "options": {
+          "continueOnFail": true
+        }
+      }
     }
   ],
   "pinData": {},
@@ -1155,6 +1233,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-05-30T11:08:52.190Z",
-  "versionId": "697f96f4-4331-4be7-977b-d9693f0e14a3"
+  "updatedAt": "2026-06-11T21:41:31.141Z",
+  "versionId": "2fe097c7-b170-49e6-89d5-45f807f2392d"
 }
