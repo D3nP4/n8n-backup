@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-09T22:33:06.327Z",
-    "createdAt": "2026-06-09T22:33:06.327Z",
-    "versionId": "e06ff252-77e5-49f2-8875-1c16e30ae5a0",
+    "updatedAt": "2026-06-11T21:41:08.875Z",
+    "createdAt": "2026-06-11T21:41:08.875Z",
+    "versionId": "eee534d8-1229-416e-8f4e-aa57e9f3b68b",
     "workflowId": "jDcj3yqWV4ByENUR",
     "nodes": [
       {
@@ -42,10 +42,10 @@
       },
       {
         "parameters": {
-          "jsCode": "const txs = items.map(i=>i.json);\nconst big = txs.filter(t => Math.abs(t.amount) >= 100);\nif (!big.length) return [];\nconst lines = big.map(t => {\n  const sign = t.amount > 0 ? '+' : '-';\n  const amt = Math.abs(t.amount).toFixed(2).replace('.',',');\n  const shop = t.applicant_name || 'Unbekannt';\n  return `${sign}${amt} € — ${shop}`;\n});\nreturn [{ json: { text: '💳 *Große Transaktion heute:*\\n\\n' + lines.join('\\n') + '\\n\\n_Warst du das?_', count: big.length } }];"
+          "jsCode": "const sd = $getWorkflowStaticData('global');\nconst today = new Date().toISOString().slice(0,10);\n\n// Gesendete Keys nur für heute behalten\nif (!sd.sentKeys || sd.sentDate !== today) {\n  sd.sentKeys = {};\n  sd.sentDate = today;\n}\n\nconst txs = items.map(i => i.json);\nconst big = txs.filter(t => Math.abs(t.amount) >= 50);\nif (!big.length) return [];\n\n// Nur Transaktionen die noch nicht gemeldet wurden\nconst unseen = big.filter(t => {\n  const key = t.date + '|' + t.amount + '|' + (t.applicant_name || '');\n  return !sd.sentKeys[key];\n});\nif (!unseen.length) return [];\n\n// Neue Keys als gesendet markieren\nfor (const t of unseen) {\n  const key = t.date + '|' + t.amount + '|' + (t.applicant_name || '');\n  sd.sentKeys[key] = true;\n}\n\nconst lines = unseen.map(t => {\n  const sign = t.amount > 0 ? '+' : '-';\n  const amt = Math.abs(t.amount).toFixed(2).replace('.', ',');\n  const shop = t.applicant_name || 'Unbekannt';\n  return `${sign}${amt} € — ${shop}`;\n});\nreturn [{ json: { text: '💳 *Große Transaktion:*\\n\\n' + lines.join('\\n') + '\\n\\n_Warst du das?_', count: unseen.length } }];"
         },
         "id": "code-1",
-        "name": "Filtern >100€",
+        "name": "Filtern >50€ (dedup)",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
@@ -106,6 +106,23 @@
           }
         },
         "webhookId": "20f4a6e3-bf83-42b0-a045-c8e58d709395"
+      },
+      {
+        "id": "hc-ping-f4218bca",
+        "name": "HC Ping",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          9000,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://hc.paun01.de/ping/f4218bca-8d93-4675-a9af-23302c11f5a2",
+          "options": {
+            "continueOnFail": true
+          }
+        }
       }
     ],
     "connections": {
@@ -152,6 +169,28 @@
             }
           ]
         ]
+      },
+      "Filtern >50€ (dedup)": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Telegram": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
@@ -159,7 +198,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "e06ff252-77e5-49f2-8875-1c16e30ae5a0",
+  "activeVersionId": "eee534d8-1229-416e-8f4e-aa57e9f3b68b",
   "connections": {
     "Alle 6h": {
       "main": [
@@ -204,13 +243,35 @@
           }
         ]
       ]
+    },
+    "Filtern >50€ (dedup)": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "createdAt": "2026-06-09T22:33:06.322Z",
   "id": "jDcj3yqWV4ByENUR",
   "isArchived": false,
   "meta": null,
-  "name": "💳 Große Transaktion Alert (>100€)",
+  "name": "💳 Große Transaktion Alert (>50€)",
   "nodes": [
     {
       "parameters": {
@@ -248,10 +309,10 @@
     },
     {
       "parameters": {
-        "jsCode": "const txs = items.map(i=>i.json);\nconst big = txs.filter(t => Math.abs(t.amount) >= 100);\nif (!big.length) return [];\nconst lines = big.map(t => {\n  const sign = t.amount > 0 ? '+' : '-';\n  const amt = Math.abs(t.amount).toFixed(2).replace('.',',');\n  const shop = t.applicant_name || 'Unbekannt';\n  return `${sign}${amt} € — ${shop}`;\n});\nreturn [{ json: { text: '💳 *Große Transaktion heute:*\\n\\n' + lines.join('\\n') + '\\n\\n_Warst du das?_', count: big.length } }];"
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nconst today = new Date().toISOString().slice(0,10);\n\n// Gesendete Keys nur für heute behalten\nif (!sd.sentKeys || sd.sentDate !== today) {\n  sd.sentKeys = {};\n  sd.sentDate = today;\n}\n\nconst txs = items.map(i => i.json);\nconst big = txs.filter(t => Math.abs(t.amount) >= 50);\nif (!big.length) return [];\n\n// Nur Transaktionen die noch nicht gemeldet wurden\nconst unseen = big.filter(t => {\n  const key = t.date + '|' + t.amount + '|' + (t.applicant_name || '');\n  return !sd.sentKeys[key];\n});\nif (!unseen.length) return [];\n\n// Neue Keys als gesendet markieren\nfor (const t of unseen) {\n  const key = t.date + '|' + t.amount + '|' + (t.applicant_name || '');\n  sd.sentKeys[key] = true;\n}\n\nconst lines = unseen.map(t => {\n  const sign = t.amount > 0 ? '+' : '-';\n  const amt = Math.abs(t.amount).toFixed(2).replace('.', ',');\n  const shop = t.applicant_name || 'Unbekannt';\n  return `${sign}${amt} € — ${shop}`;\n});\nreturn [{ json: { text: '💳 *Große Transaktion:*\\n\\n' + lines.join('\\n') + '\\n\\n_Warst du das?_', count: unseen.length } }];"
       },
       "id": "code-1",
-      "name": "Filtern >100€",
+      "name": "Filtern >50€ (dedup)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -312,6 +373,23 @@
         }
       },
       "webhookId": "20f4a6e3-bf83-42b0-a045-c8e58d709395"
+    },
+    {
+      "id": "hc-ping-f4218bca",
+      "name": "HC Ping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9000,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://hc.paun01.de/ping/f4218bca-8d93-4675-a9af-23302c11f5a2",
+        "options": {
+          "continueOnFail": true
+        }
+      }
     }
   ],
   "pinData": null,
@@ -332,11 +410,13 @@
   ],
   "staticData": {
     "node:Alle 6h": {
-      "recurrenceRules": []
+      "recurrenceRules": [
+        0
+      ]
     }
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-09T22:33:06.322Z",
-  "versionId": "e06ff252-77e5-49f2-8875-1c16e30ae5a0"
+  "updatedAt": "2026-06-11T21:41:08.874Z",
+  "versionId": "eee534d8-1229-416e-8f4e-aa57e9f3b68b"
 }
