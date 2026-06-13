@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-30T15:38:05.000Z",
-    "createdAt": "2026-05-30T15:37:50.931Z",
-    "versionId": "ce9faa88-ce85-4ca7-bced-3e0ff9ea90a7",
+    "updatedAt": "2026-06-11T21:41:31.421Z",
+    "createdAt": "2026-06-11T21:41:31.421Z",
+    "versionId": "8f8d9522-7c56-45c8-a50e-3f66762f7f05",
     "workflowId": "Nl6zfj4w8BRbiKqA",
     "nodes": [
       {
@@ -160,6 +160,23 @@
         ],
         "id": "a948972c-e4c2-43fa-82c1-3625414aaf36",
         "name": "If"
+      },
+      {
+        "id": "hc-ping-9118a502",
+        "name": "HC Ping",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          9000,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://hc.paun01.de/ping/9118a502-7fe2-44f6-96de-7c3459e7b42e",
+          "options": {
+            "continueOnFail": true
+          }
+        }
       }
     ],
     "connections": {
@@ -229,14 +246,25 @@
             }
           ]
         ]
+      },
+      "Telegram Bericht senden": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
-    "name": "Version ce9faa88",
-    "description": "",
-    "autosaved": true
+    "name": null,
+    "description": null,
+    "autosaved": false
   },
-  "activeVersionId": "ce9faa88-ce85-4ca7-bced-3e0ff9ea90a7",
+  "activeVersionId": "8f8d9522-7c56-45c8-a50e-3f66762f7f05",
   "connections": {
     "Jeden Abend 20:00 Uhr": {
       "main": [
@@ -299,6 +327,17 @@
         [
           {
             "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Bericht senden": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
             "type": "main",
             "index": 0
           }
@@ -468,6 +507,23 @@
       ],
       "id": "a948972c-e4c2-43fa-82c1-3625414aaf36",
       "name": "If"
+    },
+    {
+      "id": "hc-ping-9118a502",
+      "name": "HC Ping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9000,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://hc.paun01.de/ping/9118a502-7fe2-44f6-96de-7c3459e7b42e",
+        "options": {
+          "continueOnFail": true
+        }
+      }
     }
   ],
   "pinData": {},
@@ -503,6 +559,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-05-30T15:37:50.930Z",
-  "versionId": "ce9faa88-ce85-4ca7-bced-3e0ff9ea90a7"
+  "updatedAt": "2026-06-11T21:41:31.420Z",
+  "versionId": "8f8d9522-7c56-45c8-a50e-3f66762f7f05"
 }
