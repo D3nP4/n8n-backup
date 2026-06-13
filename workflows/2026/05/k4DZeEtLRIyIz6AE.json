@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-09T16:47:41.000Z",
-    "createdAt": "2026-05-09T15:57:52.219Z",
-    "versionId": "b1a4d986-f9a7-447c-9f9f-0dee5f15ce3a",
+    "updatedAt": "2026-06-11T21:41:31.716Z",
+    "createdAt": "2026-06-11T21:41:31.716Z",
+    "versionId": "0178f659-0562-4e7a-b4e7-7af7a128235c",
     "workflowId": "k4DZeEtLRIyIz6AE",
     "nodes": [
       {
@@ -258,7 +258,7 @@
       },
       {
         "parameters": {
-          "url": "http://192.168.178.42:8787/health-week?days=7",
+          "url": "http://192.168.178.42:3002",
           "options": {}
         },
         "type": "n8n-nodes-base.httpRequest",
@@ -282,6 +282,23 @@
         ],
         "id": "41654f84-7cb7-4554-b2c4-6a599f539558",
         "name": "Health Daten vorbereiten"
+      },
+      {
+        "id": "hc-ping-c019aa62",
+        "name": "HC Ping",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          9000,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://hc.paun01.de/ping/c019aa62-02db-4cfe-b5d5-abdeb32c07f3",
+          "options": {
+            "continueOnFail": true
+          }
+        }
       }
     ],
     "connections": {
@@ -388,14 +405,36 @@
             }
           ]
         ]
+      },
+      "InfluxDB - Aktivitäten schreiben": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a text message": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
-    "name": "Version b1a4d986",
-    "description": "",
-    "autosaved": true
+    "name": null,
+    "description": null,
+    "autosaved": false
   },
-  "activeVersionId": "b1a4d986-f9a7-447c-9f9f-0dee5f15ce3a",
+  "activeVersionId": "0178f659-0562-4e7a-b4e7-7af7a128235c",
   "connections": {
     "Konfiguration": {
       "main": [
@@ -495,6 +534,28 @@
         [
           {
             "node": "Prompt für ChatGPT bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InfluxDB - Aktivitäten schreiben": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
             "type": "main",
             "index": 0
           }
@@ -786,6 +847,23 @@
       ],
       "id": "41654f84-7cb7-4554-b2c4-6a599f539558",
       "name": "Health Daten vorbereiten"
+    },
+    {
+      "id": "hc-ping-c019aa62",
+      "name": "HC Ping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9000,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://hc.paun01.de/ping/c019aa62-02db-4cfe-b5d5-abdeb32c07f3",
+        "options": {
+          "continueOnFail": true
+        }
+      }
     }
   ],
   "pinData": {},
@@ -837,6 +915,6 @@
     }
   ],
   "triggerCount": 1,
-  "updatedAt": "2026-05-10T21:50:34.928Z",
-  "versionId": "189691b7-2bd5-4b64-bd20-1128ec361383"
+  "updatedAt": "2026-06-11T21:41:31.714Z",
+  "versionId": "0178f659-0562-4e7a-b4e7-7af7a128235c"
 }
