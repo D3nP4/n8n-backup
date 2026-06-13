@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-30T11:07:48.196Z",
-    "createdAt": "2026-05-30T11:07:48.196Z",
-    "versionId": "d564ff76-ce0e-4cf7-b1f4-394b8523f8f7",
+    "updatedAt": "2026-06-11T21:41:30.845Z",
+    "createdAt": "2026-06-11T21:41:30.845Z",
+    "versionId": "859bf7cb-2c73-4e9c-b9b2-33d26b8828c5",
     "workflowId": "JP7U7sY4efJ8l5Jc",
     "nodes": [
       {
@@ -496,6 +496,23 @@
           }
         },
         "webhookId": "0af5d772-669c-45d5-97a2-c94cabb05740"
+      },
+      {
+        "id": "hc-ping-b60f4515",
+        "name": "HC Ping",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          9000,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://hc.paun01.de/ping/b60f4515-40e6-4510-9a89-1eed8668a5a1",
+          "options": {
+            "continueOnFail": true
+          }
+        }
       }
     ],
     "connections": {
@@ -741,6 +758,28 @@
             }
           ]
         ]
+      },
+      "Return": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sticky Note1": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
@@ -748,7 +787,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "d564ff76-ce0e-4cf7-b1f4-394b8523f8f7",
+  "activeVersionId": "859bf7cb-2c73-4e9c-b9b2-33d26b8828c5",
   "connections": {
     "n8n": {
       "main": [
@@ -987,6 +1026,28 @@
         [
           {
             "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sticky Note1": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
             "type": "main",
             "index": 0
           }
@@ -1492,6 +1553,23 @@
         }
       },
       "webhookId": "0af5d772-669c-45d5-97a2-c94cabb05740"
+    },
+    {
+      "id": "hc-ping-b60f4515",
+      "name": "HC Ping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9000,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://hc.paun01.de/ping/b60f4515-40e6-4510-9a89-1eed8668a5a1",
+        "options": {
+          "continueOnFail": true
+        }
+      }
     }
   ],
   "pinData": {},
@@ -1518,6 +1596,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-05-30T11:07:48.194Z",
-  "versionId": "d564ff76-ce0e-4cf7-b1f4-394b8523f8f7"
+  "updatedAt": "2026-06-11T21:41:30.844Z",
+  "versionId": "859bf7cb-2c73-4e9c-b9b2-33d26b8828c5"
 }
