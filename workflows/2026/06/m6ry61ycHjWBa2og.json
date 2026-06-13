@@ -1,0 +1,158 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-11T21:39:28.495Z",
+    "createdAt": "2026-06-11T21:39:28.495Z",
+    "versionId": "31c6bfb4-90ab-4edc-9bc5-4353f2085064",
+    "workflowId": "m6ry61ycHjWBa2og",
+    "nodes": [
+      {
+        "id": "webhook",
+        "name": "HC Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "healthchecks-alert",
+          "responseMode": "onReceived",
+          "options": {}
+        },
+        "webhookId": "healthchecks-alert"
+      },
+      {
+        "id": "telegram",
+        "name": "Telegram Alert",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendMessage",
+          "chatId": "6422093154",
+          "text": "=❌ *n8n Workflow ausgefallen*\\n\\n`{{ $json.body?.check ?? $json.body?.name ?? 'Unbekannt' }}`\\n\\nKein Ping seit dem letzten geplanten Lauf.\\n[Healthchecks öffnen](https://hc.paun01.de)",
+          "additionalFields": {
+            "appendAttribution": false,
+            "parse_mode": "Markdown"
+          }
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "594a18aa-dc99-45e7-b506-fb093e168ded"
+      }
+    ],
+    "connections": {
+      "HC Webhook": {
+        "main": [
+          [
+            {
+              "node": "Telegram Alert",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "31c6bfb4-90ab-4edc-9bc5-4353f2085064",
+  "connections": {
+    "HC Webhook": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-11T21:39:28.492Z",
+  "id": "m6ry61ycHjWBa2og",
+  "isArchived": false,
+  "meta": null,
+  "name": "🔔 Healthchecks Alert → Telegram",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "HC Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "healthchecks-alert",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "healthchecks-alert"
+    },
+    {
+      "id": "telegram",
+      "name": "Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "6422093154",
+        "text": "=❌ *n8n Workflow ausgefallen*\\n\\n`{{ $json.body?.check ?? $json.body?.name ?? 'Unbekannt' }}`\\n\\nKein Ping seit dem letzten geplanten Lauf.\\n[Healthchecks öffnen](https://hc.paun01.de)",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "594a18aa-dc99-45e7-b506-fb093e168ded"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-11T21:39:28.494Z",
+      "createdAt": "2026-06-11T21:39:28.494Z",
+      "role": "workflow:owner",
+      "workflowId": "m6ry61ycHjWBa2og",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-11T21:39:28.492Z",
+  "versionId": "31c6bfb4-90ab-4edc-9bc5-4353f2085064"
+}
