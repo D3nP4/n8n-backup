@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-09T13:41:13.117Z",
-    "createdAt": "2026-06-09T13:41:13.117Z",
-    "versionId": "12272b02-e730-46cd-9ccd-c80e9e963e57",
+    "updatedAt": "2026-06-12T05:58:19.967Z",
+    "createdAt": "2026-06-12T05:58:19.967Z",
+    "versionId": "c5797962-86c3-4d16-9630-dc910ae2c584",
     "workflowId": "5zx10Ta0IOTkGCdk",
     "nodes": [
       {
@@ -111,7 +111,7 @@
           "method": "POST",
           "url": "={{ $('Konfiguration').item.json.tipp_url }}",
           "sendBody": true,
-          "contentType": "json",
+          "contentType": "raw",
           "body": "={{ JSON.stringify($json.matches) }}",
           "sendHeaders": true,
           "headerParameters": {
@@ -122,7 +122,8 @@
               }
             ]
           },
-          "options": {}
+          "options": {},
+          "rawContentType": "application/json"
         }
       },
       {
@@ -138,6 +139,23 @@
           "content": "## API-Key eintragen\n1. Kostenlos registrieren: **football-data.org**\n2. Key aus der E-Mail kopieren\n3. Im Node **Konfiguration** bei `api_key` eintragen\n4. Workflow aktivieren",
           "height": 120,
           "width": 320
+        }
+      },
+      {
+        "id": "hc-ping-56b23107",
+        "name": "HC Ping",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          9000,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://hc.paun01.de/ping/56b23107-eea4-4d27-9bec-6e962fb982f8",
+          "options": {
+            "continueOnFail": true
+          }
         }
       }
     ],
@@ -185,6 +203,28 @@
             }
           ]
         ]
+      },
+      "Tippspiel aktualisieren": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Hinweis": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
@@ -192,7 +232,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "12272b02-e730-46cd-9ccd-c80e9e963e57",
+  "activeVersionId": "c5797962-86c3-4d16-9630-dc910ae2c584",
   "connections": {
     "Alle 30 Minuten": {
       "main": [
@@ -232,6 +272,28 @@
         [
           {
             "node": "Tippspiel aktualisieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tippspiel aktualisieren": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hinweis": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
             "type": "main",
             "index": 0
           }
@@ -350,7 +412,7 @@
         "method": "POST",
         "url": "={{ $('Konfiguration').item.json.tipp_url }}",
         "sendBody": true,
-        "contentType": "json",
+        "contentType": "raw",
         "body": "={{ JSON.stringify($json.matches) }}",
         "sendHeaders": true,
         "headerParameters": {
@@ -361,7 +423,8 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "rawContentType": "application/json"
       }
     },
     {
@@ -377,6 +440,23 @@
         "content": "## API-Key eintragen\n1. Kostenlos registrieren: **football-data.org**\n2. Key aus der E-Mail kopieren\n3. Im Node **Konfiguration** bei `api_key` eintragen\n4. Workflow aktivieren",
         "height": 120,
         "width": 320
+      }
+    },
+    {
+      "id": "hc-ping-56b23107",
+      "name": "HC Ping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9000,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://hc.paun01.de/ping/56b23107-eea4-4d27-9bec-6e962fb982f8",
+        "options": {
+          "continueOnFail": true
+        }
       }
     }
   ],
@@ -403,6 +483,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-09T13:41:13.116Z",
-  "versionId": "12272b02-e730-46cd-9ccd-c80e9e963e57"
+  "updatedAt": "2026-06-12T05:58:19.966Z",
+  "versionId": "c5797962-86c3-4d16-9630-dc910ae2c584"
 }
