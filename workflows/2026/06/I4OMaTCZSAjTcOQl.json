@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-08T10:14:00.328Z",
-    "createdAt": "2026-06-08T10:14:00.328Z",
-    "versionId": "86e2b503-300c-4726-b4f3-3a56bb2a5ae4",
+    "updatedAt": "2026-06-11T21:41:07.785Z",
+    "createdAt": "2026-06-11T21:41:07.785Z",
+    "versionId": "49366bad-b16c-4667-9800-390eb1416e2e",
     "workflowId": "I4OMaTCZSAjTcOQl",
     "nodes": [
       {
@@ -516,6 +516,23 @@
             "name": "Telegram account"
           }
         }
+      },
+      {
+        "id": "hc-ping-c6a7816a",
+        "name": "HC Ping",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          9000,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://hc.paun01.de/ping/c6a7816a-d9bd-4a4c-8a80-7a48514fe92c",
+          "options": {
+            "continueOnFail": true
+          }
+        }
       }
     ],
     "connections": {
@@ -783,6 +800,28 @@
             }
           ]
         ]
+      },
+      "Telegram: Zusammenfassung": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Telegram: Fertig bestätigen": {
+        "main": [
+          [
+            {
+              "node": "HC Ping",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
@@ -790,7 +829,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "86e2b503-300c-4726-b4f3-3a56bb2a5ae4",
+  "activeVersionId": "49366bad-b16c-4667-9800-390eb1416e2e",
   "connections": {
     "Hat Foto?": {
       "main": [
@@ -1051,6 +1090,28 @@
         [
           {
             "node": "Telegram: getUpdates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Zusammenfassung": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Fertig bestätigen": {
+      "main": [
+        [
+          {
+            "node": "HC Ping",
             "type": "main",
             "index": 0
           }
@@ -1574,6 +1635,23 @@
           "name": "Telegram account"
         }
       }
+    },
+    {
+      "id": "hc-ping-c6a7816a",
+      "name": "HC Ping",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        9000,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://hc.paun01.de/ping/c6a7816a-d9bd-4a4c-8a80-7a48514fe92c",
+        "options": {
+          "continueOnFail": true
+        }
+      }
     }
   ],
   "pinData": null,
@@ -1601,6 +1679,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-08T10:14:00.326Z",
-  "versionId": "86e2b503-300c-4726-b4f3-3a56bb2a5ae4"
+  "updatedAt": "2026-06-11T21:41:07.784Z",
+  "versionId": "49366bad-b16c-4667-9800-390eb1416e2e"
 }
