@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-05-11T16:49:49.000Z",
-    "createdAt": "2026-05-09T16:55:22.334Z",
-    "versionId": "11255c44-075b-46d3-97a5-5024fac04bed",
+    "updatedAt": "2026-06-14T21:25:21.693Z",
+    "createdAt": "2026-06-14T21:25:21.693Z",
+    "versionId": "00f78e06-c8fc-4340-9e76-b5b785efc1fd",
     "workflowId": "lwZRndS8gjj0wXlf",
     "nodes": [
       {
@@ -76,14 +76,14 @@
           "conditions": {
             "boolean": [
               {
-                "value1": "={{$json.ai.needs_reply}}",
+                "value1": "={{$json.ai.notify_user}}",
                 "value2": true
               }
             ]
           }
         },
         "id": "e6c047a3-87aa-4235-bd03-1124491194d0",
-        "name": "IF Reply Needed",
+        "name": "Benachrichtigen?",
         "type": "n8n-nodes-base.if",
         "typeVersion": 1,
         "position": [
@@ -127,8 +127,9 @@
       {
         "parameters": {
           "chatId": "6422093154",
-          "text": "={{ $('Message a model').item.json.output[0].content[0].text }}",
-          "additionalFields": {}
+          "text": "={% set a = $('Parse AI').item.json.ai %}{% set prio_icon = {'kritisch':'🔴','hoch':'🟠','normal':'🟡','niedrig':'🟢'}[a.priority] | default('📧') %}*{{ prio_icon }} {{ a.priority | upper }} – {{ a.category }}*\n\n*Von:* {{ $('Prepare Mail').item.json.from }}\n*Betreff:* {{ $('Prepare Mail').item.json.subject }}\n\n{{ a.summary }}\n{% if a.task %}\n⚡ *Aktion:* {{ a.task }}{% endif %}{% if a.deadline %}\n📅 *Frist:* {{ a.deadline }}{% endif %}{% if a.suggested_reply %}\n\n💬 *Antwortvorschlag:*\n_{{ a.suggested_reply }}_{% endif %}",
+          "additionalFields": {},
+          "parseMode": "Markdown"
         },
         "type": "n8n-nodes-base.telegram",
         "typeVersion": 1.2,
@@ -144,6 +145,19 @@
             "id": "qBKlXY3RPqAi76pW",
             "name": "Telegram account"
           }
+        }
+      },
+      {
+        "id": "c73e5e93-3ddd-4a9e-b353-52bc43d51151",
+        "name": "Filter selbst-ausgelöst",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -616,
+          -64
+        ],
+        "parameters": {
+          "jsCode": "\nconst item = $input.first().json;\nconst subject = (item.subject || '').toLowerCase();\nconst from = (item.from || '').toLowerCase();\nconst text = (item.text || '').toLowerCase();\n\n// Drop: Bestellbestätigungen, Login-Links, Newsletter, eigene Services\nconst skipSubject = [\n  'bestellung', 'bestellbestätigung', 'order confirm', 'order #',\n  'ihre bestellung', 'deine bestellung', 'tracking',\n  'versandbestätigung', 'versand', 'shipment', 'shipped',\n  'magic link', 'login link', 'sign in link', 'anmeldelink',\n  'passwort', 'password reset', 'verify your', 'verifizier',\n  'confirm your email', 'bestätige deine',\n  'abonnement', 'unsubscribe', 'abmelden',\n  'newsletter', 'gutschein', 'rabatt', 'angebot',\n  'rechnung nr.', // auto-generated invoices handled separately\n  'healthchecks', 'n8n', 'paperless', 'immich',\n  'ihr paket', 'dein paket', 'paketnummer'\n];\n\nconst skipFrom = [\n  'noreply', 'no-reply', 'donotreply', 'do-not-reply',\n  'orders@', 'shipping@', 'notifications@', 'mailer@',\n  'amazon.', 'paypal.', 'dhl.', 'dpd.', 'ups.', 'hermes.',\n  'otto.de', 'zalando', 'ebay.', 'idealo',\n  'apple.com', 'google.com', 'microsoft.com',\n  'github.com', 'cloudflare', 'hetzner'\n];\n\nconst matchSubject = skipSubject.some(k => subject.includes(k));\nconst matchFrom   = skipFrom.some(k => from.includes(k));\n\nif (matchSubject || matchFrom) {\n  // Silently drop — return empty array\n  return [];\n}\n\nreturn [$input.first()];\n"
         }
       }
     ],
@@ -163,7 +177,7 @@
         "main": [
           [
             {
-              "node": "Message a model",
+              "node": "Filter selbst-ausgelöst",
               "type": "main",
               "index": 0
             }
@@ -179,7 +193,7 @@
               "index": 0
             },
             {
-              "node": "IF Reply Needed",
+              "node": "Benachrichtigen?",
               "type": "main",
               "index": 0
             }
@@ -189,17 +203,6 @@
       "IF Critical": {
         "main": [
           []
-        ]
-      },
-      "IF Reply Needed": {
-        "main": [
-          [
-            {
-              "node": "Send a text message",
-              "type": "main",
-              "index": 0
-            }
-          ]
         ]
       },
       "Message a model": {
@@ -212,14 +215,36 @@
             }
           ]
         ]
+      },
+      "Filter selbst-ausgelöst": {
+        "main": [
+          [
+            {
+              "node": "Message a model",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Benachrichtigen?": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
-    "name": "Version 11255c44",
-    "description": "",
-    "autosaved": true
+    "name": null,
+    "description": null,
+    "autosaved": false
   },
-  "activeVersionId": "11255c44-075b-46d3-97a5-5024fac04bed",
+  "activeVersionId": "00f78e06-c8fc-4340-9e76-b5b785efc1fd",
   "connections": {
     "IMAP Trigger": {
       "main": [
@@ -236,7 +261,7 @@
       "main": [
         [
           {
-            "node": "Message a model",
+            "node": "Filter selbst-ausgelöst",
             "type": "main",
             "index": 0
           }
@@ -252,7 +277,7 @@
             "index": 0
           },
           {
-            "node": "IF Reply Needed",
+            "node": "Benachrichtigen?",
             "type": "main",
             "index": 0
           }
@@ -264,22 +289,33 @@
         []
       ]
     },
-    "IF Reply Needed": {
+    "Message a model": {
       "main": [
         [
           {
-            "node": "Send a text message",
+            "node": "Parse AI",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Message a model": {
+    "Filter selbst-ausgelöst": {
       "main": [
         [
           {
-            "node": "Parse AI",
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Benachrichtigen?": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
             "type": "main",
             "index": 0
           }
@@ -365,14 +401,14 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{$json.ai.needs_reply}}",
+              "value1": "={{$json.ai.notify_user}}",
               "value2": true
             }
           ]
         }
       },
       "id": "e6c047a3-87aa-4235-bd03-1124491194d0",
-      "name": "IF Reply Needed",
+      "name": "Benachrichtigen?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
@@ -416,8 +452,9 @@
     {
       "parameters": {
         "chatId": "6422093154",
-        "text": "={{ $('Message a model').item.json.output[0].content[0].text }}",
-        "additionalFields": {}
+        "text": "={% set a = $('Parse AI').item.json.ai %}{% set prio_icon = {'kritisch':'🔴','hoch':'🟠','normal':'🟡','niedrig':'🟢'}[a.priority] | default('📧') %}*{{ prio_icon }} {{ a.priority | upper }} – {{ a.category }}*\n\n*Von:* {{ $('Prepare Mail').item.json.from }}\n*Betreff:* {{ $('Prepare Mail').item.json.subject }}\n\n{{ a.summary }}\n{% if a.task %}\n⚡ *Aktion:* {{ a.task }}{% endif %}{% if a.deadline %}\n📅 *Frist:* {{ a.deadline }}{% endif %}{% if a.suggested_reply %}\n\n💬 *Antwortvorschlag:*\n_{{ a.suggested_reply }}_{% endif %}",
+        "additionalFields": {},
+        "parseMode": "Markdown"
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -433,6 +470,19 @@
           "id": "qBKlXY3RPqAi76pW",
           "name": "Telegram account"
         }
+      }
+    },
+    {
+      "id": "c73e5e93-3ddd-4a9e-b353-52bc43d51151",
+      "name": "Filter selbst-ausgelöst",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -616,
+        -64
+      ],
+      "parameters": {
+        "jsCode": "\nconst item = $input.first().json;\nconst subject = (item.subject || '').toLowerCase();\nconst from = (item.from || '').toLowerCase();\nconst text = (item.text || '').toLowerCase();\n\n// Drop: Bestellbestätigungen, Login-Links, Newsletter, eigene Services\nconst skipSubject = [\n  'bestellung', 'bestellbestätigung', 'order confirm', 'order #',\n  'ihre bestellung', 'deine bestellung', 'tracking',\n  'versandbestätigung', 'versand', 'shipment', 'shipped',\n  'magic link', 'login link', 'sign in link', 'anmeldelink',\n  'passwort', 'password reset', 'verify your', 'verifizier',\n  'confirm your email', 'bestätige deine',\n  'abonnement', 'unsubscribe', 'abmelden',\n  'newsletter', 'gutschein', 'rabatt', 'angebot',\n  'rechnung nr.', // auto-generated invoices handled separately\n  'healthchecks', 'n8n', 'paperless', 'immich',\n  'ihr paket', 'dein paket', 'paketnummer'\n];\n\nconst skipFrom = [\n  'noreply', 'no-reply', 'donotreply', 'do-not-reply',\n  'orders@', 'shipping@', 'notifications@', 'mailer@',\n  'amazon.', 'paypal.', 'dhl.', 'dpd.', 'ups.', 'hermes.',\n  'otto.de', 'zalando', 'ebay.', 'idealo',\n  'apple.com', 'google.com', 'microsoft.com',\n  'github.com', 'cloudflare', 'hetzner'\n];\n\nconst matchSubject = skipSubject.some(k => subject.includes(k));\nconst matchFrom   = skipFrom.some(k => from.includes(k));\n\nif (matchSubject || matchFrom) {\n  // Silently drop — return empty array\n  return [];\n}\n\nreturn [$input.first()];\n"
       }
     }
   ],
@@ -455,11 +505,11 @@
   ],
   "staticData": {
     "node:IMAP Trigger": {
-      "lastMessageUid": 1194
+      "lastMessageUid": 1202
     }
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-05-09T16:55:22.332Z",
-  "versionId": "11255c44-075b-46d3-97a5-5024fac04bed"
+  "updatedAt": "2026-06-14T21:25:21.691Z",
+  "versionId": "00f78e06-c8fc-4340-9e76-b5b785efc1fd"
 }
