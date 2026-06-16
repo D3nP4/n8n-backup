@@ -1,0 +1,344 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-15T08:50:14.898Z",
+    "createdAt": "2026-06-15T08:50:14.898Z",
+    "versionId": "3a69ca04-47b9-4241-b57f-ae09980acc4a",
+    "workflowId": "zjUTUb5PsjhSvr6j",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "fitness-coach",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "trigger-1",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "fitness-coach-webhook"
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst stats = body.stats || {};\nconst lastActivity = body.lastActivity || null;\nconst bodyStats = body.bodyStats || {};\n\nconst week = stats.week || {};\nconst month = stats.month || {};\nconst year = stats.year || {};\n\nlet prompt = `Du bist ein persönlicher Fitness-Coach für Dennis. Analysiere seine aktuellen Sportstats und gib eine kurze, motivierende Zusammenfassung auf Deutsch.\n\nDIESE WOCHE:\n- ${week.count||0} Aktivitäten, ${week.distanceKm||0} km, ${week.timeMin||0} Min, ${week.elevationM||0}m Höhe\n- Sportarten: ${(week.byType||[]).map(t=>t.label+' '+t.distanceKm+'km').join(', ')||'keine'}\n\nDIESEN MONAT:\n- ${month.count||0} Aktivitäten, ${month.distanceKm||0} km, ${month.timeMin||0} Min\n\nDIESES JAHR:\n- ${year.count||0} Aktivitäten, ${year.distanceKm||0} km total`;\n\nif (lastActivity) {\n  prompt += `\\n\\nLETZTES TRAINING: ${lastActivity.name} (${lastActivity.label}), ${lastActivity.distanceKm}km, ${lastActivity.timeMin} Min`;\n  if (lastActivity.avgHr) prompt += `, Ø ${lastActivity.avgHr} bpm`;\n  if (lastActivity.calories) prompt += `, ${lastActivity.calories} kcal`;\n}\n\nconst weight = bodyStats.body_mass && bodyStats.body_mass[0];\nconst bodyFat = bodyStats.body_fat_percentage && bodyStats.body_fat_percentage[0];\nif (weight) prompt += `\\n\\nGEWICHT: ${weight.value} kg`;\nif (bodyFat) prompt += `, Körperfett: ${bodyFat.value}%`;\n\nprompt += `\\n\\nGib genau zurück:\n{\n  \"summary\": \"2-3 Sätze motivierende Zusammenfassung des aktuellen Fitnessstands\",\n  \"tip\": \"1 konkreter Trainingstipp für diese Woche\",\n  \"mood\": \"emoji das die aktuelle Fitness-Phase beschreibt (1 emoji)\"\n}\n\nAntworte NUR mit dem JSON-Objekt, nichts anderes.`;\n\nreturn [{ json: { prompt } }];"
+        },
+        "id": "code-prompt",
+        "name": "Prompt bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          220,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "claude-haiku-4-5-20251001",
+            "mode": "list",
+            "cachedResultName": "claude-haiku-4-5-20251001"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "={{ $json.prompt }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "ai-1",
+        "name": "Claude Coach",
+        "type": "@n8n/n8n-nodes-langchain.anthropic",
+        "typeVersion": 1.7,
+        "position": [
+          440,
+          0
+        ],
+        "credentials": {
+          "anthropicApi": {
+            "id": "9LB76hvnIilIJdFy",
+            "name": "Anthropic account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const j = $input.first().json;\nlet raw = '';\nif (Array.isArray(j.content)) {\n  raw = j.content.map(c => c.text || '').join('');\n} else {\n  raw = String(j.content || j.text || '');\n}\nlet result = { summary: '', tip: '', mood: '💪' };\ntry {\n  const match = raw.match(/\\{[\\s\\S]*\\}/);\n  if (match) result = { ...result, ...JSON.parse(match[0]) };\n} catch(e) {\n  result.summary = raw.slice(0, 300);\n}\nreturn [{ json: result }];"
+        },
+        "id": "code-parse",
+        "name": "Parse",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}",
+          "options": {
+            "responseCode": 200,
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ]
+            }
+          }
+        },
+        "id": "respond-1",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          880,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Prompt bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prompt bauen": {
+        "main": [
+          [
+            {
+              "node": "Claude Coach",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Claude Coach": {
+        "main": [
+          [
+            {
+              "node": "Parse",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "3a69ca04-47b9-4241-b57f-ae09980acc4a",
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prompt bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt bauen": {
+      "main": [
+        [
+          {
+            "node": "Claude Coach",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Coach": {
+      "main": [
+        [
+          {
+            "node": "Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-15T08:47:28.806Z",
+  "id": "zjUTUb5PsjhSvr6j",
+  "isArchived": false,
+  "meta": null,
+  "name": "Fitness Coach AI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fitness-coach",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "trigger-1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "fitness-coach-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst stats = body.stats || {};\nconst lastActivity = body.lastActivity || null;\nconst bodyStats = body.bodyStats || {};\n\nconst week = stats.week || {};\nconst month = stats.month || {};\nconst year = stats.year || {};\n\nlet prompt = `Du bist ein persönlicher Fitness-Coach für Dennis. Analysiere seine aktuellen Sportstats und gib eine kurze, motivierende Zusammenfassung auf Deutsch.\n\nDIESE WOCHE:\n- ${week.count||0} Aktivitäten, ${week.distanceKm||0} km, ${week.timeMin||0} Min, ${week.elevationM||0}m Höhe\n- Sportarten: ${(week.byType||[]).map(t=>t.label+' '+t.distanceKm+'km').join(', ')||'keine'}\n\nDIESEN MONAT:\n- ${month.count||0} Aktivitäten, ${month.distanceKm||0} km, ${month.timeMin||0} Min\n\nDIESES JAHR:\n- ${year.count||0} Aktivitäten, ${year.distanceKm||0} km total`;\n\nif (lastActivity) {\n  prompt += `\\n\\nLETZTES TRAINING: ${lastActivity.name} (${lastActivity.label}), ${lastActivity.distanceKm}km, ${lastActivity.timeMin} Min`;\n  if (lastActivity.avgHr) prompt += `, Ø ${lastActivity.avgHr} bpm`;\n  if (lastActivity.calories) prompt += `, ${lastActivity.calories} kcal`;\n}\n\nconst weight = bodyStats.body_mass && bodyStats.body_mass[0];\nconst bodyFat = bodyStats.body_fat_percentage && bodyStats.body_fat_percentage[0];\nif (weight) prompt += `\\n\\nGEWICHT: ${weight.value} kg`;\nif (bodyFat) prompt += `, Körperfett: ${bodyFat.value}%`;\n\nprompt += `\\n\\nGib genau zurück:\n{\n  \"summary\": \"2-3 Sätze motivierende Zusammenfassung des aktuellen Fitnessstands\",\n  \"tip\": \"1 konkreter Trainingstipp für diese Woche\",\n  \"mood\": \"emoji das die aktuelle Fitness-Phase beschreibt (1 emoji)\"\n}\n\nAntworte NUR mit dem JSON-Objekt, nichts anderes.`;\n\nreturn [{ json: { prompt } }];"
+      },
+      "id": "code-prompt",
+      "name": "Prompt bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "claude-haiku-4-5-20251001"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ai-1",
+      "name": "Claude Coach",
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1.7,
+      "position": [
+        440,
+        0
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "9LB76hvnIilIJdFy",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nlet raw = '';\nif (Array.isArray(j.content)) {\n  raw = j.content.map(c => c.text || '').join('');\n} else {\n  raw = String(j.content || j.text || '');\n}\nlet result = { summary: '', tip: '', mood: '💪' };\ntry {\n  const match = raw.match(/\\{[\\s\\S]*\\}/);\n  if (match) result = { ...result, ...JSON.parse(match[0]) };\n} catch(e) {\n  result.summary = raw.slice(0, 300);\n}\nreturn [{ json: result }];"
+      },
+      "id": "code-parse",
+      "name": "Parse",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-1",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ]
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-15T08:47:28.808Z",
+      "createdAt": "2026-06-15T08:47:28.808Z",
+      "role": "workflow:owner",
+      "workflowId": "zjUTUb5PsjhSvr6j",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-15T08:50:14.897Z",
+  "versionId": "3a69ca04-47b9-4241-b57f-ae09980acc4a"
+}
