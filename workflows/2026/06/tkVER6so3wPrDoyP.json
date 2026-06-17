@@ -1,0 +1,344 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-16T18:36:41.115Z",
+    "createdAt": "2026-06-16T18:36:41.115Z",
+    "versionId": "5d5fe0d0-4db3-4585-8dac-c1fb0efcbc89",
+    "workflowId": "tkVER6so3wPrDoyP",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "diktat",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-node",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          240,
+          300
+        ],
+        "webhookId": "diktat-processor-v3"
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $input.first().json.body || {};\nconst text = body.text || '';\nconst action = body.action || 'note';\n\nconst instructions = {\n  ticket: 'Du bist ein Projektmanagement-Assistent. Wandle den diktierten Text in ein strukturiertes Ticket um.\\n\\nFormat (Markdown):\\n**Titel:** (kurz, prägnant)\\n\\n**Beschreibung:**\\n(Was soll gemacht werden und warum)\\n\\n**Akzeptanzkriterien:**\\n- ...\\n\\n**Priorität:** Niedrig / Mittel / Hoch / Kritisch\\n\\nNur den Ticket-Text ausgeben, keine Erklärungen.',\n\n  grocy: 'Du bist ein Aufgaben-Assistent. Wandle den diktierten Text in einen kurzen Aufgabentitel um (max. 80 Zeichen). Direkt, handlungsorientiert, keine Erklärungen, nur den Titel.',\n\n  note: 'Du bist ein Notiz-Assistent. Bereinige und strukturiere den diktierten Text.\\n\\nFormat:\\n**Titel:** (kurz)\\n\\n**Inhalt:**\\n(bereinigt, grammatikalisch korrekt, ohne Füllwörter)\\n\\nNur die Notiz ausgeben.',\n\n  idea: 'Du bist ein Ideen-Coach. Strukturiere den diktierten Text als ausgearbeitete Idee.\\n\\nFormat:\\n💡 **Idee:** (Kernidee in einem Satz)\\n\\n**Potential:** (Was ermöglicht das?)\\n\\n**Herausforderungen:** (Was ist zu bedenken?)\\n\\n**Nächste Schritte:**\\n- ...\\n- ...\\n\\nNur die Idee ausgeben.',\n\n  email: 'Du bist ein E-Mail-Assistent. Wandle den diktierten Text in einen professionellen E-Mail-Entwurf.\\n\\nFormat:\\n**Betreff:** ...\\n\\n**Anrede:** ...\\n\\n**Text:**\\n...\\n\\n**Gruß:** ...\\n\\nNur den E-Mail-Entwurf ausgeben.'\n};\n\nconst instruction = instructions[action] || instructions.note;\nconst prompt = instruction + '\\n\\n---\\n\\nDiktierter Text:\\n' + text;\n\nreturn [{ json: { prompt, action } }];"
+        },
+        "id": "build-prompt",
+        "name": "Build Prompt",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          460,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "claude-haiku-4-5-20251001",
+            "mode": "list",
+            "cachedResultName": "claude-haiku-4-5-20251001"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "={{ $json.prompt }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "claude-ai",
+        "name": "Claude AI",
+        "type": "@n8n/n8n-nodes-langchain.anthropic",
+        "typeVersion": 1.7,
+        "position": [
+          680,
+          300
+        ],
+        "credentials": {
+          "anthropicApi": {
+            "id": "9LB76hvnIilIJdFy",
+            "name": "Anthropic account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const j = $input.first().json;\nconst action = $('Build Prompt').item.json.action;\nlet result = '';\nif (Array.isArray(j.content)) {\n  result = j.content.map(c => c.text || '').join('');\n} else {\n  result = String(j.content || j.text || '');\n}\nreturn [{ json: { result: result.trim(), action } }];"
+        },
+        "id": "extract-result",
+        "name": "Extract Result",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          900,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ result: $json.result, action: $json.action }) }}",
+          "options": {
+            "responseCode": 200,
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ]
+            }
+          }
+        },
+        "id": "respond-webhook",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Build Prompt",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Prompt": {
+        "main": [
+          [
+            {
+              "node": "Claude AI",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Claude AI": {
+        "main": [
+          [
+            {
+              "node": "Extract Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Result": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "5d5fe0d0-4db3-4585-8dac-c1fb0efcbc89",
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Build Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Prompt": {
+      "main": [
+        [
+          {
+            "node": "Claude AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude AI": {
+      "main": [
+        [
+          {
+            "node": "Extract Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Result": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-16T18:25:51.234Z",
+  "id": "tkVER6so3wPrDoyP",
+  "isArchived": false,
+  "meta": null,
+  "name": "🎙️ Diktat Processor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "diktat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "diktat-processor-v3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || {};\nconst text = body.text || '';\nconst action = body.action || 'note';\n\nconst instructions = {\n  ticket: 'Du bist ein Projektmanagement-Assistent. Wandle den diktierten Text in ein strukturiertes Ticket um.\\n\\nFormat (Markdown):\\n**Titel:** (kurz, prägnant)\\n\\n**Beschreibung:**\\n(Was soll gemacht werden und warum)\\n\\n**Akzeptanzkriterien:**\\n- ...\\n\\n**Priorität:** Niedrig / Mittel / Hoch / Kritisch\\n\\nNur den Ticket-Text ausgeben, keine Erklärungen.',\n\n  grocy: 'Du bist ein Aufgaben-Assistent. Wandle den diktierten Text in einen kurzen Aufgabentitel um (max. 80 Zeichen). Direkt, handlungsorientiert, keine Erklärungen, nur den Titel.',\n\n  note: 'Du bist ein Notiz-Assistent. Bereinige und strukturiere den diktierten Text.\\n\\nFormat:\\n**Titel:** (kurz)\\n\\n**Inhalt:**\\n(bereinigt, grammatikalisch korrekt, ohne Füllwörter)\\n\\nNur die Notiz ausgeben.',\n\n  idea: 'Du bist ein Ideen-Coach. Strukturiere den diktierten Text als ausgearbeitete Idee.\\n\\nFormat:\\n💡 **Idee:** (Kernidee in einem Satz)\\n\\n**Potential:** (Was ermöglicht das?)\\n\\n**Herausforderungen:** (Was ist zu bedenken?)\\n\\n**Nächste Schritte:**\\n- ...\\n- ...\\n\\nNur die Idee ausgeben.',\n\n  email: 'Du bist ein E-Mail-Assistent. Wandle den diktierten Text in einen professionellen E-Mail-Entwurf.\\n\\nFormat:\\n**Betreff:** ...\\n\\n**Anrede:** ...\\n\\n**Text:**\\n...\\n\\n**Gruß:** ...\\n\\nNur den E-Mail-Entwurf ausgeben.'\n};\n\nconst instruction = instructions[action] || instructions.note;\nconst prompt = instruction + '\\n\\n---\\n\\nDiktierter Text:\\n' + text;\n\nreturn [{ json: { prompt, action } }];"
+      },
+      "id": "build-prompt",
+      "name": "Build Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "claude-haiku-4-5-20251001",
+          "mode": "list",
+          "cachedResultName": "claude-haiku-4-5-20251001"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "claude-ai",
+      "name": "Claude AI",
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1.7,
+      "position": [
+        680,
+        300
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "9LB76hvnIilIJdFy",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nconst action = $('Build Prompt').item.json.action;\nlet result = '';\nif (Array.isArray(j.content)) {\n  result = j.content.map(c => c.text || '').join('');\n} else {\n  result = String(j.content || j.text || '');\n}\nreturn [{ json: { result: result.trim(), action } }];"
+      },
+      "id": "extract-result",
+      "name": "Extract Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ result: $json.result, action: $json.action }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-webhook",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        300
+      ]
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-16T18:25:51.238Z",
+      "createdAt": "2026-06-16T18:25:51.238Z",
+      "role": "workflow:owner",
+      "workflowId": "tkVER6so3wPrDoyP",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-16T18:36:41.114Z",
+  "versionId": "5d5fe0d0-4db3-4585-8dac-c1fb0efcbc89"
+}
