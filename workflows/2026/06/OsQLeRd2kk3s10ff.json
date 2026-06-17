@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-11T21:23:14.924Z",
-    "createdAt": "2026-06-11T21:23:14.924Z",
-    "versionId": "75137824-ae85-4469-8172-507819234d8e",
+    "updatedAt": "2026-06-16T09:07:37.260Z",
+    "createdAt": "2026-06-16T09:07:37.260Z",
+    "versionId": "b504bfe6-0303-4449-bfed-b008f9c0b8b9",
     "workflowId": "OsQLeRd2kk3s10ff",
     "nodes": [
       {
@@ -114,7 +114,7 @@
           80
         ],
         "parameters": {
-          "jsCode": "const errData = $('Fehler letzte 24h').first().json;\nconst wfData = $('Aktive Workflows').first().json;\n\nconst since = new Date(Date.now() - 24*60*60*1000);\nconst errors = (errData.data || []).filter(e => new Date(e.startedAt) > since);\n\n// Fehler nach Workflow gruppieren\nconst byWf = {};\nfor (const e of errors) {\n  const id = e.workflowId;\n  if (!byWf[id]) byWf[id] = { name: e.workflowData?.name || id, count: 0, last: e.startedAt };\n  byWf[id].count++;\n}\n\nconst activeCount = (wfData.data || []).length;\nconst errorWfs = Object.values(byWf).sort((a,b) => b.count - a.count);\n\nif (errorWfs.length === 0) {\n  return [{ json: { send: false } }];\n}\n\nconst lines = errorWfs.map(w => `❌ *${w.name}* — ${w.count}x Fehler`);\nconst text = `🔍 *n8n Health Report*\\n\\n${lines.join('\\n')}\\n\\n✅ ${activeCount} Workflows aktiv`;\n\nreturn [{ json: { send: true, text } }];"
+          "jsCode": "const errData = $('Fehler letzte 24h').first().json;\nconst wfData = $('Aktive Workflows').first().json;\n\nconst since = new Date(Date.now() - 24*60*60*1000);\nconst errors = (errData.data || []).filter(e => new Date(e.startedAt) > since);\n\n// Fehler nach Workflow gruppieren\nconst byWf = {};\nfor (const e of errors) {\n  const id = e.workflowId;\n  const name = e.workflowData?.name || id;\n  if (!byWf[id]) byWf[id] = { name, count: 0, last: e.startedAt };\n  byWf[id].count++;\n  if (new Date(e.startedAt) > new Date(byWf[id].last)) byWf[id].last = e.startedAt;\n}\n\nconst activeCount = (wfData.data || []).length;\nconst errorWfs = Object.values(byWf).sort((a,b) => b.count - a.count);\n\nif (errorWfs.length === 0) {\n  return [{ json: { send: false } }];\n}\n\nconst fmtTime = (iso) => new Date(iso).toLocaleString('de-DE', {\n  day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'\n});\n\nconst lines = errorWfs.map(w =>\n  `❌ *${w.name}*\\n` +\n  `   ${w.count}× Fehler · zuletzt ${fmtTime(w.last)}`\n);\n\nconst reportTime = new Date().toLocaleString('de-DE', {\n  weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'\n});\n\nconst text = \n  `🔍 *n8n Tagesbericht* · ${reportTime}\\n` +\n  `━━━━━━━━━━━━━━\\n\\n` +\n  lines.join('\\n\\n') +\n  `\\n\\n━━━━━━━━━━━━━━\\n` +\n  `✅ ${activeCount} Workflows aktiv`;\n\nreturn [{ json: { send: true, text } }];"
         }
       },
       {
@@ -244,7 +244,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "75137824-ae85-4469-8172-507819234d8e",
+  "activeVersionId": "b504bfe6-0303-4449-bfed-b008f9c0b8b9",
   "connections": {
     "Täglich 8 Uhr": {
       "main": [
@@ -422,7 +422,7 @@
         80
       ],
       "parameters": {
-        "jsCode": "const errData = $('Fehler letzte 24h').first().json;\nconst wfData = $('Aktive Workflows').first().json;\n\nconst since = new Date(Date.now() - 24*60*60*1000);\nconst errors = (errData.data || []).filter(e => new Date(e.startedAt) > since);\n\n// Fehler nach Workflow gruppieren\nconst byWf = {};\nfor (const e of errors) {\n  const id = e.workflowId;\n  if (!byWf[id]) byWf[id] = { name: e.workflowData?.name || id, count: 0, last: e.startedAt };\n  byWf[id].count++;\n}\n\nconst activeCount = (wfData.data || []).length;\nconst errorWfs = Object.values(byWf).sort((a,b) => b.count - a.count);\n\nif (errorWfs.length === 0) {\n  return [{ json: { send: false } }];\n}\n\nconst lines = errorWfs.map(w => `❌ *${w.name}* — ${w.count}x Fehler`);\nconst text = `🔍 *n8n Health Report*\\n\\n${lines.join('\\n')}\\n\\n✅ ${activeCount} Workflows aktiv`;\n\nreturn [{ json: { send: true, text } }];"
+        "jsCode": "const errData = $('Fehler letzte 24h').first().json;\nconst wfData = $('Aktive Workflows').first().json;\n\nconst since = new Date(Date.now() - 24*60*60*1000);\nconst errors = (errData.data || []).filter(e => new Date(e.startedAt) > since);\n\n// Fehler nach Workflow gruppieren\nconst byWf = {};\nfor (const e of errors) {\n  const id = e.workflowId;\n  const name = e.workflowData?.name || id;\n  if (!byWf[id]) byWf[id] = { name, count: 0, last: e.startedAt };\n  byWf[id].count++;\n  if (new Date(e.startedAt) > new Date(byWf[id].last)) byWf[id].last = e.startedAt;\n}\n\nconst activeCount = (wfData.data || []).length;\nconst errorWfs = Object.values(byWf).sort((a,b) => b.count - a.count);\n\nif (errorWfs.length === 0) {\n  return [{ json: { send: false } }];\n}\n\nconst fmtTime = (iso) => new Date(iso).toLocaleString('de-DE', {\n  day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'\n});\n\nconst lines = errorWfs.map(w =>\n  `❌ *${w.name}*\\n` +\n  `   ${w.count}× Fehler · zuletzt ${fmtTime(w.last)}`\n);\n\nconst reportTime = new Date().toLocaleString('de-DE', {\n  weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'\n});\n\nconst text = \n  `🔍 *n8n Tagesbericht* · ${reportTime}\\n` +\n  `━━━━━━━━━━━━━━\\n\\n` +\n  lines.join('\\n\\n') +\n  `\\n\\n━━━━━━━━━━━━━━\\n` +\n  `✅ ${activeCount} Workflows aktiv`;\n\nreturn [{ json: { send: true, text } }];"
       }
     },
     {
@@ -507,6 +507,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-11T21:23:14.918Z",
-  "versionId": "75137824-ae85-4469-8172-507819234d8e"
+  "updatedAt": "2026-06-16T09:07:37.259Z",
+  "versionId": "b504bfe6-0303-4449-bfed-b008f9c0b8b9"
 }
