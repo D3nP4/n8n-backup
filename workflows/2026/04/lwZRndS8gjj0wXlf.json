@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-14T21:25:21.693Z",
-    "createdAt": "2026-06-14T21:25:21.693Z",
-    "versionId": "00f78e06-c8fc-4340-9e76-b5b785efc1fd",
+    "updatedAt": "2026-06-16T10:34:39.901Z",
+    "createdAt": "2026-06-16T10:34:39.901Z",
+    "versionId": "482129a1-fee7-496a-b321-77a3dfaa4ea0",
     "workflowId": "lwZRndS8gjj0wXlf",
     "nodes": [
       {
@@ -127,7 +127,7 @@
       {
         "parameters": {
           "chatId": "6422093154",
-          "text": "={% set a = $('Parse AI').item.json.ai %}{% set prio_icon = {'kritisch':'🔴','hoch':'🟠','normal':'🟡','niedrig':'🟢'}[a.priority] | default('📧') %}*{{ prio_icon }} {{ a.priority | upper }} – {{ a.category }}*\n\n*Von:* {{ $('Prepare Mail').item.json.from }}\n*Betreff:* {{ $('Prepare Mail').item.json.subject }}\n\n{{ a.summary }}\n{% if a.task %}\n⚡ *Aktion:* {{ a.task }}{% endif %}{% if a.deadline %}\n📅 *Frist:* {{ a.deadline }}{% endif %}{% if a.suggested_reply %}\n\n💬 *Antwortvorschlag:*\n_{{ a.suggested_reply }}_{% endif %}",
+          "text": "={{ (() => {\n  const a = $('Parse AI').item.json.ai;\n  const m = $('Prepare Mail').item.json;\n  const icons = { kritisch: '🔴', hoch: '🟠', normal: '🟡', niedrig: '🟢' };\n  const icon = icons[a.priority] || '📧';\n  const prio = (a.priority || 'normal').toUpperCase();\n  let msg = icon + ' *' + prio + ' – ' + (a.category || '–') + '*\\n\\n';\n  msg += '*Von:* ' + (m.from || '–') + '\\n';\n  msg += '*Betreff:* ' + (m.subject || '–') + '\\n\\n';\n  msg += (a.summary || '');\n  if (a.task)            msg += '\\n\\n⚡ *Aktion:* ' + a.task;\n  if (a.deadline)        msg += '\\n📅 *Frist:* ' + a.deadline;\n  if (a.suggested_reply) msg += '\\n\\n💬 *Antwortvorschlag:*\\n_' + a.suggested_reply + '_';\n  return msg;\n})() }}",
           "additionalFields": {},
           "parseMode": "Markdown"
         },
@@ -244,7 +244,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "00f78e06-c8fc-4340-9e76-b5b785efc1fd",
+  "activeVersionId": "482129a1-fee7-496a-b321-77a3dfaa4ea0",
   "connections": {
     "IMAP Trigger": {
       "main": [
@@ -452,7 +452,7 @@
     {
       "parameters": {
         "chatId": "6422093154",
-        "text": "={% set a = $('Parse AI').item.json.ai %}{% set prio_icon = {'kritisch':'🔴','hoch':'🟠','normal':'🟡','niedrig':'🟢'}[a.priority] | default('📧') %}*{{ prio_icon }} {{ a.priority | upper }} – {{ a.category }}*\n\n*Von:* {{ $('Prepare Mail').item.json.from }}\n*Betreff:* {{ $('Prepare Mail').item.json.subject }}\n\n{{ a.summary }}\n{% if a.task %}\n⚡ *Aktion:* {{ a.task }}{% endif %}{% if a.deadline %}\n📅 *Frist:* {{ a.deadline }}{% endif %}{% if a.suggested_reply %}\n\n💬 *Antwortvorschlag:*\n_{{ a.suggested_reply }}_{% endif %}",
+        "text": "={{ (() => {\n  const a = $('Parse AI').item.json.ai;\n  const m = $('Prepare Mail').item.json;\n  const icons = { kritisch: '🔴', hoch: '🟠', normal: '🟡', niedrig: '🟢' };\n  const icon = icons[a.priority] || '📧';\n  const prio = (a.priority || 'normal').toUpperCase();\n  let msg = icon + ' *' + prio + ' – ' + (a.category || '–') + '*\\n\\n';\n  msg += '*Von:* ' + (m.from || '–') + '\\n';\n  msg += '*Betreff:* ' + (m.subject || '–') + '\\n\\n';\n  msg += (a.summary || '');\n  if (a.task)            msg += '\\n\\n⚡ *Aktion:* ' + a.task;\n  if (a.deadline)        msg += '\\n📅 *Frist:* ' + a.deadline;\n  if (a.suggested_reply) msg += '\\n\\n💬 *Antwortvorschlag:*\\n_' + a.suggested_reply + '_';\n  return msg;\n})() }}",
         "additionalFields": {},
         "parseMode": "Markdown"
       },
@@ -505,11 +505,11 @@
   ],
   "staticData": {
     "node:IMAP Trigger": {
-      "lastMessageUid": 1211
+      "lastMessageUid": 1216
     }
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-14T21:25:21.691Z",
-  "versionId": "00f78e06-c8fc-4340-9e76-b5b785efc1fd"
+  "updatedAt": "2026-06-16T10:34:39.900Z",
+  "versionId": "482129a1-fee7-496a-b321-77a3dfaa4ea0"
 }
