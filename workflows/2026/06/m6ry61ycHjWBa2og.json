@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-11T21:39:28.495Z",
-    "createdAt": "2026-06-11T21:39:28.495Z",
-    "versionId": "31c6bfb4-90ab-4edc-9bc5-4353f2085064",
+    "updatedAt": "2026-06-16T09:06:37.257Z",
+    "createdAt": "2026-06-16T09:06:37.257Z",
+    "versionId": "2e2de7aa-f20a-4c67-b3ff-f6075ab0ae0b",
     "workflowId": "m6ry61ycHjWBa2og",
     "nodes": [
       {
@@ -36,7 +36,7 @@
           "resource": "message",
           "operation": "sendMessage",
           "chatId": "6422093154",
-          "text": "=❌ *n8n Workflow ausgefallen*\\n\\n`{{ $json.body?.check ?? $json.body?.name ?? 'Unbekannt' }}`\\n\\nKein Ping seit dem letzten geplanten Lauf.\\n[Healthchecks öffnen](https://hc.paun01.de)",
+          "text": "={{ (() => {\n  const b = $json.body || {};\n  const status = b.status || 'down';\n  const name = b.name || 'Unbekannter Check';\n  const desc = b.desc || '';\n  const tags = (b.tags || '').split(' ').filter(Boolean).map(t => '#' + t).join(' ');\n  const checkUrl = b.check_url || 'https://hc.paun01.de';\n  const fmtTime = (iso) => {\n    if (!iso) return '–';\n    return new Date(iso).toLocaleString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});\n  };\n  const lastPing = fmtTime(b.last_ping);\n  const isUp = status === 'up';\n  const header = isUp\n    ? '✅ *Health Check erholt*'\n    : status === 'failure'\n      ? '🟠 *Health Check – Exit-Fehler*'\n      : '🔴 *Health Check ausgefallen*';\n  let msg = header + '\\n\\n';\n  msg += '📋 *' + name + '*\\n';\n  msg += (isUp ? '⏰ Wieder aktiv: ' : '⏰ Letzter Ping: ') + lastPing + '\\n';\n  if (desc) msg += '📝 ' + desc + '\\n';\n  if (tags) msg += '🏷 ' + tags + '\\n';\n  msg += '\\n[Details bei Healthchecks öffnen](' + checkUrl + ')';\n  return msg;\n})() }}",
           "additionalFields": {
             "appendAttribution": false,
             "parse_mode": "Markdown"
@@ -69,7 +69,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "31c6bfb4-90ab-4edc-9bc5-4353f2085064",
+  "activeVersionId": "2e2de7aa-f20a-4c67-b3ff-f6075ab0ae0b",
   "connections": {
     "HC Webhook": {
       "main": [
@@ -119,7 +119,7 @@
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "6422093154",
-        "text": "=❌ *n8n Workflow ausgefallen*\\n\\n`{{ $json.body?.check ?? $json.body?.name ?? 'Unbekannt' }}`\\n\\nKein Ping seit dem letzten geplanten Lauf.\\n[Healthchecks öffnen](https://hc.paun01.de)",
+        "text": "={{ (() => {\n  const b = $json.body || {};\n  const status = b.status || 'down';\n  const name = b.name || 'Unbekannter Check';\n  const desc = b.desc || '';\n  const tags = (b.tags || '').split(' ').filter(Boolean).map(t => '#' + t).join(' ');\n  const checkUrl = b.check_url || 'https://hc.paun01.de';\n  const fmtTime = (iso) => {\n    if (!iso) return '–';\n    return new Date(iso).toLocaleString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});\n  };\n  const lastPing = fmtTime(b.last_ping);\n  const isUp = status === 'up';\n  const header = isUp\n    ? '✅ *Health Check erholt*'\n    : status === 'failure'\n      ? '🟠 *Health Check – Exit-Fehler*'\n      : '🔴 *Health Check ausgefallen*';\n  let msg = header + '\\n\\n';\n  msg += '📋 *' + name + '*\\n';\n  msg += (isUp ? '⏰ Wieder aktiv: ' : '⏰ Letzter Ping: ') + lastPing + '\\n';\n  if (desc) msg += '📝 ' + desc + '\\n';\n  if (tags) msg += '🏷 ' + tags + '\\n';\n  msg += '\\n[Details bei Healthchecks öffnen](' + checkUrl + ')';\n  return msg;\n})() }}",
         "additionalFields": {
           "appendAttribution": false,
           "parse_mode": "Markdown"
@@ -153,6 +153,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-11T21:39:28.492Z",
-  "versionId": "31c6bfb4-90ab-4edc-9bc5-4353f2085064"
+  "updatedAt": "2026-06-16T09:06:37.256Z",
+  "versionId": "2e2de7aa-f20a-4c67-b3ff-f6075ab0ae0b"
 }
