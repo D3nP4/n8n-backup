@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-16T18:36:41.115Z",
-    "createdAt": "2026-06-16T18:36:41.115Z",
-    "versionId": "5d5fe0d0-4db3-4585-8dac-c1fb0efcbc89",
+    "updatedAt": "2026-06-17T11:09:54.193Z",
+    "createdAt": "2026-06-17T11:09:54.193Z",
+    "versionId": "6344f88a-9823-4d6b-96d8-f835a0fa2fe9",
     "workflowId": "tkVER6so3wPrDoyP",
     "nodes": [
       {
@@ -25,7 +25,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const body = $input.first().json.body || {};\nconst text = body.text || '';\nconst action = body.action || 'note';\n\nconst instructions = {\n  ticket: 'Du bist ein Projektmanagement-Assistent. Wandle den diktierten Text in ein strukturiertes Ticket um.\\n\\nFormat (Markdown):\\n**Titel:** (kurz, prägnant)\\n\\n**Beschreibung:**\\n(Was soll gemacht werden und warum)\\n\\n**Akzeptanzkriterien:**\\n- ...\\n\\n**Priorität:** Niedrig / Mittel / Hoch / Kritisch\\n\\nNur den Ticket-Text ausgeben, keine Erklärungen.',\n\n  grocy: 'Du bist ein Aufgaben-Assistent. Wandle den diktierten Text in einen kurzen Aufgabentitel um (max. 80 Zeichen). Direkt, handlungsorientiert, keine Erklärungen, nur den Titel.',\n\n  note: 'Du bist ein Notiz-Assistent. Bereinige und strukturiere den diktierten Text.\\n\\nFormat:\\n**Titel:** (kurz)\\n\\n**Inhalt:**\\n(bereinigt, grammatikalisch korrekt, ohne Füllwörter)\\n\\nNur die Notiz ausgeben.',\n\n  idea: 'Du bist ein Ideen-Coach. Strukturiere den diktierten Text als ausgearbeitete Idee.\\n\\nFormat:\\n💡 **Idee:** (Kernidee in einem Satz)\\n\\n**Potential:** (Was ermöglicht das?)\\n\\n**Herausforderungen:** (Was ist zu bedenken?)\\n\\n**Nächste Schritte:**\\n- ...\\n- ...\\n\\nNur die Idee ausgeben.',\n\n  email: 'Du bist ein E-Mail-Assistent. Wandle den diktierten Text in einen professionellen E-Mail-Entwurf.\\n\\nFormat:\\n**Betreff:** ...\\n\\n**Anrede:** ...\\n\\n**Text:**\\n...\\n\\n**Gruß:** ...\\n\\nNur den E-Mail-Entwurf ausgeben.'\n};\n\nconst instruction = instructions[action] || instructions.note;\nconst prompt = instruction + '\\n\\n---\\n\\nDiktierter Text:\\n' + text;\n\nreturn [{ json: { prompt, action } }];"
+          "jsCode": "const body = $input.first().json.body || {};\nconst text = body.text || '';\nconst action = body.action || 'note';\n\nconst instructions = {\n  ticket: `Du bist ein IT-Dienstleister-Assistent. Wandle den diktierten Text in eine Ticketdokumentation um.\n\nAusgabe als reiner Text OHNE Markdown, OHNE Sternchen, OHNE Rauten. Nur dieses Format:\n\nTitel: (kurze Bezeichnung der Tätigkeit, max. 60 Zeichen)\n\nKategorie: (eine von: Installation / Konfiguration / Support / Wartung / Beratung / Entwicklung / Migration / Fehleranalyse)\n\nDurchgeführte Tätigkeiten:\n- (Was wurde konkret getan)\n- ...\n\nErgebnis:\n(Was ist der aktuelle Stand / was wurde erreicht)\n\nNächste Schritte:\n(Nur ausfüllen wenn noch etwas offen ist, sonst diese Zeile weglassen)\n\nVergangenheitsform. Technisch präzise. Kein Markdown, keine Sonderzeichen zur Formatierung.`,\n\n  grocy: `Du bist ein Aufgaben-Assistent. Wandle den diktierten Text in einen kurzen Aufgabentitel um (max. 80 Zeichen). Direkt, handlungsorientiert, keine Erklärungen, nur den Titel. Kein Markdown.`,\n\n  note: `Du bist ein Notiz-Assistent. Bereinige und strukturiere den diktierten Text als reinen Text ohne Markdown.\n\nFormat:\nTitel: (kurz)\n\nInhalt:\n(bereinigt, grammatikalisch korrekt, ohne Füllwörter)\n\nNur die Notiz ausgeben, kein Markdown.`,\n\n  idea: `Du bist ein Ideen-Coach. Strukturiere den diktierten Text als ausgearbeitete Idee im reinen Textformat ohne Markdown.\n\nFormat:\nIdee: (Kernidee in einem Satz)\n\nPotential:\n(Was ermöglicht das?)\n\nHerausforderungen:\n(Was ist zu bedenken?)\n\nNächste Schritte:\n- ...\n- ...\n\nKein Markdown, keine Sternchen.`,\n\n  email: `Du bist ein E-Mail-Assistent. Wandle den diktierten Text in einen professionellen E-Mail-Entwurf ohne Markdown.\n\nFormat:\nBetreff: ...\n\nAnrede: ...\n\nText:\n...\n\nGruß: ...\n\nKein Markdown, keine Sternchen.`\n};\n\nconst instruction = instructions[action] || instructions.note;\nconst prompt = instruction + '\\n\\n---\\n\\nDiktierter Text:\\n' + text;\n\nreturn [{ json: { prompt, action } }];"
         },
         "id": "build-prompt",
         "name": "Build Prompt",
@@ -162,7 +162,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "5d5fe0d0-4db3-4585-8dac-c1fb0efcbc89",
+  "activeVersionId": "6344f88a-9823-4d6b-96d8-f835a0fa2fe9",
   "connections": {
     "Webhook": {
       "main": [
@@ -234,7 +234,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body || {};\nconst text = body.text || '';\nconst action = body.action || 'note';\n\nconst instructions = {\n  ticket: 'Du bist ein Projektmanagement-Assistent. Wandle den diktierten Text in ein strukturiertes Ticket um.\\n\\nFormat (Markdown):\\n**Titel:** (kurz, prägnant)\\n\\n**Beschreibung:**\\n(Was soll gemacht werden und warum)\\n\\n**Akzeptanzkriterien:**\\n- ...\\n\\n**Priorität:** Niedrig / Mittel / Hoch / Kritisch\\n\\nNur den Ticket-Text ausgeben, keine Erklärungen.',\n\n  grocy: 'Du bist ein Aufgaben-Assistent. Wandle den diktierten Text in einen kurzen Aufgabentitel um (max. 80 Zeichen). Direkt, handlungsorientiert, keine Erklärungen, nur den Titel.',\n\n  note: 'Du bist ein Notiz-Assistent. Bereinige und strukturiere den diktierten Text.\\n\\nFormat:\\n**Titel:** (kurz)\\n\\n**Inhalt:**\\n(bereinigt, grammatikalisch korrekt, ohne Füllwörter)\\n\\nNur die Notiz ausgeben.',\n\n  idea: 'Du bist ein Ideen-Coach. Strukturiere den diktierten Text als ausgearbeitete Idee.\\n\\nFormat:\\n💡 **Idee:** (Kernidee in einem Satz)\\n\\n**Potential:** (Was ermöglicht das?)\\n\\n**Herausforderungen:** (Was ist zu bedenken?)\\n\\n**Nächste Schritte:**\\n- ...\\n- ...\\n\\nNur die Idee ausgeben.',\n\n  email: 'Du bist ein E-Mail-Assistent. Wandle den diktierten Text in einen professionellen E-Mail-Entwurf.\\n\\nFormat:\\n**Betreff:** ...\\n\\n**Anrede:** ...\\n\\n**Text:**\\n...\\n\\n**Gruß:** ...\\n\\nNur den E-Mail-Entwurf ausgeben.'\n};\n\nconst instruction = instructions[action] || instructions.note;\nconst prompt = instruction + '\\n\\n---\\n\\nDiktierter Text:\\n' + text;\n\nreturn [{ json: { prompt, action } }];"
+        "jsCode": "const body = $input.first().json.body || {};\nconst text = body.text || '';\nconst action = body.action || 'note';\n\nconst instructions = {\n  ticket: `Du bist ein IT-Dienstleister-Assistent. Wandle den diktierten Text in eine Ticketdokumentation um.\n\nAusgabe als reiner Text OHNE Markdown, OHNE Sternchen, OHNE Rauten. Nur dieses Format:\n\nTitel: (kurze Bezeichnung der Tätigkeit, max. 60 Zeichen)\n\nKategorie: (eine von: Installation / Konfiguration / Support / Wartung / Beratung / Entwicklung / Migration / Fehleranalyse)\n\nDurchgeführte Tätigkeiten:\n- (Was wurde konkret getan)\n- ...\n\nErgebnis:\n(Was ist der aktuelle Stand / was wurde erreicht)\n\nNächste Schritte:\n(Nur ausfüllen wenn noch etwas offen ist, sonst diese Zeile weglassen)\n\nVergangenheitsform. Technisch präzise. Kein Markdown, keine Sonderzeichen zur Formatierung.`,\n\n  grocy: `Du bist ein Aufgaben-Assistent. Wandle den diktierten Text in einen kurzen Aufgabentitel um (max. 80 Zeichen). Direkt, handlungsorientiert, keine Erklärungen, nur den Titel. Kein Markdown.`,\n\n  note: `Du bist ein Notiz-Assistent. Bereinige und strukturiere den diktierten Text als reinen Text ohne Markdown.\n\nFormat:\nTitel: (kurz)\n\nInhalt:\n(bereinigt, grammatikalisch korrekt, ohne Füllwörter)\n\nNur die Notiz ausgeben, kein Markdown.`,\n\n  idea: `Du bist ein Ideen-Coach. Strukturiere den diktierten Text als ausgearbeitete Idee im reinen Textformat ohne Markdown.\n\nFormat:\nIdee: (Kernidee in einem Satz)\n\nPotential:\n(Was ermöglicht das?)\n\nHerausforderungen:\n(Was ist zu bedenken?)\n\nNächste Schritte:\n- ...\n- ...\n\nKein Markdown, keine Sternchen.`,\n\n  email: `Du bist ein E-Mail-Assistent. Wandle den diktierten Text in einen professionellen E-Mail-Entwurf ohne Markdown.\n\nFormat:\nBetreff: ...\n\nAnrede: ...\n\nText:\n...\n\nGruß: ...\n\nKein Markdown, keine Sternchen.`\n};\n\nconst instruction = instructions[action] || instructions.note;\nconst prompt = instruction + '\\n\\n---\\n\\nDiktierter Text:\\n' + text;\n\nreturn [{ json: { prompt, action } }];"
       },
       "id": "build-prompt",
       "name": "Build Prompt",
@@ -339,6 +339,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-16T18:36:41.114Z",
-  "versionId": "5d5fe0d0-4db3-4585-8dac-c1fb0efcbc89"
+  "updatedAt": "2026-06-17T11:09:54.192Z",
+  "versionId": "6344f88a-9823-4d6b-96d8-f835a0fa2fe9"
 }
