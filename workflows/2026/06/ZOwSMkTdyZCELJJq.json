@@ -1,0 +1,260 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-22T18:46:30.191Z",
+    "createdAt": "2026-06-22T18:46:30.191Z",
+    "versionId": "7f04133b-e98f-40ea-9f2f-ca5977f5ead8",
+    "workflowId": "ZOwSMkTdyZCELJJq",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "rezeptgenerator",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-rg-1",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "224ec57c-16a8-46c3-82d2-58eee8bd87ff"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "anthropicApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              },
+              {
+                "name": "content-type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": []
+          },
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"model\": \"claude-haiku-4-5\",\n  \"max_tokens\": 4096,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Du bist ein Kochassistent. Erstelle Rezepte.\\n\\nWICHTIG: Antworte AUSSCHLIESSLICH mit einem JSON-Objekt (kein Markdown, kein Text):\\n\\n{\\\"recipes\\\":[{\\\"name\\\":\\\"...\\\",\\\"description\\\":\\\"...\\\",\\\"servings\\\":4,\\\"prepTime\\\":15,\\\"cookTime\\\":30,\\\"difficulty\\\":\\\"Einfach\\\",\\\"cuisine\\\":\\\"Deutsch\\\",\\\"tags\\\":[\\\"...\\\"],\\\"ingredients\\\":[{\\\"name\\\":\\\"...\\\",\\\"amount\\\":400,\\\"unit\\\":\\\"g\\\",\\\"category\\\":\\\"Gemüse\\\",\\\"note\\\":\\\"\\\"}],\\\"steps\\\":[{\\\"instruction\\\":\\\"Schritt 1\\\",\\\"ingredients\\\":[\\\"Zutat1\\\",\\\"Zutat2\\\"]},{\\\"instruction\\\":\\\"Schritt 2\\\",\\\"ingredients\\\":[\\\"Zutat3\\\"]}]}]}\\n\\nKategorien: Gemüse, Fleisch & Fisch, Pasta & Getreide, Milchprodukte, Gewürze & Öle, Konserven, Sonstiges\\nErstelle genau 3 verschiedene Rezeptvarianten.\\nOrdne jede Zutat (exakt der \\\"name\\\" aus ingredients) dem passenden Zubereitungsschritt zu.\\n\\nAnfrage: {{ $json.body.request }}\\nPortionen: {{ $json.body.servings }}\\nVorlieben: {{ $json.body.preferences }}\\nMax. Zeit: {{ $json.body.maxTime }} Minuten\"\n    }\n  ]\n}",
+          "options": {},
+          "body": "={\n  \"model\": \"claude-haiku-4-5\",\n  \"max_tokens\": 4096,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Du bist ein Kochassistent. Erstelle Rezepte.\\n\\nWICHTIG: Antworte AUSSCHLIESSLICH mit einem JSON-Objekt (kein Markdown, kein Text):\\n\\n{\\\"recipes\\\":[{\\\"name\\\":\\\"...\\\",\\\"description\\\":\\\"...\\\",\\\"servings\\\":4,\\\"prepTime\\\":15,\\\"cookTime\\\":30,\\\"difficulty\\\":\\\"Einfach\\\",\\\"cuisine\\\":\\\"Deutsch\\\",\\\"tags\\\":[\\\"...\\\"],\\\"ingredients\\\":[{\\\"name\\\":\\\"...\\\",\\\"amount\\\":400,\\\"unit\\\":\\\"g\\\",\\\"category\\\":\\\"Gemüse\\\",\\\"note\\\":\\\"\\\"}],\\\"steps\\\":[{\\\"instruction\\\":\\\"Schritt 1\\\",\\\"ingredients\\\":[\\\"Zutat1\\\",\\\"Zutat2\\\"]},{\\\"instruction\\\":\\\"Schritt 2\\\",\\\"ingredients\\\":[\\\"Zutat3\\\"]}]}]}\\n\\nKategorien: Gemüse, Fleisch & Fisch, Pasta & Getreide, Milchprodukte, Gewürze & Öle, Konserven, Sonstiges\\nErstelle genau 3 verschiedene Rezeptvarianten.\\nOrdne jede Zutat (exakt der \\\"name\\\" aus ingredients) dem passenden Zubereitungsschritt zu.\\n\\nAnfrage: {{ $json.body.request }}\\nPortionen: {{ $json.body.servings }}\\nVorlieben: {{ $json.body.preferences }}\\nMax. Zeit: {{ $json.body.maxTime }} Minuten\"\n    }\n  ]\n}"
+        },
+        "id": "http-rg-1",
+        "name": "Anthropic API",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          250,
+          0
+        ],
+        "credentials": {
+          "anthropicApi": {
+            "id": "9LB76hvnIilIJdFy",
+            "name": "Anthropic account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "text",
+          "responseBody": "={{ $json.content[0].text }}",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                }
+              ]
+            }
+          }
+        },
+        "id": "respond-rg-1",
+        "name": "Respond to Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          500,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Anthropic API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Anthropic API": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "7f04133b-e98f-40ea-9f2f-ca5977f5ead8",
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Anthropic API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic API": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-22T11:27:31.604Z",
+  "id": "ZOwSMkTdyZCELJJq",
+  "isArchived": false,
+  "meta": null,
+  "name": "🍳 Rezeptgenerator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rezeptgenerator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-rg-1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "224ec57c-16a8-46c3-82d2-58eee8bd87ff"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-haiku-4-5\",\n  \"max_tokens\": 4096,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Du bist ein Kochassistent. Erstelle Rezepte.\\n\\nWICHTIG: Antworte AUSSCHLIESSLICH mit einem JSON-Objekt (kein Markdown, kein Text):\\n\\n{\\\"recipes\\\":[{\\\"name\\\":\\\"...\\\",\\\"description\\\":\\\"...\\\",\\\"servings\\\":4,\\\"prepTime\\\":15,\\\"cookTime\\\":30,\\\"difficulty\\\":\\\"Einfach\\\",\\\"cuisine\\\":\\\"Deutsch\\\",\\\"tags\\\":[\\\"...\\\"],\\\"ingredients\\\":[{\\\"name\\\":\\\"...\\\",\\\"amount\\\":400,\\\"unit\\\":\\\"g\\\",\\\"category\\\":\\\"Gemüse\\\",\\\"note\\\":\\\"\\\"}],\\\"steps\\\":[{\\\"instruction\\\":\\\"Schritt 1\\\",\\\"ingredients\\\":[\\\"Zutat1\\\",\\\"Zutat2\\\"]},{\\\"instruction\\\":\\\"Schritt 2\\\",\\\"ingredients\\\":[\\\"Zutat3\\\"]}]}]}\\n\\nKategorien: Gemüse, Fleisch & Fisch, Pasta & Getreide, Milchprodukte, Gewürze & Öle, Konserven, Sonstiges\\nErstelle genau 3 verschiedene Rezeptvarianten.\\nOrdne jede Zutat (exakt der \\\"name\\\" aus ingredients) dem passenden Zubereitungsschritt zu.\\n\\nAnfrage: {{ $json.body.request }}\\nPortionen: {{ $json.body.servings }}\\nVorlieben: {{ $json.body.preferences }}\\nMax. Zeit: {{ $json.body.maxTime }} Minuten\"\n    }\n  ]\n}",
+        "options": {},
+        "body": "={\n  \"model\": \"claude-haiku-4-5\",\n  \"max_tokens\": 4096,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Du bist ein Kochassistent. Erstelle Rezepte.\\n\\nWICHTIG: Antworte AUSSCHLIESSLICH mit einem JSON-Objekt (kein Markdown, kein Text):\\n\\n{\\\"recipes\\\":[{\\\"name\\\":\\\"...\\\",\\\"description\\\":\\\"...\\\",\\\"servings\\\":4,\\\"prepTime\\\":15,\\\"cookTime\\\":30,\\\"difficulty\\\":\\\"Einfach\\\",\\\"cuisine\\\":\\\"Deutsch\\\",\\\"tags\\\":[\\\"...\\\"],\\\"ingredients\\\":[{\\\"name\\\":\\\"...\\\",\\\"amount\\\":400,\\\"unit\\\":\\\"g\\\",\\\"category\\\":\\\"Gemüse\\\",\\\"note\\\":\\\"\\\"}],\\\"steps\\\":[{\\\"instruction\\\":\\\"Schritt 1\\\",\\\"ingredients\\\":[\\\"Zutat1\\\",\\\"Zutat2\\\"]},{\\\"instruction\\\":\\\"Schritt 2\\\",\\\"ingredients\\\":[\\\"Zutat3\\\"]}]}]}\\n\\nKategorien: Gemüse, Fleisch & Fisch, Pasta & Getreide, Milchprodukte, Gewürze & Öle, Konserven, Sonstiges\\nErstelle genau 3 verschiedene Rezeptvarianten.\\nOrdne jede Zutat (exakt der \\\"name\\\" aus ingredients) dem passenden Zubereitungsschritt zu.\\n\\nAnfrage: {{ $json.body.request }}\\nPortionen: {{ $json.body.servings }}\\nVorlieben: {{ $json.body.preferences }}\\nMax. Zeit: {{ $json.body.maxTime }} Minuten\"\n    }\n  ]\n}"
+      },
+      "id": "http-rg-1",
+      "name": "Anthropic API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        250,
+        0
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "9LB76hvnIilIJdFy",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.content[0].text }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-rg-1",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        0
+      ]
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-22T11:27:31.606Z",
+      "createdAt": "2026-06-22T11:27:31.606Z",
+      "role": "workflow:owner",
+      "workflowId": "ZOwSMkTdyZCELJJq",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-22T18:46:30.190Z",
+  "versionId": "7f04133b-e98f-40ea-9f2f-ca5977f5ead8"
+}
