@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-11T21:41:31.141Z",
-    "createdAt": "2026-06-11T21:41:31.141Z",
-    "versionId": "2fe097c7-b170-49e6-89d5-45f807f2392d",
+    "updatedAt": "2026-06-23T13:14:04.176Z",
+    "createdAt": "2026-06-23T13:14:04.176Z",
+    "versionId": "b42651db-234e-4cb1-8b35-8de3c5a6d149",
     "workflowId": "LZq2tcEIQElLS3dU",
     "nodes": [
       {
@@ -326,7 +326,8 @@
             "id": "fWv04bRwaM2io6AB",
             "name": "Unnamed credential"
           }
-        }
+        },
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -411,6 +412,30 @@
           "url": "https://hc.paun01.de/ping/4e634337-f4f7-4740-8933-4ee0715786f6",
           "options": {
             "continueOnFail": true
+          }
+        }
+      },
+      {
+        "id": "mkcol-folder-create",
+        "name": "Nextcloud - Ordner anlegen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          5000,
+          876
+        ],
+        "continueOnFail": true,
+        "parameters": {
+          "method": "MKCOL",
+          "url": "={{ $('Konfiguration').item.json.nextcloud_url }}/remote.php/dav/files/{{ $('Konfiguration').item.json.nextcloud_user }}/{{ $('Nextcloud - Upload vorbereiten1').item.json.folderName }}/",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBasicAuth",
+          "options": {}
+        },
+        "credentials": {
+          "httpBasicAuth": {
+            "id": "fWv04bRwaM2io6AB",
+            "name": "Unnamed credential"
           }
         }
       }
@@ -597,6 +622,17 @@
             }
           ]
         ]
+      },
+      "Nextcloud - Ordner anlegen": {
+        "main": [
+          [
+            {
+              "node": "Nextcloud - Datei hochladen1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
@@ -604,7 +640,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "2fe097c7-b170-49e6-89d5-45f807f2392d",
+  "activeVersionId": "b42651db-234e-4cb1-8b35-8de3c5a6d149",
   "connections": {
     "Konfiguration": {
       "main": [
@@ -782,6 +818,17 @@
         [
           {
             "node": "HC Ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nextcloud - Ordner anlegen": {
+      "main": [
+        [
+          {
+            "node": "Nextcloud - Datei hochladen1",
             "type": "main",
             "index": 0
           }
@@ -1117,7 +1164,8 @@
           "id": "fWv04bRwaM2io6AB",
           "name": "Unnamed credential"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -1204,6 +1252,30 @@
           "continueOnFail": true
         }
       }
+    },
+    {
+      "id": "mkcol-folder-create",
+      "name": "Nextcloud - Ordner anlegen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5000,
+        876
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "MKCOL",
+        "url": "={{ $('Konfiguration').item.json.nextcloud_url }}/remote.php/dav/files/{{ $('Konfiguration').item.json.nextcloud_user }}/{{ $('Nextcloud - Upload vorbereiten1').item.json.folderName }}/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "fWv04bRwaM2io6AB",
+          "name": "Unnamed credential"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -1233,6 +1305,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-11T21:41:31.141Z",
-  "versionId": "2fe097c7-b170-49e6-89d5-45f807f2392d"
+  "updatedAt": "2026-06-23T13:14:04.175Z",
+  "versionId": "b42651db-234e-4cb1-8b35-8de3c5a6d149"
 }
