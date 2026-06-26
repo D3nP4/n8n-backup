@@ -1,0 +1,256 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-25T22:53:24.665Z",
+    "createdAt": "2026-06-25T22:53:24.665Z",
+    "versionId": "1f112158-1f2e-464e-b609-d1b164b91d05",
+    "workflowId": "xIWwhwP3EulCs8mK",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "7 8 26 * *"
+              }
+            ]
+          }
+        },
+        "id": "1a2b3c4d-0001-0001-0001-000000000001",
+        "name": "Am 26. jeden Monats",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          240,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "url": "http://192.168.178.42:3099/transactions/60",
+          "options": {}
+        },
+        "id": "1a2b3c4d-0002-0002-0002-000000000002",
+        "name": "Transaktionen abrufen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          460,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const transactions = $input.all()[0].json;\n\nconst salaryTx = transactions\n  .filter(t => t.amount > 1000 && t.applicant_name && t.applicant_name.includes('Mandala'))\n  .sort((a, b) => new Date(b.date) - new Date(a.date));\n\nif (!salaryTx.length) throw new Error('Kein Gehalt gefunden');\n\nconst lastSalary = salaryTx[0];\nconst salaryDate = lastSalary.date;\nconst salaryAmount = lastSalary.amount;\n\nconst after = transactions.filter(t => t.date > salaryDate);\nconst income = after.filter(t => t.amount > 0);\nconst expenses = after.filter(t => t.amount < 0);\n\nconst totalIncome = income.reduce((s, t) => s + t.amount, 0);\nconst totalExpenses = expenses.reduce((s, t) => s + t.amount, 0);\nconst grandTotal = salaryAmount + totalIncome + totalExpenses;\n\nconst fmt = (d) => { const [y,m,day]=d.split('-'); return `${day}.${m}.${y}`; };\nconst eur = (n) => n.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});\n\nconst incomeLines = income\n  .sort((a, b) => b.amount - a.amount)\n  .map(t => `  +${eur(t.amount)} € — ${(t.applicant_name || t.purpose || '').substring(0,35)}`)\n  .join('\\n');\n\nconst topExpLines = expenses\n  .sort((a, b) => a.amount - b.amount)\n  .slice(0, 10)\n  .map(t => {\n    const desc = (t.applicant_name || t.purpose || '').substring(0,30);\n    return `${eur(t.amount)} € — ${desc}`;\n  })\n  .join('\\n');\n\nconst fazit = grandTotal >= 0\n  ? `Nein, du bist noch im Plus (${eur(grandTotal)} € übrig vom Gehalt)`\n  : `Ja, du hast ${eur(Math.abs(grandTotal))} € mehr ausgegeben als eingenommen`;\n\nconst msg = `💰 Monats-Finanzauswertung\\n📅 seit ${fmt(salaryDate)} (letztes Gehalt)\\n\\nLetztes Gehalt: +${eur(salaryAmount)} € (Mandala GmbH)\\n\\nEinnahmen seitdem: +${eur(totalIncome)} €\\n${incomeLines || '  —'}\\n\\nAusgaben gesamt: ${eur(totalExpenses)} €\\n\\nGrößte Ausgaben:\\n${topExpLines}\\n\\nBilanz (ohne Gehalt): ${totalIncome + totalExpenses >= 0 ? '+' : ''}${eur(totalIncome + totalExpenses)} €\\nBilanz (mit Gehalt): ${grandTotal >= 0 ? '+' : ''}${eur(grandTotal)} €\\n\\n${grandTotal >= 0 ? '✅' : '❌'} ${fazit}`;\n\nreturn [{ json: { message: msg } }];"
+        },
+        "id": "1a2b3c4d-0003-0003-0003-000000000003",
+        "name": "Auswertung berechnen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          680,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.message }}",
+          "additionalFields": {}
+        },
+        "id": "1a2b3c4d-0004-0004-0004-000000000004",
+        "name": "Telegram senden",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          900,
+          300
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "cf03a380-538f-4e2c-8b55-3033ff91cf69"
+      }
+    ],
+    "connections": {
+      "Am 26. jeden Monats": {
+        "main": [
+          [
+            {
+              "node": "Transaktionen abrufen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Transaktionen abrufen": {
+        "main": [
+          [
+            {
+              "node": "Auswertung berechnen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Auswertung berechnen": {
+        "main": [
+          [
+            {
+              "node": "Telegram senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "1f112158-1f2e-464e-b609-d1b164b91d05",
+  "connections": {
+    "Am 26. jeden Monats": {
+      "main": [
+        [
+          {
+            "node": "Transaktionen abrufen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transaktionen abrufen": {
+      "main": [
+        [
+          {
+            "node": "Auswertung berechnen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auswertung berechnen": {
+      "main": [
+        [
+          {
+            "node": "Telegram senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-25T22:53:24.662Z",
+  "id": "xIWwhwP3EulCs8mK",
+  "isArchived": false,
+  "meta": null,
+  "name": "💰 Monats-Finanzauswertung (26.)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "7 8 26 * *"
+            }
+          ]
+        }
+      },
+      "id": "1a2b3c4d-0001-0001-0001-000000000001",
+      "name": "Am 26. jeden Monats",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.178.42:3099/transactions/60",
+        "options": {}
+      },
+      "id": "1a2b3c4d-0002-0002-0002-000000000002",
+      "name": "Transaktionen abrufen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const transactions = $input.all()[0].json;\n\nconst salaryTx = transactions\n  .filter(t => t.amount > 1000 && t.applicant_name && t.applicant_name.includes('Mandala'))\n  .sort((a, b) => new Date(b.date) - new Date(a.date));\n\nif (!salaryTx.length) throw new Error('Kein Gehalt gefunden');\n\nconst lastSalary = salaryTx[0];\nconst salaryDate = lastSalary.date;\nconst salaryAmount = lastSalary.amount;\n\nconst after = transactions.filter(t => t.date > salaryDate);\nconst income = after.filter(t => t.amount > 0);\nconst expenses = after.filter(t => t.amount < 0);\n\nconst totalIncome = income.reduce((s, t) => s + t.amount, 0);\nconst totalExpenses = expenses.reduce((s, t) => s + t.amount, 0);\nconst grandTotal = salaryAmount + totalIncome + totalExpenses;\n\nconst fmt = (d) => { const [y,m,day]=d.split('-'); return `${day}.${m}.${y}`; };\nconst eur = (n) => n.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});\n\nconst incomeLines = income\n  .sort((a, b) => b.amount - a.amount)\n  .map(t => `  +${eur(t.amount)} € — ${(t.applicant_name || t.purpose || '').substring(0,35)}`)\n  .join('\\n');\n\nconst topExpLines = expenses\n  .sort((a, b) => a.amount - b.amount)\n  .slice(0, 10)\n  .map(t => {\n    const desc = (t.applicant_name || t.purpose || '').substring(0,30);\n    return `${eur(t.amount)} € — ${desc}`;\n  })\n  .join('\\n');\n\nconst fazit = grandTotal >= 0\n  ? `Nein, du bist noch im Plus (${eur(grandTotal)} € übrig vom Gehalt)`\n  : `Ja, du hast ${eur(Math.abs(grandTotal))} € mehr ausgegeben als eingenommen`;\n\nconst msg = `💰 Monats-Finanzauswertung\\n📅 seit ${fmt(salaryDate)} (letztes Gehalt)\\n\\nLetztes Gehalt: +${eur(salaryAmount)} € (Mandala GmbH)\\n\\nEinnahmen seitdem: +${eur(totalIncome)} €\\n${incomeLines || '  —'}\\n\\nAusgaben gesamt: ${eur(totalExpenses)} €\\n\\nGrößte Ausgaben:\\n${topExpLines}\\n\\nBilanz (ohne Gehalt): ${totalIncome + totalExpenses >= 0 ? '+' : ''}${eur(totalIncome + totalExpenses)} €\\nBilanz (mit Gehalt): ${grandTotal >= 0 ? '+' : ''}${eur(grandTotal)} €\\n\\n${grandTotal >= 0 ? '✅' : '❌'} ${fazit}`;\n\nreturn [{ json: { message: msg } }];"
+      },
+      "id": "1a2b3c4d-0003-0003-0003-000000000003",
+      "name": "Auswertung berechnen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "1a2b3c4d-0004-0004-0004-000000000004",
+      "name": "Telegram senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "cf03a380-538f-4e2c-8b55-3033ff91cf69"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-25T22:53:24.664Z",
+      "createdAt": "2026-06-25T22:53:24.664Z",
+      "role": "workflow:owner",
+      "workflowId": "xIWwhwP3EulCs8mK",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Am 26. jeden Monats": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-25T22:53:24.662Z",
+  "versionId": "1f112158-1f2e-464e-b609-d1b164b91d05"
+}
