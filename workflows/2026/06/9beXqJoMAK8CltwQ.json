@@ -1,0 +1,294 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-26T13:51:58.107Z",
+    "createdAt": "2026-06-26T13:51:58.107Z",
+    "versionId": "f15683d1-a2de-44b9-949f-4333201899e4",
+    "workflowId": "9beXqJoMAK8CltwQ",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 8 * * *"
+              }
+            ]
+          }
+        },
+        "id": "fa11-0001-0001-0001-000000000001",
+        "name": "Täglich 08:00",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          240,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst PAPERLESS_URL = 'https://paperless.paun01.de';\nconst PAPERLESS_TOKEN = '54f69347ba18315b156062cf21e1012d7e55c84f';\nconst TAG_RECHNUNG = 3;\nconst TAG_BEZAHLT = 11;\n\n// Alle Docs mit Rechnungs-Tag holen\nconst resp = await $helpers.httpRequest({\n  method: 'GET',\n  url: `${PAPERLESS_URL}/api/documents/?tags__id__all=${TAG_RECHNUNG}&page_size=100&ordering=-created`,\n  headers: { Authorization: `Token ${PAPERLESS_TOKEN}` }\n});\n\nconst docs = resp.results || [];\n\n// Nur unbezahlte filtern\nconst open = docs.filter(d => !d.tags.includes(TAG_BEZAHLT));\n\nif (open.length === 0) {\n  return [{ json: { message: null, count: 0 } }];\n}\n\nconst fmt = (d) => {\n  if (!d) return '?';\n  const s = d.substring(0, 10);\n  const [y, m, day] = s.split('-');\n  return `${day}.${m}.${y}`;\n};\n\n// Nach Datum sortieren (neueste zuerst)\nopen.sort((a, b) => new Date(b.created) - new Date(a.created));\n\n// Kategorien\nconst heute = new Date();\nconst rows = open.map(d => {\n  const age = Math.floor((heute - new Date(d.created)) / 86400000);\n  let flag;\n  if (age > 30) flag = '🔴';\n  else if (age > 14) flag = '🟡';\n  else flag = '🟢';\n  return `${flag} ${fmt(d.created)} — ${d.title}`;\n});\n\nconst msg = `🧾 Offene Rechnungen (${open.length})\\n📅 Stand: ${fmt(heute.toISOString())}\\n\\n${rows.join('\\n')}\\n\\n🔴 >30 Tage  🟡 >14 Tage  🟢 aktuell`;\n\nreturn [{ json: { message: msg, count: open.length } }];\n",
+          "mode": "runOnceForAllItems"
+        },
+        "id": "fa11-0002-0002-0002-000000000002",
+        "name": "Paperless prüfen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          460,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "cond1",
+                "leftValue": "={{ $json.count }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        },
+        "id": "fa11-0003-0003-0003-000000000003",
+        "name": "Offene vorhanden?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          680,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.message }}",
+          "additionalFields": {}
+        },
+        "id": "fa11-0004-0004-0004-000000000004",
+        "name": "Telegram senden",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          900,
+          220
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "26d89929-9de2-43da-bab7-e45a50457018"
+      }
+    ],
+    "connections": {
+      "Täglich 08:00": {
+        "main": [
+          [
+            {
+              "node": "Paperless prüfen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Paperless prüfen": {
+        "main": [
+          [
+            {
+              "node": "Offene vorhanden?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Offene vorhanden?": {
+        "main": [
+          [
+            {
+              "node": "Telegram senden",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "f15683d1-a2de-44b9-949f-4333201899e4",
+  "connections": {
+    "Täglich 08:00": {
+      "main": [
+        [
+          {
+            "node": "Paperless prüfen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paperless prüfen": {
+      "main": [
+        [
+          {
+            "node": "Offene vorhanden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Offene vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "Telegram senden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "createdAt": "2026-06-26T13:51:58.102Z",
+  "id": "9beXqJoMAK8CltwQ",
+  "isArchived": false,
+  "meta": null,
+  "name": "🧾 Fällige Rechnungen – Täglicher Check",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "fa11-0001-0001-0001-000000000001",
+      "name": "Täglich 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst PAPERLESS_URL = 'https://paperless.paun01.de';\nconst PAPERLESS_TOKEN = '54f69347ba18315b156062cf21e1012d7e55c84f';\nconst TAG_RECHNUNG = 3;\nconst TAG_BEZAHLT = 11;\n\n// Alle Docs mit Rechnungs-Tag holen\nconst resp = await $helpers.httpRequest({\n  method: 'GET',\n  url: `${PAPERLESS_URL}/api/documents/?tags__id__all=${TAG_RECHNUNG}&page_size=100&ordering=-created`,\n  headers: { Authorization: `Token ${PAPERLESS_TOKEN}` }\n});\n\nconst docs = resp.results || [];\n\n// Nur unbezahlte filtern\nconst open = docs.filter(d => !d.tags.includes(TAG_BEZAHLT));\n\nif (open.length === 0) {\n  return [{ json: { message: null, count: 0 } }];\n}\n\nconst fmt = (d) => {\n  if (!d) return '?';\n  const s = d.substring(0, 10);\n  const [y, m, day] = s.split('-');\n  return `${day}.${m}.${y}`;\n};\n\n// Nach Datum sortieren (neueste zuerst)\nopen.sort((a, b) => new Date(b.created) - new Date(a.created));\n\n// Kategorien\nconst heute = new Date();\nconst rows = open.map(d => {\n  const age = Math.floor((heute - new Date(d.created)) / 86400000);\n  let flag;\n  if (age > 30) flag = '🔴';\n  else if (age > 14) flag = '🟡';\n  else flag = '🟢';\n  return `${flag} ${fmt(d.created)} — ${d.title}`;\n});\n\nconst msg = `🧾 Offene Rechnungen (${open.length})\\n📅 Stand: ${fmt(heute.toISOString())}\\n\\n${rows.join('\\n')}\\n\\n🔴 >30 Tage  🟡 >14 Tage  🟢 aktuell`;\n\nreturn [{ json: { message: msg, count: open.length } }];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "fa11-0002-0002-0002-000000000002",
+      "name": "Paperless prüfen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond1",
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "fa11-0003-0003-0003-000000000003",
+      "name": "Offene vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "fa11-0004-0004-0004-000000000004",
+      "name": "Telegram senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        220
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "26d89929-9de2-43da-bab7-e45a50457018"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-26T13:51:58.106Z",
+      "createdAt": "2026-06-26T13:51:58.106Z",
+      "role": "workflow:owner",
+      "workflowId": "9beXqJoMAK8CltwQ",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Täglich 08:00": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-26T13:51:58.102Z",
+  "versionId": "f15683d1-a2de-44b9-949f-4333201899e4"
+}
