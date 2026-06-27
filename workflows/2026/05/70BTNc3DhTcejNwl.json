@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-11T21:41:30.529Z",
-    "createdAt": "2026-06-11T21:41:30.529Z",
-    "versionId": "305041e5-51f1-458b-a500-60ec6e7cee53",
+    "updatedAt": "2026-06-26T13:51:25.321Z",
+    "createdAt": "2026-06-26T13:51:25.321Z",
+    "versionId": "286dac1c-2a09-4b3c-965d-108be5e39bc1",
     "workflowId": "70BTNc3DhTcejNwl",
     "nodes": [
       {
@@ -236,10 +236,10 @@
       },
       {
         "parameters": {
-          "jsCode": "const invoice = $json;\n\nconst terms = [];\n\n// Sehr gute Suchbegriffe einzeln sammeln\nif (invoice.creditor_name) terms.push(invoice.creditor_name);\nif (invoice.invoice_number) terms.push(invoice.invoice_number);\nif (invoice.customer_number) terms.push(invoice.customer_number);\nif (invoice.iban) terms.push(invoice.iban);\nif (invoice.bic) terms.push(invoice.bic);\nif (invoice.payment_reference) terms.push(invoice.payment_reference);\n\nif (Array.isArray(invoice.suggested_firefly_search_terms)) {\n  terms.push(...invoice.suggested_firefly_search_terms);\n}\n\n// Begriffe bereinigen\nconst clean = [...new Set(\n  terms\n    .filter(Boolean)\n    .map(t => String(t).trim())\n    .filter(t => t.length >= 3)\n)];\n\n// Smarte Firefly-Suchen bauen\nconst queries = [];\n\n// 1. Rechnungsnummer einzeln\nif (invoice.invoice_number) queries.push(String(invoice.invoice_number));\n\n// 2. Verwendungszweck einzeln\nif (invoice.payment_reference) queries.push(String(invoice.payment_reference));\n\n// 3. IBAN einzeln\nif (invoice.iban) queries.push(String(invoice.iban).replace(/\\s+/g, ''));\n\n// 4. Empfänger gekürzt\nif (invoice.creditor_name) {\n  const shortCreditor = String(invoice.creditor_name)\n    .replace(/GmbH|Co\\. KG|KG|UG|AG|Ltd|&/gi, '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\n  queries.push(shortCreditor);\n}\n\n// 5. Suggested Terms einzeln\nfor (const t of clean) {\n  queries.push(t);\n}\n\n// 6. Kombi: Empfänger + Rechnungsnummer\nif (invoice.creditor_name && invoice.invoice_number) {\n  queries.push(`${invoice.creditor_name} ${invoice.invoice_number}`);\n}\n\n// 7. Kombi: Empfänger + Verwendungszweck\nif (invoice.creditor_name && invoice.payment_reference) {\n  queries.push(`${invoice.creditor_name} ${invoice.payment_reference}`);\n}\n\n// Duplikate entfernen, max. 8 Suchläufe\nconst finalQueries = [...new Set(\n  queries\n    .map(q => String(q).trim())\n    .filter(q => q.length >= 3)\n)].slice(0, 8);\n\n// Wenn gar nichts da ist, mindestens Titel nutzen\nif (finalQueries.length === 0 && invoice.paperless_title) {\n  finalQueries.push(invoice.paperless_title);\n}\n\n// Aus 1 Rechnung mehrere Items machen\nreturn finalQueries.map(query => ({\n  json: {\n    ...invoice,\n    firefly_query: query\n  }\n}));"
+          "jsCode": "const invoice = $json;\nreturn [{ json: { ...invoice } }];"
         },
         "id": "8acae8d4-a867-4409-be67-abc906eae45d",
-        "name": "Firefly Suchparameter bauen",
+        "name": "FinTS Suchparameter bauen",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
@@ -249,37 +249,11 @@
       },
       {
         "parameters": {
-          "url": "={{ $('Konfiguration').first().json.firefly_url }}/api/v1/search/transactions",
-          "sendQuery": true,
-          "queryParameters": {
-            "parameters": [
-              {
-                "name": "query",
-                "value": "={{ $json.firefly_query }}"
-              },
-              {
-                "name": "limit",
-                "value": "25"
-              }
-            ]
-          },
-          "sendHeaders": true,
-          "headerParameters": {
-            "parameters": [
-              {
-                "name": "Authorization",
-                "value": "=Bearer {{ $('Konfiguration').first().json.firefly_token }}"
-              },
-              {
-                "name": "Accept",
-                "value": "application/json"
-              }
-            ]
-          },
+          "url": "http://192.168.178.42:3099/transactions/90",
           "options": {}
         },
         "id": "7ea25af1-6178-4baa-b1c4-e407b3e685df",
-        "name": "Firefly - Transaktionen suchen",
+        "name": "FinTS - Transaktionen abrufen",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
@@ -289,7 +263,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// Original-Rechnung aus dem ersten Suchparameter-Item\nconst invoice = $('Firefly Suchparameter bauen').first().json;\n\n// Alle Firefly-Node-Items lesen\nconst items = $input.all();\n\nconst allCandidates = [];\n\nfor (const item of items) {\n  let fireflyRaw = item.json;\n\n  // Bei dir kommt data teilweise als JSON-String\n  if (typeof item.json.data === 'string') {\n    try {\n      fireflyRaw = JSON.parse(item.json.data);\n    } catch (e) {\n      fireflyRaw = {\n        data: [],\n        parse_error: e.message,\n        raw: item.json.data\n      };\n    }\n  }\n\n  const transactionsRaw = Array.isArray(fireflyRaw.data)\n    ? fireflyRaw.data\n    : [];\n\n  for (const txItem of transactionsRaw) {\n    const attr = txItem.attributes || {};\n    const txs = attr.transactions || [];\n\n    for (const tx of txs) {\n      allCandidates.push({\n        transaction_id: txItem.id,\n        date: tx.date || null,\n        description: tx.description || '',\n        amount: tx.amount || null,\n        currency: tx.currency_code || tx.currency_symbol || null,\n        source_name: tx.source_name || '',\n        destination_name: tx.destination_name || '',\n        category_name: tx.category_name || '',\n        notes: tx.notes || '',\n        tags: tx.tags || [],\n        search_query_used: item.json.firefly_query || invoice.firefly_query || ''\n      });\n    }\n  }\n}\n\n// Duplikate anhand transaction_id + amount + date entfernen\nconst seen = new Set();\nconst candidates = allCandidates.filter(c => {\n  const key = `${c.transaction_id}|${c.date}|${c.amount}|${c.description}`;\n  if (seen.has(key)) return false;\n  seen.add(key);\n  return true;\n});\n\nreturn [\n  {\n    json: {\n      invoice,\n      candidates,\n      firefly_result_count: candidates.length,\n      firefly_searches_used: items.map(i => i.json.firefly_query).filter(Boolean)\n    }\n  }\n];"
+          "jsCode": "// Rechnung aus KI-Analyse\nconst invoice = $('FinTS Suchparameter bauen').first().json;\n\n// FinTS Transaktionen (Array direkt)\nconst txList = $input.first().json;\nconst transactions = Array.isArray(txList) ? txList : [];\n\nconst invoiceAmount = parseFloat(invoice.amount_total || 0);\nconst creditor = (invoice.creditor_name || '').toLowerCase();\nconst invoiceNum = (invoice.invoice_number || '').toLowerCase();\nconst payRef = (invoice.payment_reference || '').toLowerCase();\nconst invoiceIban = (invoice.iban || '').replace(/\\s/g, '').toLowerCase();\n\nconst candidates = [];\n\nfor (const tx of transactions) {\n  if (tx.amount >= 0) continue; // Nur Ausgaben\n  const txAmount = Math.abs(tx.amount);\n  const txName = (tx.applicant_name || '').toLowerCase();\n  const txPurpose = (tx.purpose || '').toLowerCase();\n  const txIban = (tx.iban || '').replace(/\\s/g, '').toLowerCase();\n\n  let score = 0;\n\n  // Betrag passt (±10%)\n  if (invoiceAmount > 0) {\n    const diff = Math.abs(txAmount - invoiceAmount) / invoiceAmount;\n    if (diff < 0.05) score += 40;\n    else if (diff < 0.10) score += 20;\n  }\n\n  // Gläubiger im Namen\n  const creditorWords = creditor.split(/\\s+/).filter(w => w.length > 3);\n  for (const word of creditorWords) {\n    if (txName.includes(word) || txPurpose.includes(word)) score += 15;\n  }\n\n  // Rechnungsnummer im Verwendungszweck\n  if (invoiceNum && txPurpose.includes(invoiceNum)) score += 35;\n\n  // Zahlungsreferenz\n  if (payRef && txPurpose.includes(payRef)) score += 30;\n\n  // IBAN-Match\n  if (invoiceIban && invoiceIban.length > 10 && txIban === invoiceIban) score += 25;\n\n  if (score >= 20) {\n    candidates.push({\n      score,\n      date: tx.date,\n      amount: tx.amount,\n      applicant_name: tx.applicant_name,\n      purpose: (tx.purpose || '').substring(0, 100),\n      iban: tx.iban\n    });\n  }\n}\n\ncandidates.sort((a, b) => b.score - a.score);\nconst best = candidates[0] || null;\n\nreturn [{\n  json: {\n    invoice,\n    best_match: best,\n    all_candidates: candidates.slice(0, 3),\n    match_found: best !== null && best.score >= 35\n  }\n}];"
         },
         "id": "3f696ab0-b322-4347-8be5-4a451573ece7",
         "name": "Matching Daten bauen",
@@ -596,25 +570,25 @@
         "main": [
           [
             {
-              "node": "Firefly Suchparameter bauen",
+              "node": "FinTS Suchparameter bauen",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "Firefly Suchparameter bauen": {
+      "FinTS Suchparameter bauen": {
         "main": [
           [
             {
-              "node": "Firefly - Transaktionen suchen",
+              "node": "FinTS - Transaktionen abrufen",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "Firefly - Transaktionen suchen": {
+      "FinTS - Transaktionen abrufen": {
         "main": [
           [
             {
@@ -715,7 +689,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "305041e5-51f1-458b-a500-60ec6e7cee53",
+  "activeVersionId": "286dac1c-2a09-4b3c-965d-108be5e39bc1",
   "connections": {
     "Manual Trigger": {
       "main": [
@@ -810,25 +784,25 @@
       "main": [
         [
           {
-            "node": "Firefly Suchparameter bauen",
+            "node": "FinTS Suchparameter bauen",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Firefly Suchparameter bauen": {
+    "FinTS Suchparameter bauen": {
       "main": [
         [
           {
-            "node": "Firefly - Transaktionen suchen",
+            "node": "FinTS - Transaktionen abrufen",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Firefly - Transaktionen suchen": {
+    "FinTS - Transaktionen abrufen": {
       "main": [
         [
           {
@@ -1162,10 +1136,10 @@
     },
     {
       "parameters": {
-        "jsCode": "const invoice = $json;\n\nconst terms = [];\n\n// Sehr gute Suchbegriffe einzeln sammeln\nif (invoice.creditor_name) terms.push(invoice.creditor_name);\nif (invoice.invoice_number) terms.push(invoice.invoice_number);\nif (invoice.customer_number) terms.push(invoice.customer_number);\nif (invoice.iban) terms.push(invoice.iban);\nif (invoice.bic) terms.push(invoice.bic);\nif (invoice.payment_reference) terms.push(invoice.payment_reference);\n\nif (Array.isArray(invoice.suggested_firefly_search_terms)) {\n  terms.push(...invoice.suggested_firefly_search_terms);\n}\n\n// Begriffe bereinigen\nconst clean = [...new Set(\n  terms\n    .filter(Boolean)\n    .map(t => String(t).trim())\n    .filter(t => t.length >= 3)\n)];\n\n// Smarte Firefly-Suchen bauen\nconst queries = [];\n\n// 1. Rechnungsnummer einzeln\nif (invoice.invoice_number) queries.push(String(invoice.invoice_number));\n\n// 2. Verwendungszweck einzeln\nif (invoice.payment_reference) queries.push(String(invoice.payment_reference));\n\n// 3. IBAN einzeln\nif (invoice.iban) queries.push(String(invoice.iban).replace(/\\s+/g, ''));\n\n// 4. Empfänger gekürzt\nif (invoice.creditor_name) {\n  const shortCreditor = String(invoice.creditor_name)\n    .replace(/GmbH|Co\\. KG|KG|UG|AG|Ltd|&/gi, '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\n  queries.push(shortCreditor);\n}\n\n// 5. Suggested Terms einzeln\nfor (const t of clean) {\n  queries.push(t);\n}\n\n// 6. Kombi: Empfänger + Rechnungsnummer\nif (invoice.creditor_name && invoice.invoice_number) {\n  queries.push(`${invoice.creditor_name} ${invoice.invoice_number}`);\n}\n\n// 7. Kombi: Empfänger + Verwendungszweck\nif (invoice.creditor_name && invoice.payment_reference) {\n  queries.push(`${invoice.creditor_name} ${invoice.payment_reference}`);\n}\n\n// Duplikate entfernen, max. 8 Suchläufe\nconst finalQueries = [...new Set(\n  queries\n    .map(q => String(q).trim())\n    .filter(q => q.length >= 3)\n)].slice(0, 8);\n\n// Wenn gar nichts da ist, mindestens Titel nutzen\nif (finalQueries.length === 0 && invoice.paperless_title) {\n  finalQueries.push(invoice.paperless_title);\n}\n\n// Aus 1 Rechnung mehrere Items machen\nreturn finalQueries.map(query => ({\n  json: {\n    ...invoice,\n    firefly_query: query\n  }\n}));"
+        "jsCode": "const invoice = $json;\nreturn [{ json: { ...invoice } }];"
       },
       "id": "8acae8d4-a867-4409-be67-abc906eae45d",
-      "name": "Firefly Suchparameter bauen",
+      "name": "FinTS Suchparameter bauen",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -1175,37 +1149,11 @@
     },
     {
       "parameters": {
-        "url": "={{ $('Konfiguration').first().json.firefly_url }}/api/v1/search/transactions",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "query",
-              "value": "={{ $json.firefly_query }}"
-            },
-            {
-              "name": "limit",
-              "value": "25"
-            }
-          ]
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $('Konfiguration').first().json.firefly_token }}"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            }
-          ]
-        },
+        "url": "http://192.168.178.42:3099/transactions/90",
         "options": {}
       },
       "id": "7ea25af1-6178-4baa-b1c4-e407b3e685df",
-      "name": "Firefly - Transaktionen suchen",
+      "name": "FinTS - Transaktionen abrufen",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -1215,7 +1163,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Original-Rechnung aus dem ersten Suchparameter-Item\nconst invoice = $('Firefly Suchparameter bauen').first().json;\n\n// Alle Firefly-Node-Items lesen\nconst items = $input.all();\n\nconst allCandidates = [];\n\nfor (const item of items) {\n  let fireflyRaw = item.json;\n\n  // Bei dir kommt data teilweise als JSON-String\n  if (typeof item.json.data === 'string') {\n    try {\n      fireflyRaw = JSON.parse(item.json.data);\n    } catch (e) {\n      fireflyRaw = {\n        data: [],\n        parse_error: e.message,\n        raw: item.json.data\n      };\n    }\n  }\n\n  const transactionsRaw = Array.isArray(fireflyRaw.data)\n    ? fireflyRaw.data\n    : [];\n\n  for (const txItem of transactionsRaw) {\n    const attr = txItem.attributes || {};\n    const txs = attr.transactions || [];\n\n    for (const tx of txs) {\n      allCandidates.push({\n        transaction_id: txItem.id,\n        date: tx.date || null,\n        description: tx.description || '',\n        amount: tx.amount || null,\n        currency: tx.currency_code || tx.currency_symbol || null,\n        source_name: tx.source_name || '',\n        destination_name: tx.destination_name || '',\n        category_name: tx.category_name || '',\n        notes: tx.notes || '',\n        tags: tx.tags || [],\n        search_query_used: item.json.firefly_query || invoice.firefly_query || ''\n      });\n    }\n  }\n}\n\n// Duplikate anhand transaction_id + amount + date entfernen\nconst seen = new Set();\nconst candidates = allCandidates.filter(c => {\n  const key = `${c.transaction_id}|${c.date}|${c.amount}|${c.description}`;\n  if (seen.has(key)) return false;\n  seen.add(key);\n  return true;\n});\n\nreturn [\n  {\n    json: {\n      invoice,\n      candidates,\n      firefly_result_count: candidates.length,\n      firefly_searches_used: items.map(i => i.json.firefly_query).filter(Boolean)\n    }\n  }\n];"
+        "jsCode": "// Rechnung aus KI-Analyse\nconst invoice = $('FinTS Suchparameter bauen').first().json;\n\n// FinTS Transaktionen (Array direkt)\nconst txList = $input.first().json;\nconst transactions = Array.isArray(txList) ? txList : [];\n\nconst invoiceAmount = parseFloat(invoice.amount_total || 0);\nconst creditor = (invoice.creditor_name || '').toLowerCase();\nconst invoiceNum = (invoice.invoice_number || '').toLowerCase();\nconst payRef = (invoice.payment_reference || '').toLowerCase();\nconst invoiceIban = (invoice.iban || '').replace(/\\s/g, '').toLowerCase();\n\nconst candidates = [];\n\nfor (const tx of transactions) {\n  if (tx.amount >= 0) continue; // Nur Ausgaben\n  const txAmount = Math.abs(tx.amount);\n  const txName = (tx.applicant_name || '').toLowerCase();\n  const txPurpose = (tx.purpose || '').toLowerCase();\n  const txIban = (tx.iban || '').replace(/\\s/g, '').toLowerCase();\n\n  let score = 0;\n\n  // Betrag passt (±10%)\n  if (invoiceAmount > 0) {\n    const diff = Math.abs(txAmount - invoiceAmount) / invoiceAmount;\n    if (diff < 0.05) score += 40;\n    else if (diff < 0.10) score += 20;\n  }\n\n  // Gläubiger im Namen\n  const creditorWords = creditor.split(/\\s+/).filter(w => w.length > 3);\n  for (const word of creditorWords) {\n    if (txName.includes(word) || txPurpose.includes(word)) score += 15;\n  }\n\n  // Rechnungsnummer im Verwendungszweck\n  if (invoiceNum && txPurpose.includes(invoiceNum)) score += 35;\n\n  // Zahlungsreferenz\n  if (payRef && txPurpose.includes(payRef)) score += 30;\n\n  // IBAN-Match\n  if (invoiceIban && invoiceIban.length > 10 && txIban === invoiceIban) score += 25;\n\n  if (score >= 20) {\n    candidates.push({\n      score,\n      date: tx.date,\n      amount: tx.amount,\n      applicant_name: tx.applicant_name,\n      purpose: (tx.purpose || '').substring(0, 100),\n      iban: tx.iban\n    });\n  }\n}\n\ncandidates.sort((a, b) => b.score - a.score);\nconst best = candidates[0] || null;\n\nreturn [{\n  json: {\n    invoice,\n    best_match: best,\n    all_candidates: candidates.slice(0, 3),\n    match_found: best !== null && best.score >= 35\n  }\n}];"
       },
       "id": "3f696ab0-b322-4347-8be5-4a451573ece7",
       "name": "Matching Daten bauen",
@@ -1452,6 +1400,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-11T21:41:30.528Z",
-  "versionId": "305041e5-51f1-458b-a500-60ec6e7cee53"
+  "updatedAt": "2026-06-26T13:51:25.320Z",
+  "versionId": "286dac1c-2a09-4b3c-965d-108be5e39bc1"
 }
