@@ -1,0 +1,31 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {},
+  "createdAt": "2026-06-28T19:33:06.763Z",
+  "id": "HzKeuiw0JKbBcwQm",
+  "isArchived": false,
+  "meta": null,
+  "name": "test",
+  "nodes": [],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {},
+  "shared": [
+    {
+      "updatedAt": "2026-06-28T19:33:06.765Z",
+      "createdAt": "2026-06-28T19:33:06.765Z",
+      "role": "workflow:owner",
+      "workflowId": "HzKeuiw0JKbBcwQm",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-06-28T19:33:06.763Z",
+  "versionId": "66996de5-3655-4cb5-924c-6600cf957f7a"
+}
