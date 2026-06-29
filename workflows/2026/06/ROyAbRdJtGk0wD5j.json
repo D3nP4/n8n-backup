@@ -1,0 +1,206 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-28T15:52:02.793Z",
+    "createdAt": "2026-06-28T15:52:02.793Z",
+    "versionId": "11e37d52-5948-4a24-b62a-870e2c868f45",
+    "workflowId": "ROyAbRdJtGk0wD5j",
+    "nodes": [
+      {
+        "id": "webhook",
+        "name": "Watchtower Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "watchtower-notify",
+          "responseMode": "onReceived",
+          "options": {}
+        },
+        "webhookId": "watchtower-notify"
+      },
+      {
+        "id": "format",
+        "name": "Nachricht formatieren",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const body = $input.first().json.body || {};\nconst raw = body.message || JSON.stringify(body);\n\nconst lines = raw.split(\"\\n\").filter(l => l.trim());\nconst updated = lines.filter(l => l.includes(\"Updated\") || l.includes(\"updated\"));\nconst failed  = lines.filter(l => l.includes(\"Failed\") || l.includes(\"failed\") || l.includes(\"Error\"));\n\nconst summary = lines.find(l => l.includes(\"Scanned\") || l.includes(\"Session done\")) || \"\";\nconst scanned = (summary.match(/Scanned=(\\d+)/) || [])[1] || \"?\";\nconst updCount = (summary.match(/Updated=(\\d+)/) || [])[1] || updated.length;\nconst failCount= (summary.match(/Failed=(\\d+)/)  || [])[1] || failed.length;\n\nlet msg = `🐳 *Watchtower – Container Updates*\\n\\n`;\nmsg += `📦 Gescannt: ${scanned} | ✅ Aktualisiert: ${updCount} | ❌ Fehler: ${failCount}\\n`;\n\nif (updated.length > 0) {\n  msg += `\\n✅ *Aktualisiert:*\\n`;\n  updated.forEach(l => { msg += `• ${l.replace(/.*\\//, \"\").replace(/[\"]/g, \"\").trim()}\\n`; });\n}\nif (failed.length > 0) {\n  msg += `\\n❌ *Fehler:*\\n`;\n  failed.forEach(l => { msg += `• ${l.trim()}\\n`; });\n}\n\nconst now = new Date().toLocaleString(\"de-DE\", {day:\"2-digit\",month:\"2-digit\",year:\"numeric\",hour:\"2-digit\",minute:\"2-digit\"});\nmsg += `\\n🕐 ${now}`;\n\nreturn [{ json: { message: msg } }];"
+        }
+      },
+      {
+        "id": "telegram",
+        "name": "Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendMessage",
+          "chatId": "6422093154",
+          "text": "={{ $json.message }}",
+          "additionalFields": {
+            "parse_mode": "Markdown",
+            "appendAttribution": false
+          }
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "97bf3738-7f55-44c1-b739-7660744ff397"
+      }
+    ],
+    "connections": {
+      "Watchtower Webhook": {
+        "main": [
+          [
+            {
+              "node": "Nachricht formatieren",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Nachricht formatieren": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "11e37d52-5948-4a24-b62a-870e2c868f45",
+  "connections": {
+    "Watchtower Webhook": {
+      "main": [
+        [
+          {
+            "node": "Nachricht formatieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nachricht formatieren": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-28T15:52:02.789Z",
+  "id": "ROyAbRdJtGk0wD5j",
+  "isArchived": false,
+  "meta": null,
+  "name": "🐳 Watchtower Updates → Telegram",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Watchtower Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "watchtower-notify",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "watchtower-notify"
+    },
+    {
+      "id": "format",
+      "name": "Nachricht formatieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || {};\nconst raw = body.message || JSON.stringify(body);\n\nconst lines = raw.split(\"\\n\").filter(l => l.trim());\nconst updated = lines.filter(l => l.includes(\"Updated\") || l.includes(\"updated\"));\nconst failed  = lines.filter(l => l.includes(\"Failed\") || l.includes(\"failed\") || l.includes(\"Error\"));\n\nconst summary = lines.find(l => l.includes(\"Scanned\") || l.includes(\"Session done\")) || \"\";\nconst scanned = (summary.match(/Scanned=(\\d+)/) || [])[1] || \"?\";\nconst updCount = (summary.match(/Updated=(\\d+)/) || [])[1] || updated.length;\nconst failCount= (summary.match(/Failed=(\\d+)/)  || [])[1] || failed.length;\n\nlet msg = `🐳 *Watchtower – Container Updates*\\n\\n`;\nmsg += `📦 Gescannt: ${scanned} | ✅ Aktualisiert: ${updCount} | ❌ Fehler: ${failCount}\\n`;\n\nif (updated.length > 0) {\n  msg += `\\n✅ *Aktualisiert:*\\n`;\n  updated.forEach(l => { msg += `• ${l.replace(/.*\\//, \"\").replace(/[\"]/g, \"\").trim()}\\n`; });\n}\nif (failed.length > 0) {\n  msg += `\\n❌ *Fehler:*\\n`;\n  failed.forEach(l => { msg += `• ${l.trim()}\\n`; });\n}\n\nconst now = new Date().toLocaleString(\"de-DE\", {day:\"2-digit\",month:\"2-digit\",year:\"numeric\",hour:\"2-digit\",minute:\"2-digit\"});\nmsg += `\\n🕐 ${now}`;\n\nreturn [{ json: { message: msg } }];"
+      }
+    },
+    {
+      "id": "telegram",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "6422093154",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "97bf3738-7f55-44c1-b739-7660744ff397"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-28T15:52:02.792Z",
+      "createdAt": "2026-06-28T15:52:02.792Z",
+      "role": "workflow:owner",
+      "workflowId": "ROyAbRdJtGk0wD5j",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-28T15:52:02.789Z",
+  "versionId": "11e37d52-5948-4a24-b62a-870e2c868f45"
+}
