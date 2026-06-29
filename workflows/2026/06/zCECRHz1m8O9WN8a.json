@@ -1,0 +1,507 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-06-29T04:56:16.838Z",
+    "createdAt": "2026-06-29T04:56:16.838Z",
+    "versionId": "dab2bc16-da54-4d8e-8858-0899e948fbdc",
+    "workflowId": "zCECRHz1m8O9WN8a",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Täglich 09:00",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 24,
+                "triggerAtHour": 9
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch",
+        "name": "Transaktionen 7 Tage",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "http://192.168.178.42:3099/transactions/7",
+          "options": {}
+        }
+      },
+      {
+        "id": "check",
+        "name": "Neues Gehalt prüfen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "jsCode": "\nconst staticData = $getWorkflowStaticData('global');\nconst lastProcessed = staticData.lastSalaryDate || '';\nconst txs = $input.first().json;\nconst arr = Array.isArray(txs) ? txs : (txs.transactions || []);\n\nconst salary = arr.find(t => {\n  const name = (t.applicant_name || '').toLowerCase();\n  const amt = parseFloat(t.amount || 0);\n  return name.includes('mandala') && amt > 1000 && t.date !== lastProcessed;\n});\n\nif (!salary) return [{ json: { newSalary: false } }];\n\nstaticData.lastSalaryDate = salary.date;\n\nreturn [{ json: {\n  newSalary: true,\n  salaryAmount: parseFloat(salary.amount),\n  salaryDate: salary.date\n} }];\n"
+        }
+      },
+      {
+        "id": "if_new",
+        "name": "Neues Gehalt?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          660,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.newSalary }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "fetch45",
+        "name": "Transaktionen 45 Tage",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          880,
+          -80
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "http://192.168.178.42:3099/transactions/45",
+          "options": {}
+        }
+      },
+      {
+        "id": "balance",
+        "name": "Kontostand",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1100,
+          -80
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "http://192.168.178.42:3099/balance",
+          "options": {}
+        }
+      },
+      {
+        "id": "calc",
+        "name": "Fixkosten berechnen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1320,
+          -80
+        ],
+        "parameters": {
+          "jsCode": "\nconst salaryData = $('Neues Gehalt prüfen').first().json;\nconst txs = $('Transaktionen 45 Tage').first().json;\nconst arr = Array.isArray(txs) ? txs : (txs.transactions || []);\nconst salary = salaryData.salaryAmount;\n\n// Girokonto-Stand (IBAN endet auf 7000)\nconst balArr = $input.first().json;\nconst accounts = Array.isArray(balArr) ? balArr : [balArr];\nconst girokonto = accounts.find(a => (a.iban || '').endsWith('7000')) || accounts[0];\nconst currentBalance = parseFloat(girokonto.balance || 0);\n\nconst FIXKOSTEN = [\n  { name: 'Miete',                  keywords: ['gronwald', 'sigrid'], amount: 470.00 },\n  { name: 'Allianz Lebensversicherung', keywords: ['allianz lebens'],  amount: 130.00 },\n  { name: 'Canada Life',            keywords: ['canada life'],         amount: 55.94  },\n  { name: 'Telefonica',             keywords: ['telefonica'],          amount: 43.23  },\n  { name: 'Vattenfall (Strom)',      keywords: ['vattenfall'],          amount: 33.00  },\n  { name: 'Debeka KV',              keywords: ['debeka kran'],         amount: 28.29  },\n  { name: 'ARAG',                   keywords: ['arag'],                amount: 18.30  },\n  { name: 'Barmenia',               keywords: ['barmenia'],            amount: 4.61   },\n];\n\n// Fixkosten die DIESEN MONAT bereits abgebucht wurden\nconst now = new Date();\nconst cm = now.getMonth();\nconst cy = now.getFullYear();\nconst paidThisMonth = arr.filter(t => {\n  const d = new Date(t.date);\n  return parseFloat(t.amount) < 0 && d.getMonth() === cm && d.getFullYear() === cy;\n});\n\nconst result = FIXKOSTEN.map(fk => {\n  const paid = paidThisMonth.find(t =>\n    fk.keywords.some(kw => (t.applicant_name || '').toLowerCase().includes(kw))\n  );\n  return { ...fk, paid: !!paid, paidAmount: paid ? Math.abs(parseFloat(paid.amount)) : null };\n});\n\nconst stillOpen = result.filter(f => !f.paid).reduce((s, f) => s + f.amount, 0);\nconst transferAmount = currentBalance - stillOpen;\nconst fmt = n => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n\nlet msg = `\\u{1F4B0} *Gehaltseingang – ${fmt(salary)} €*\\n`;\nmsg += `\\u{1F4C5} ${new Date(salaryData.salaryDate).toLocaleDateString('de-DE')}\\n`;\nmsg += `\\u{1F3E6} Kontostand: *${fmt(currentBalance)} €*\\n\\n`;\n\nconst open = result.filter(f => !f.paid);\nconst paid_items = result.filter(f => f.paid);\n\nif (open.length) {\n  msg += `\\u{1F4CB} *Noch offene Fixkosten:*\\n`;\n  open.forEach(f => { msg += `  • ${f.name}: ${fmt(f.amount)} €\\n`; });\n  msg += `  ∑ *${fmt(stillOpen)} €*\\n\\n`;\n}\nif (paid_items.length) {\n  msg += `✅ *Bereits abgebucht:*\\n`;\n  paid_items.forEach(f => { msg += `  • ${f.name}: ${fmt(f.paidAmount || f.amount)} €\\n`; });\n  msg += `\\n`;\n}\n\nmsg += `\\u{1F4B3} *→ ${fmt(transferAmount)} € auf C24 überweisen*`;\n\nreturn [{ json: { message: msg, transferAmount, currentBalance, salary, stillOpen } }];\n"
+        }
+      },
+      {
+        "id": "telegram",
+        "name": "Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1540,
+          -80
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendMessage",
+          "chatId": "6422093154",
+          "text": "={{ $json.message }}",
+          "additionalFields": {
+            "parse_mode": "Markdown",
+            "appendAttribution": false
+          }
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "239c4202-3dd2-4daf-bd2a-db78188b0451"
+      }
+    ],
+    "connections": {
+      "Täglich 09:00": {
+        "main": [
+          [
+            {
+              "node": "Transaktionen 7 Tage",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Transaktionen 7 Tage": {
+        "main": [
+          [
+            {
+              "node": "Neues Gehalt prüfen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Neues Gehalt prüfen": {
+        "main": [
+          [
+            {
+              "node": "Neues Gehalt?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Neues Gehalt?": {
+        "main": [
+          [
+            {
+              "node": "Transaktionen 45 Tage",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Transaktionen 45 Tage": {
+        "main": [
+          [
+            {
+              "node": "Kontostand",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Kontostand": {
+        "main": [
+          [
+            {
+              "node": "Fixkosten berechnen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fixkosten berechnen": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "dab2bc16-da54-4d8e-8858-0899e948fbdc",
+  "connections": {
+    "Täglich 09:00": {
+      "main": [
+        [
+          {
+            "node": "Transaktionen 7 Tage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transaktionen 7 Tage": {
+      "main": [
+        [
+          {
+            "node": "Neues Gehalt prüfen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neues Gehalt prüfen": {
+      "main": [
+        [
+          {
+            "node": "Neues Gehalt?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neues Gehalt?": {
+      "main": [
+        [
+          {
+            "node": "Transaktionen 45 Tage",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Transaktionen 45 Tage": {
+      "main": [
+        [
+          {
+            "node": "Kontostand",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kontostand": {
+      "main": [
+        [
+          {
+            "node": "Fixkosten berechnen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fixkosten berechnen": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-28T19:37:40.616Z",
+  "id": "zCECRHz1m8O9WN8a",
+  "isArchived": false,
+  "meta": null,
+  "name": "💰 Gehaltseingang → C24 Überweisung",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Täglich 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24,
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch",
+      "name": "Transaktionen 7 Tage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.178.42:3099/transactions/7",
+        "options": {}
+      }
+    },
+    {
+      "id": "check",
+      "name": "Neues Gehalt prüfen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "\nconst staticData = $getWorkflowStaticData('global');\nconst lastProcessed = staticData.lastSalaryDate || '';\nconst txs = $input.first().json;\nconst arr = Array.isArray(txs) ? txs : (txs.transactions || []);\n\nconst salary = arr.find(t => {\n  const name = (t.applicant_name || '').toLowerCase();\n  const amt = parseFloat(t.amount || 0);\n  return name.includes('mandala') && amt > 1000 && t.date !== lastProcessed;\n});\n\nif (!salary) return [{ json: { newSalary: false } }];\n\nstaticData.lastSalaryDate = salary.date;\n\nreturn [{ json: {\n  newSalary: true,\n  salaryAmount: parseFloat(salary.amount),\n  salaryDate: salary.date\n} }];\n"
+      }
+    },
+    {
+      "id": "if_new",
+      "name": "Neues Gehalt?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.newSalary }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "fetch45",
+      "name": "Transaktionen 45 Tage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -80
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.178.42:3099/transactions/45",
+        "options": {}
+      }
+    },
+    {
+      "id": "balance",
+      "name": "Kontostand",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        -80
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.178.42:3099/balance",
+        "options": {}
+      }
+    },
+    {
+      "id": "calc",
+      "name": "Fixkosten berechnen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        -80
+      ],
+      "parameters": {
+        "jsCode": "\nconst salaryData = $('Neues Gehalt prüfen').first().json;\nconst txs = $('Transaktionen 45 Tage').first().json;\nconst arr = Array.isArray(txs) ? txs : (txs.transactions || []);\nconst salary = salaryData.salaryAmount;\n\n// Girokonto-Stand (IBAN endet auf 7000)\nconst balArr = $input.first().json;\nconst accounts = Array.isArray(balArr) ? balArr : [balArr];\nconst girokonto = accounts.find(a => (a.iban || '').endsWith('7000')) || accounts[0];\nconst currentBalance = parseFloat(girokonto.balance || 0);\n\nconst FIXKOSTEN = [\n  { name: 'Miete',                  keywords: ['gronwald', 'sigrid'], amount: 470.00 },\n  { name: 'Allianz Lebensversicherung', keywords: ['allianz lebens'],  amount: 130.00 },\n  { name: 'Canada Life',            keywords: ['canada life'],         amount: 55.94  },\n  { name: 'Telefonica',             keywords: ['telefonica'],          amount: 43.23  },\n  { name: 'Vattenfall (Strom)',      keywords: ['vattenfall'],          amount: 33.00  },\n  { name: 'Debeka KV',              keywords: ['debeka kran'],         amount: 28.29  },\n  { name: 'ARAG',                   keywords: ['arag'],                amount: 18.30  },\n  { name: 'Barmenia',               keywords: ['barmenia'],            amount: 4.61   },\n];\n\n// Fixkosten die DIESEN MONAT bereits abgebucht wurden\nconst now = new Date();\nconst cm = now.getMonth();\nconst cy = now.getFullYear();\nconst paidThisMonth = arr.filter(t => {\n  const d = new Date(t.date);\n  return parseFloat(t.amount) < 0 && d.getMonth() === cm && d.getFullYear() === cy;\n});\n\nconst result = FIXKOSTEN.map(fk => {\n  const paid = paidThisMonth.find(t =>\n    fk.keywords.some(kw => (t.applicant_name || '').toLowerCase().includes(kw))\n  );\n  return { ...fk, paid: !!paid, paidAmount: paid ? Math.abs(parseFloat(paid.amount)) : null };\n});\n\nconst stillOpen = result.filter(f => !f.paid).reduce((s, f) => s + f.amount, 0);\nconst transferAmount = currentBalance - stillOpen;\nconst fmt = n => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n\nlet msg = `\\u{1F4B0} *Gehaltseingang – ${fmt(salary)} €*\\n`;\nmsg += `\\u{1F4C5} ${new Date(salaryData.salaryDate).toLocaleDateString('de-DE')}\\n`;\nmsg += `\\u{1F3E6} Kontostand: *${fmt(currentBalance)} €*\\n\\n`;\n\nconst open = result.filter(f => !f.paid);\nconst paid_items = result.filter(f => f.paid);\n\nif (open.length) {\n  msg += `\\u{1F4CB} *Noch offene Fixkosten:*\\n`;\n  open.forEach(f => { msg += `  • ${f.name}: ${fmt(f.amount)} €\\n`; });\n  msg += `  ∑ *${fmt(stillOpen)} €*\\n\\n`;\n}\nif (paid_items.length) {\n  msg += `✅ *Bereits abgebucht:*\\n`;\n  paid_items.forEach(f => { msg += `  • ${f.name}: ${fmt(f.paidAmount || f.amount)} €\\n`; });\n  msg += `\\n`;\n}\n\nmsg += `\\u{1F4B3} *→ ${fmt(transferAmount)} € auf C24 überweisen*`;\n\nreturn [{ json: { message: msg, transferAmount, currentBalance, salary, stillOpen } }];\n"
+      }
+    },
+    {
+      "id": "telegram",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1540,
+        -80
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "6422093154",
+        "text": "={{ $json.message }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "239c4202-3dd2-4daf-bd2a-db78188b0451"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-28T19:37:40.618Z",
+      "createdAt": "2026-06-28T19:37:40.618Z",
+      "role": "workflow:owner",
+      "workflowId": "zCECRHz1m8O9WN8a",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Täglich 09:00": {
+      "recurrenceRules": []
+    },
+    "global": {}
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-06-29T04:56:16.831Z",
+  "versionId": "dab2bc16-da54-4d8e-8858-0899e948fbdc"
+}
