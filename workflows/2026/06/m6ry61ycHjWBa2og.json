@@ -1,75 +1,7 @@
 {
-  "active": true,
-  "activeVersion": {
-    "updatedAt": "2026-06-16T09:06:37.257Z",
-    "createdAt": "2026-06-16T09:06:37.257Z",
-    "versionId": "2e2de7aa-f20a-4c67-b3ff-f6075ab0ae0b",
-    "workflowId": "m6ry61ycHjWBa2og",
-    "nodes": [
-      {
-        "id": "webhook",
-        "name": "HC Webhook",
-        "type": "n8n-nodes-base.webhook",
-        "typeVersion": 2,
-        "position": [
-          0,
-          0
-        ],
-        "parameters": {
-          "httpMethod": "POST",
-          "path": "healthchecks-alert",
-          "responseMode": "onReceived",
-          "options": {}
-        },
-        "webhookId": "healthchecks-alert"
-      },
-      {
-        "id": "telegram",
-        "name": "Telegram Alert",
-        "type": "n8n-nodes-base.telegram",
-        "typeVersion": 1.2,
-        "position": [
-          220,
-          0
-        ],
-        "parameters": {
-          "resource": "message",
-          "operation": "sendMessage",
-          "chatId": "6422093154",
-          "text": "={{ (() => {\n  const b = $json.body || {};\n  const status = b.status || 'down';\n  const name = b.name || 'Unbekannter Check';\n  const desc = b.desc || '';\n  const tags = (b.tags || '').split(' ').filter(Boolean).map(t => '#' + t).join(' ');\n  const checkUrl = b.check_url || 'https://hc.paun01.de';\n  const fmtTime = (iso) => {\n    if (!iso) return '–';\n    return new Date(iso).toLocaleString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});\n  };\n  const lastPing = fmtTime(b.last_ping);\n  const isUp = status === 'up';\n  const header = isUp\n    ? '✅ *Health Check erholt*'\n    : status === 'failure'\n      ? '🟠 *Health Check – Exit-Fehler*'\n      : '🔴 *Health Check ausgefallen*';\n  let msg = header + '\\n\\n';\n  msg += '📋 *' + name + '*\\n';\n  msg += (isUp ? '⏰ Wieder aktiv: ' : '⏰ Letzter Ping: ') + lastPing + '\\n';\n  if (desc) msg += '📝 ' + desc + '\\n';\n  if (tags) msg += '🏷 ' + tags + '\\n';\n  msg += '\\n[Details bei Healthchecks öffnen](' + checkUrl + ')';\n  return msg;\n})() }}",
-          "additionalFields": {
-            "appendAttribution": false,
-            "parse_mode": "Markdown"
-          }
-        },
-        "credentials": {
-          "telegramApi": {
-            "id": "qBKlXY3RPqAi76pW",
-            "name": "Telegram account"
-          }
-        },
-        "webhookId": "594a18aa-dc99-45e7-b506-fb093e168ded"
-      }
-    ],
-    "connections": {
-      "HC Webhook": {
-        "main": [
-          [
-            {
-              "node": "Telegram Alert",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      }
-    },
-    "authors": "Dennis Paun",
-    "name": null,
-    "description": null,
-    "autosaved": false
-  },
-  "activeVersionId": "2e2de7aa-f20a-4c67-b3ff-f6075ab0ae0b",
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
   "connections": {
     "HC Webhook": {
       "main": [
@@ -85,7 +17,7 @@
   },
   "createdAt": "2026-06-11T21:39:28.492Z",
   "id": "m6ry61ycHjWBa2og",
-  "isArchived": false,
+  "isArchived": true,
   "meta": null,
   "name": "🔔 Healthchecks Alert → Telegram",
   "nodes": [
@@ -153,6 +85,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-16T09:06:37.256Z",
-  "versionId": "2e2de7aa-f20a-4c67-b3ff-f6075ab0ae0b"
+  "updatedAt": "2026-06-28T15:49:19.000Z",
+  "versionId": "552d1a94-f059-46ea-b591-084d8cbff2fd"
 }
