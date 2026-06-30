@@ -1,14 +1,14 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-29T04:56:16.838Z",
-    "createdAt": "2026-06-29T04:56:16.838Z",
-    "versionId": "dab2bc16-da54-4d8e-8858-0899e948fbdc",
+    "updatedAt": "2026-06-29T10:07:46.187Z",
+    "createdAt": "2026-06-29T10:07:46.187Z",
+    "versionId": "1d1c45cd-e233-4dfa-842b-bb0c0422375f",
     "workflowId": "zCECRHz1m8O9WN8a",
     "nodes": [
       {
         "id": "trigger",
-        "name": "Täglich 09:00",
+        "name": "Täglich 14:00",
         "type": "n8n-nodes-base.scheduleTrigger",
         "typeVersion": 1.2,
         "position": [
@@ -19,9 +19,8 @@
           "rule": {
             "interval": [
               {
-                "field": "hours",
-                "hoursInterval": 24,
-                "triggerAtHour": 9
+                "field": "cronExpression",
+                "expression": "0 12 * * *"
               }
             ]
           }
@@ -39,7 +38,14 @@
         "parameters": {
           "method": "GET",
           "url": "http://192.168.178.42:3099/transactions/7",
-          "options": {}
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
         }
       },
       {
@@ -52,7 +58,7 @@
           0
         ],
         "parameters": {
-          "jsCode": "\nconst staticData = $getWorkflowStaticData('global');\nconst lastProcessed = staticData.lastSalaryDate || '';\nconst txs = $input.first().json;\nconst arr = Array.isArray(txs) ? txs : (txs.transactions || []);\n\nconst salary = arr.find(t => {\n  const name = (t.applicant_name || '').toLowerCase();\n  const amt = parseFloat(t.amount || 0);\n  return name.includes('mandala') && amt > 1000 && t.date !== lastProcessed;\n});\n\nif (!salary) return [{ json: { newSalary: false } }];\n\nstaticData.lastSalaryDate = salary.date;\n\nreturn [{ json: {\n  newSalary: true,\n  salaryAmount: parseFloat(salary.amount),\n  salaryDate: salary.date\n} }];\n"
+          "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst lastProcessed = staticData.lastSalaryDate || '';\n\n// fullResponse: body enthält den kompletten Array\nconst arr = $input.first().json.body;\n\nconst salary = arr.find(t => {\n  const name = (t.applicant_name || '').toLowerCase();\n  const amt = parseFloat(t.amount || 0);\n  return name.includes('mandala') && amt > 1000 && t.date !== lastProcessed;\n});\n\nif (!salary) return [{ json: { newSalary: false } }];\n\nstaticData.lastSalaryDate = salary.date;\nreturn [{ json: { newSalary: true, salaryAmount: parseFloat(salary.amount), salaryDate: salary.date } }];"
         }
       },
       {
@@ -97,7 +103,14 @@
         "parameters": {
           "method": "GET",
           "url": "http://192.168.178.42:3099/transactions/45",
-          "options": {}
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
         }
       },
       {
@@ -112,7 +125,14 @@
         "parameters": {
           "method": "GET",
           "url": "http://192.168.178.42:3099/balance",
-          "options": {}
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
         }
       },
       {
@@ -125,7 +145,7 @@
           -80
         ],
         "parameters": {
-          "jsCode": "\nconst salaryData = $('Neues Gehalt prüfen').first().json;\nconst txs = $('Transaktionen 45 Tage').first().json;\nconst arr = Array.isArray(txs) ? txs : (txs.transactions || []);\nconst salary = salaryData.salaryAmount;\n\n// Girokonto-Stand (IBAN endet auf 7000)\nconst balArr = $input.first().json;\nconst accounts = Array.isArray(balArr) ? balArr : [balArr];\nconst girokonto = accounts.find(a => (a.iban || '').endsWith('7000')) || accounts[0];\nconst currentBalance = parseFloat(girokonto.balance || 0);\n\nconst FIXKOSTEN = [\n  { name: 'Miete',                  keywords: ['gronwald', 'sigrid'], amount: 470.00 },\n  { name: 'Allianz Lebensversicherung', keywords: ['allianz lebens'],  amount: 130.00 },\n  { name: 'Canada Life',            keywords: ['canada life'],         amount: 55.94  },\n  { name: 'Telefonica',             keywords: ['telefonica'],          amount: 43.23  },\n  { name: 'Vattenfall (Strom)',      keywords: ['vattenfall'],          amount: 33.00  },\n  { name: 'Debeka KV',              keywords: ['debeka kran'],         amount: 28.29  },\n  { name: 'ARAG',                   keywords: ['arag'],                amount: 18.30  },\n  { name: 'Barmenia',               keywords: ['barmenia'],            amount: 4.61   },\n];\n\n// Fixkosten die DIESEN MONAT bereits abgebucht wurden\nconst now = new Date();\nconst cm = now.getMonth();\nconst cy = now.getFullYear();\nconst paidThisMonth = arr.filter(t => {\n  const d = new Date(t.date);\n  return parseFloat(t.amount) < 0 && d.getMonth() === cm && d.getFullYear() === cy;\n});\n\nconst result = FIXKOSTEN.map(fk => {\n  const paid = paidThisMonth.find(t =>\n    fk.keywords.some(kw => (t.applicant_name || '').toLowerCase().includes(kw))\n  );\n  return { ...fk, paid: !!paid, paidAmount: paid ? Math.abs(parseFloat(paid.amount)) : null };\n});\n\nconst stillOpen = result.filter(f => !f.paid).reduce((s, f) => s + f.amount, 0);\nconst transferAmount = currentBalance - stillOpen;\nconst fmt = n => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n\nlet msg = `\\u{1F4B0} *Gehaltseingang – ${fmt(salary)} €*\\n`;\nmsg += `\\u{1F4C5} ${new Date(salaryData.salaryDate).toLocaleDateString('de-DE')}\\n`;\nmsg += `\\u{1F3E6} Kontostand: *${fmt(currentBalance)} €*\\n\\n`;\n\nconst open = result.filter(f => !f.paid);\nconst paid_items = result.filter(f => f.paid);\n\nif (open.length) {\n  msg += `\\u{1F4CB} *Noch offene Fixkosten:*\\n`;\n  open.forEach(f => { msg += `  • ${f.name}: ${fmt(f.amount)} €\\n`; });\n  msg += `  ∑ *${fmt(stillOpen)} €*\\n\\n`;\n}\nif (paid_items.length) {\n  msg += `✅ *Bereits abgebucht:*\\n`;\n  paid_items.forEach(f => { msg += `  • ${f.name}: ${fmt(f.paidAmount || f.amount)} €\\n`; });\n  msg += `\\n`;\n}\n\nmsg += `\\u{1F4B3} *→ ${fmt(transferAmount)} € auf C24 überweisen*`;\n\nreturn [{ json: { message: msg, transferAmount, currentBalance, salary, stillOpen } }];\n"
+          "jsCode": "const salaryData = $('Neues Gehalt prüfen').first().json;\nconst salaryDate = salaryData.salaryDate;\nconst salary = salaryData.salaryAmount;\nconst salaryDay = new Date(salaryDate).getDate();\n\nconst balArr = $input.first().json.body;\nconst girokonto = balArr.find(a => (a.iban || '').endsWith('7000')) || balArr[0];\nconst currentBalance = parseFloat(girokonto.balance || 0);\n\nconst FIXKOSTEN = [\n  { name: 'Miete (28.)',           amount: 470.00, nurVorDem28: true },\n  { name: 'Allianz Lebensvers.',   amount: 130.00 },\n  { name: 'Iris Moenig (Fahrrad)', amount: 140.00 },\n  { name: 'Canada Life',           amount: 55.94  },\n  { name: 'Telefonica',            amount: 43.23  },\n  { name: 'Vattenfall (Strom)',    amount: 33.00  },\n  { name: 'Martin Paun (Handy)',   amount: 30.00  },\n  { name: 'Debeka KV',             amount: 28.29  },\n  { name: 'ARAG',                  amount: 18.30  },\n  { name: 'Claude Pro',            amount: 19.00  },\n  { name: 'Barmenia',              amount: 4.61   },\n];\n\nconst mieteSchonBezahlt = salaryDay >= 28;\nconst zuReservieren = FIXKOSTEN.filter(f => !(f.nurVorDem28 && mieteSchonBezahlt));\nconst reserve = zuReservieren.reduce((s, f) => s + f.amount, 0);\nconst transferAmount = currentBalance - reserve;\n\nconst fmt = n => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n\nlet msg = '\\u{1F4B0} *Gehaltseingang \\u2013 ' + fmt(salary) + ' \\u20AC*\\n';\nmsg += '\\u{1F3E6} *Kontostand: ' + fmt(currentBalance) + ' \\u20AC*\\n';\nmsg += '\\u{1F4C5} ' + new Date(salaryDate).toLocaleDateString('de-DE') + '\\n\\n';\n\nif (mieteSchonBezahlt) {\n  msg += '\\u2705 *Miete bereits abgebucht*\\n\\n';\n}\n\nmsg += '\\u{1F4CB} *Reserviert f\\u00FCr Folgemonat:*\\n';\nzuReservieren.forEach(f => { msg += '  \\u2022 ' + f.name + ': ' + fmt(f.amount) + ' \\u20AC\\n'; });\nmsg += '  \\u2211 *' + fmt(reserve) + ' \\u20AC*\\n\\n';\nmsg += '\\u{1F4B3} *\\u2192 ' + fmt(transferAmount) + ' \\u20AC auf C24 \\u00FCberweisen*';\n\nreturn [{ json: { message: msg, transferAmount, currentBalance, salary, reserve } }];"
         }
       },
       {
@@ -157,17 +177,6 @@
       }
     ],
     "connections": {
-      "Täglich 09:00": {
-        "main": [
-          [
-            {
-              "node": "Transaktionen 7 Tage",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
       "Transaktionen 7 Tage": {
         "main": [
           [
@@ -234,6 +243,17 @@
             }
           ]
         ]
+      },
+      "Täglich 14:00": {
+        "main": [
+          [
+            {
+              "node": "Transaktionen 7 Tage",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
@@ -241,19 +261,8 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "dab2bc16-da54-4d8e-8858-0899e948fbdc",
+  "activeVersionId": "1d1c45cd-e233-4dfa-842b-bb0c0422375f",
   "connections": {
-    "Täglich 09:00": {
-      "main": [
-        [
-          {
-            "node": "Transaktionen 7 Tage",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Transaktionen 7 Tage": {
       "main": [
         [
@@ -320,6 +329,17 @@
           }
         ]
       ]
+    },
+    "Täglich 14:00": {
+      "main": [
+        [
+          {
+            "node": "Transaktionen 7 Tage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "createdAt": "2026-06-28T19:37:40.616Z",
@@ -330,7 +350,7 @@
   "nodes": [
     {
       "id": "trigger",
-      "name": "Täglich 09:00",
+      "name": "Täglich 14:00",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
@@ -341,9 +361,8 @@
         "rule": {
           "interval": [
             {
-              "field": "hours",
-              "hoursInterval": 24,
-              "triggerAtHour": 9
+              "field": "cronExpression",
+              "expression": "0 12 * * *"
             }
           ]
         }
@@ -361,7 +380,14 @@
       "parameters": {
         "method": "GET",
         "url": "http://192.168.178.42:3099/transactions/7",
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
       }
     },
     {
@@ -374,7 +400,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "\nconst staticData = $getWorkflowStaticData('global');\nconst lastProcessed = staticData.lastSalaryDate || '';\nconst txs = $input.first().json;\nconst arr = Array.isArray(txs) ? txs : (txs.transactions || []);\n\nconst salary = arr.find(t => {\n  const name = (t.applicant_name || '').toLowerCase();\n  const amt = parseFloat(t.amount || 0);\n  return name.includes('mandala') && amt > 1000 && t.date !== lastProcessed;\n});\n\nif (!salary) return [{ json: { newSalary: false } }];\n\nstaticData.lastSalaryDate = salary.date;\n\nreturn [{ json: {\n  newSalary: true,\n  salaryAmount: parseFloat(salary.amount),\n  salaryDate: salary.date\n} }];\n"
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst lastProcessed = staticData.lastSalaryDate || '';\n\n// fullResponse: body enthält den kompletten Array\nconst arr = $input.first().json.body;\n\nconst salary = arr.find(t => {\n  const name = (t.applicant_name || '').toLowerCase();\n  const amt = parseFloat(t.amount || 0);\n  return name.includes('mandala') && amt > 1000 && t.date !== lastProcessed;\n});\n\nif (!salary) return [{ json: { newSalary: false } }];\n\nstaticData.lastSalaryDate = salary.date;\nreturn [{ json: { newSalary: true, salaryAmount: parseFloat(salary.amount), salaryDate: salary.date } }];"
       }
     },
     {
@@ -419,7 +445,14 @@
       "parameters": {
         "method": "GET",
         "url": "http://192.168.178.42:3099/transactions/45",
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
       }
     },
     {
@@ -434,7 +467,14 @@
       "parameters": {
         "method": "GET",
         "url": "http://192.168.178.42:3099/balance",
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
       }
     },
     {
@@ -447,7 +487,7 @@
         -80
       ],
       "parameters": {
-        "jsCode": "\nconst salaryData = $('Neues Gehalt prüfen').first().json;\nconst txs = $('Transaktionen 45 Tage').first().json;\nconst arr = Array.isArray(txs) ? txs : (txs.transactions || []);\nconst salary = salaryData.salaryAmount;\n\n// Girokonto-Stand (IBAN endet auf 7000)\nconst balArr = $input.first().json;\nconst accounts = Array.isArray(balArr) ? balArr : [balArr];\nconst girokonto = accounts.find(a => (a.iban || '').endsWith('7000')) || accounts[0];\nconst currentBalance = parseFloat(girokonto.balance || 0);\n\nconst FIXKOSTEN = [\n  { name: 'Miete',                  keywords: ['gronwald', 'sigrid'], amount: 470.00 },\n  { name: 'Allianz Lebensversicherung', keywords: ['allianz lebens'],  amount: 130.00 },\n  { name: 'Canada Life',            keywords: ['canada life'],         amount: 55.94  },\n  { name: 'Telefonica',             keywords: ['telefonica'],          amount: 43.23  },\n  { name: 'Vattenfall (Strom)',      keywords: ['vattenfall'],          amount: 33.00  },\n  { name: 'Debeka KV',              keywords: ['debeka kran'],         amount: 28.29  },\n  { name: 'ARAG',                   keywords: ['arag'],                amount: 18.30  },\n  { name: 'Barmenia',               keywords: ['barmenia'],            amount: 4.61   },\n];\n\n// Fixkosten die DIESEN MONAT bereits abgebucht wurden\nconst now = new Date();\nconst cm = now.getMonth();\nconst cy = now.getFullYear();\nconst paidThisMonth = arr.filter(t => {\n  const d = new Date(t.date);\n  return parseFloat(t.amount) < 0 && d.getMonth() === cm && d.getFullYear() === cy;\n});\n\nconst result = FIXKOSTEN.map(fk => {\n  const paid = paidThisMonth.find(t =>\n    fk.keywords.some(kw => (t.applicant_name || '').toLowerCase().includes(kw))\n  );\n  return { ...fk, paid: !!paid, paidAmount: paid ? Math.abs(parseFloat(paid.amount)) : null };\n});\n\nconst stillOpen = result.filter(f => !f.paid).reduce((s, f) => s + f.amount, 0);\nconst transferAmount = currentBalance - stillOpen;\nconst fmt = n => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n\nlet msg = `\\u{1F4B0} *Gehaltseingang – ${fmt(salary)} €*\\n`;\nmsg += `\\u{1F4C5} ${new Date(salaryData.salaryDate).toLocaleDateString('de-DE')}\\n`;\nmsg += `\\u{1F3E6} Kontostand: *${fmt(currentBalance)} €*\\n\\n`;\n\nconst open = result.filter(f => !f.paid);\nconst paid_items = result.filter(f => f.paid);\n\nif (open.length) {\n  msg += `\\u{1F4CB} *Noch offene Fixkosten:*\\n`;\n  open.forEach(f => { msg += `  • ${f.name}: ${fmt(f.amount)} €\\n`; });\n  msg += `  ∑ *${fmt(stillOpen)} €*\\n\\n`;\n}\nif (paid_items.length) {\n  msg += `✅ *Bereits abgebucht:*\\n`;\n  paid_items.forEach(f => { msg += `  • ${f.name}: ${fmt(f.paidAmount || f.amount)} €\\n`; });\n  msg += `\\n`;\n}\n\nmsg += `\\u{1F4B3} *→ ${fmt(transferAmount)} € auf C24 überweisen*`;\n\nreturn [{ json: { message: msg, transferAmount, currentBalance, salary, stillOpen } }];\n"
+        "jsCode": "const salaryData = $('Neues Gehalt prüfen').first().json;\nconst salaryDate = salaryData.salaryDate;\nconst salary = salaryData.salaryAmount;\nconst salaryDay = new Date(salaryDate).getDate();\n\nconst balArr = $input.first().json.body;\nconst girokonto = balArr.find(a => (a.iban || '').endsWith('7000')) || balArr[0];\nconst currentBalance = parseFloat(girokonto.balance || 0);\n\nconst FIXKOSTEN = [\n  { name: 'Miete (28.)',           amount: 470.00, nurVorDem28: true },\n  { name: 'Allianz Lebensvers.',   amount: 130.00 },\n  { name: 'Iris Moenig (Fahrrad)', amount: 140.00 },\n  { name: 'Canada Life',           amount: 55.94  },\n  { name: 'Telefonica',            amount: 43.23  },\n  { name: 'Vattenfall (Strom)',    amount: 33.00  },\n  { name: 'Martin Paun (Handy)',   amount: 30.00  },\n  { name: 'Debeka KV',             amount: 28.29  },\n  { name: 'ARAG',                  amount: 18.30  },\n  { name: 'Claude Pro',            amount: 19.00  },\n  { name: 'Barmenia',              amount: 4.61   },\n];\n\nconst mieteSchonBezahlt = salaryDay >= 28;\nconst zuReservieren = FIXKOSTEN.filter(f => !(f.nurVorDem28 && mieteSchonBezahlt));\nconst reserve = zuReservieren.reduce((s, f) => s + f.amount, 0);\nconst transferAmount = currentBalance - reserve;\n\nconst fmt = n => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n\nlet msg = '\\u{1F4B0} *Gehaltseingang \\u2013 ' + fmt(salary) + ' \\u20AC*\\n';\nmsg += '\\u{1F3E6} *Kontostand: ' + fmt(currentBalance) + ' \\u20AC*\\n';\nmsg += '\\u{1F4C5} ' + new Date(salaryDate).toLocaleDateString('de-DE') + '\\n\\n';\n\nif (mieteSchonBezahlt) {\n  msg += '\\u2705 *Miete bereits abgebucht*\\n\\n';\n}\n\nmsg += '\\u{1F4CB} *Reserviert f\\u00FCr Folgemonat:*\\n';\nzuReservieren.forEach(f => { msg += '  \\u2022 ' + f.name + ': ' + fmt(f.amount) + ' \\u20AC\\n'; });\nmsg += '  \\u2211 *' + fmt(reserve) + ' \\u20AC*\\n\\n';\nmsg += '\\u{1F4B3} *\\u2192 ' + fmt(transferAmount) + ' \\u20AC auf C24 \\u00FCberweisen*';\n\nreturn [{ json: { message: msg, transferAmount, currentBalance, salary, reserve } }];"
       }
     },
     {
@@ -483,7 +523,8 @@
   "repo_owner": "D3nP4",
   "repo_path": "workflows/",
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate"
   },
   "shared": [
     {
@@ -498,10 +539,15 @@
     "node:Täglich 09:00": {
       "recurrenceRules": []
     },
-    "global": {}
+    "global": {
+      "lastSalaryDate": "2026-06-29"
+    },
+    "node:Täglich 14:00": {
+      "recurrenceRules": []
+    }
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-29T04:56:16.831Z",
-  "versionId": "dab2bc16-da54-4d8e-8858-0899e948fbdc"
+  "updatedAt": "2026-06-29T10:07:46.187Z",
+  "versionId": "1d1c45cd-e233-4dfa-842b-bb0c0422375f"
 }
