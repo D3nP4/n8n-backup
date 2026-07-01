@@ -1,0 +1,308 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-07-01T05:14:28.665Z",
+    "createdAt": "2026-07-01T05:14:28.665Z",
+    "versionId": "998c441a-b0df-4f06-9070-e9b561b81ba3",
+    "workflowId": "LcqjJmRP43ypsZ6U",
+    "nodes": [
+      {
+        "id": "cron-node",
+        "name": "Alle 6h prüfen",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 6
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "ha-node",
+        "name": "HA Sensor",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [
+          450,
+          300
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "QJ27sUGKyxqQvUNH",
+            "name": "Home Assistant API"
+          }
+        },
+        "parameters": {
+          "method": "GET",
+          "url": "http://192.168.178.24:8123/api/states/sensor.pflanze_innen_soil_moisture",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "httpHeaderAuth",
+          "options": {}
+        }
+      },
+      {
+        "id": "if-node",
+        "name": "Trocken unter 30%?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          650,
+          300
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ Number($json.state) }}",
+                "rightValue": 30,
+                "operator": {
+                  "type": "number",
+                  "operation": "lt"
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "telegram-node",
+        "name": "Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          850,
+          200
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "parameters": {
+          "resource": "message",
+          "operation": "sendMessage",
+          "chatId": "6422093154",
+          "text": "=🌿 Birkenfeige giessen!\nBodenfeuchtigkeit: {{ $json.state }}% (Schwellwert: 30%)"
+        },
+        "webhookId": "d4246ebd-bf4e-415e-82d4-2d35866ba783"
+      }
+    ],
+    "connections": {
+      "Alle 6h prüfen": {
+        "main": [
+          [
+            {
+              "node": "HA Sensor",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HA Sensor": {
+        "main": [
+          [
+            {
+              "node": "Trocken unter 30%?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Trocken unter 30%?": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "998c441a-b0df-4f06-9070-e9b561b81ba3",
+  "connections": {
+    "Alle 6h prüfen": {
+      "main": [
+        [
+          {
+            "node": "HA Sensor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HA Sensor": {
+      "main": [
+        [
+          {
+            "node": "Trocken unter 30%?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trocken unter 30%?": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "createdAt": "2026-06-30T18:24:01.197Z",
+  "id": "LcqjJmRP43ypsZ6U",
+  "isArchived": false,
+  "meta": null,
+  "name": "🌿 Birkenfeige – Gießen Erinnerung",
+  "nodes": [
+    {
+      "id": "cron-node",
+      "name": "Alle 6h prüfen",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ha-node",
+      "name": "HA Sensor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        450,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "QJ27sUGKyxqQvUNH",
+          "name": "Home Assistant API"
+        }
+      },
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.178.24:8123/api/states/sensor.pflanze_innen_soil_moisture",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "options": {}
+      }
+    },
+    {
+      "id": "if-node",
+      "name": "Trocken unter 30%?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        650,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ Number($json.state) }}",
+              "rightValue": 30,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "telegram-node",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        850,
+        200
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "6422093154",
+        "text": "=🌿 Birkenfeige giessen!\nBodenfeuchtigkeit: {{ $json.state }}% (Schwellwert: 30%)"
+      },
+      "webhookId": "d4246ebd-bf4e-415e-82d4-2d35866ba783"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-30T18:24:01.200Z",
+      "createdAt": "2026-06-30T18:24:01.200Z",
+      "role": "workflow:owner",
+      "workflowId": "LcqjJmRP43ypsZ6U",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Alle 6h prüfen": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-07-01T05:14:28.664Z",
+  "versionId": "998c441a-b0df-4f06-9070-e9b561b81ba3"
+}
