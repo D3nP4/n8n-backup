@@ -298,7 +298,9 @@
   ],
   "staticData": {
     "node:Alle 6h prüfen": {
-      "recurrenceRules": []
+      "recurrenceRules": [
+        0
+      ]
     }
   },
   "tags": [],
