@@ -1,0 +1,403 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-07-03T20:53:17.498Z",
+    "createdAt": "2026-07-03T20:53:17.498Z",
+    "versionId": "0012ec0a-9859-4ddf-aad0-454b8ba18303",
+    "workflowId": "evAHYsQEbzxZKefq",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Täglich 10 Uhr",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 10
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "fetch-body-stats",
+        "name": "Health-Daten holen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://fitness.paun01.de/api/body-stats",
+          "options": {}
+        }
+      },
+      {
+        "id": "zusammenfassen",
+        "name": "Health-Daten zusammenfassen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1100,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const data = $json || {};\nconst sleep = data.sleep_analysis || [];\nconst rhr = data.resting_heart_rate || [];\nconst hrv = data.heart_rate_variability || [];\n\nif (!Array.isArray(sleep) || sleep.length === 0) {\n  return [{ json: { hasData: false } }];\n}\n\n// entries are sorted newest-first by the storage backend\nconst latestSleep = sleep[0];\nconst latestRhr = Array.isArray(rhr) && rhr.length ? rhr[0] : null;\nconst latestHrv = Array.isArray(hrv) && hrv.length ? hrv[0] : null;\n\nconst inBedH = (latestSleep.inBed || 0);\nconst totalH = (latestSleep.core||0)+(latestSleep.deep||0)+(latestSleep.rem||0);\nconst deepH = (latestSleep.deep||0);\nconst remH = (latestSleep.rem||0);\nconst coreH = (latestSleep.core||0);\nconst awakeMin = Math.round((latestSleep.awake||0)*60);\n\nconst fmtTime = (iso) => iso ? new Date(iso).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '?';\n\nlet summary = `🛏️ Bettzeit: ${inBedH.toFixed(1)} h (${fmtTime(latestSleep.inBedStart)} - ${fmtTime(latestSleep.inBedEnd)})\n😴 Gesamtschlaf: ${totalH.toFixed(1)} h\n🔵 Tiefschlaf: ${deepH.toFixed(1)} h | REM: ${remH.toFixed(1)} h | Leicht: ${coreH.toFixed(1)} h\n⚠️ Wach im Bett: ${awakeMin} min`;\nif (latestRhr) summary += `\\n❤️ Ruhepuls: ${latestRhr.value ?? latestRhr.qty} bpm`;\nif (latestHrv) summary += `\\n📈 HRV: ${Math.round(latestHrv.value ?? latestHrv.qty)} ms`;\n\nconst tips = [];\nif (totalH < 6) {\n  tips.push(`Nur ${totalH.toFixed(1)}h Schlaf - versuch heute 45-60 Min frueher ins Bett zu gehen.`);\n} else if (totalH < 7) {\n  tips.push(`Mit ${totalH.toFixed(1)}h etwas knapp - eine frueher Bettzeit wuerde guttun.`);\n} else {\n  tips.push(`Guter Schlafumfang (${totalH.toFixed(1)}h) - weiter so.`);\n}\nif (deepH < 1) {\n  tips.push('Wenig Tiefschlaf - heute Abend Alkohol, spaetes Essen und Bildschirmzeit vor dem Schlafen meiden.');\n}\nif (awakeMin > 30) {\n  tips.push(`${awakeMin} Min wach im Bett - Raumtemperatur und Laerm im Schlafzimmer pruefen.`);\n}\nif (remH < 1) {\n  tips.push('Wenig REM-Schlaf - Stresslevel vorm Schlafengehen (z.B. kurze Atemuebung) senken kann helfen.');\n}\n\nconst empfehlung = tips.join('\\n');\n\nreturn [{ json: { hasData: true, summary, empfehlung } }];"
+        }
+      },
+      {
+        "id": "hasdata_if",
+        "name": "Daten vorhanden?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1320,
+          300
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.hasData }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "telegram_ok",
+        "name": "Telegram Erfolg",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          1980,
+          200
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendMessage",
+          "chatId": "6422093154",
+          "text": "=🌙 Schlaf-Report\n\n{{ $json.summary }}\n\n💡 {{ $json.empfehlung }}"
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "acafc4a5-d436-49c1-a402-7c3ede22a238"
+      },
+      {
+        "id": "telegram_no",
+        "name": "Telegram Keine Daten",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          1540,
+          420
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendMessage",
+          "chatId": "6422093154",
+          "text": "=🌙 Schlaf-Report\n\nKeine aktuellen Schlafdaten gefunden. Prüfe, ob die Health Auto Export App auf dem iPhone noch aktiv Daten an die Bridge sendet."
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "a1e19157-58ff-4095-87d4-403d7a694439"
+      }
+    ],
+    "connections": {
+      "Täglich 10 Uhr": {
+        "main": [
+          [
+            {
+              "node": "Health-Daten holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Health-Daten zusammenfassen": {
+        "main": [
+          [
+            {
+              "node": "Daten vorhanden?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Daten vorhanden?": {
+        "main": [
+          [
+            {
+              "node": "Telegram Erfolg",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Telegram Keine Daten",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Health-Daten holen": {
+        "main": [
+          [
+            {
+              "node": "Health-Daten zusammenfassen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "0012ec0a-9859-4ddf-aad0-454b8ba18303",
+  "connections": {
+    "Täglich 10 Uhr": {
+      "main": [
+        [
+          {
+            "node": "Health-Daten holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Health-Daten zusammenfassen": {
+      "main": [
+        [
+          {
+            "node": "Daten vorhanden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daten vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "Telegram Erfolg",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram Keine Daten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Health-Daten holen": {
+      "main": [
+        [
+          {
+            "node": "Health-Daten zusammenfassen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-03T06:44:21.432Z",
+  "id": "evAHYsQEbzxZKefq",
+  "isArchived": false,
+  "meta": null,
+  "name": "🌙 Schlaf-Report – Täglich 10 Uhr",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Täglich 10 Uhr",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch-body-stats",
+      "name": "Health-Daten holen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://fitness.paun01.de/api/body-stats",
+        "options": {}
+      }
+    },
+    {
+      "id": "zusammenfassen",
+      "name": "Health-Daten zusammenfassen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const data = $json || {};\nconst sleep = data.sleep_analysis || [];\nconst rhr = data.resting_heart_rate || [];\nconst hrv = data.heart_rate_variability || [];\n\nif (!Array.isArray(sleep) || sleep.length === 0) {\n  return [{ json: { hasData: false } }];\n}\n\n// entries are sorted newest-first by the storage backend\nconst latestSleep = sleep[0];\nconst latestRhr = Array.isArray(rhr) && rhr.length ? rhr[0] : null;\nconst latestHrv = Array.isArray(hrv) && hrv.length ? hrv[0] : null;\n\nconst inBedH = (latestSleep.inBed || 0);\nconst totalH = (latestSleep.core||0)+(latestSleep.deep||0)+(latestSleep.rem||0);\nconst deepH = (latestSleep.deep||0);\nconst remH = (latestSleep.rem||0);\nconst coreH = (latestSleep.core||0);\nconst awakeMin = Math.round((latestSleep.awake||0)*60);\n\nconst fmtTime = (iso) => iso ? new Date(iso).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '?';\n\nlet summary = `🛏️ Bettzeit: ${inBedH.toFixed(1)} h (${fmtTime(latestSleep.inBedStart)} - ${fmtTime(latestSleep.inBedEnd)})\n😴 Gesamtschlaf: ${totalH.toFixed(1)} h\n🔵 Tiefschlaf: ${deepH.toFixed(1)} h | REM: ${remH.toFixed(1)} h | Leicht: ${coreH.toFixed(1)} h\n⚠️ Wach im Bett: ${awakeMin} min`;\nif (latestRhr) summary += `\\n❤️ Ruhepuls: ${latestRhr.value ?? latestRhr.qty} bpm`;\nif (latestHrv) summary += `\\n📈 HRV: ${Math.round(latestHrv.value ?? latestHrv.qty)} ms`;\n\nconst tips = [];\nif (totalH < 6) {\n  tips.push(`Nur ${totalH.toFixed(1)}h Schlaf - versuch heute 45-60 Min frueher ins Bett zu gehen.`);\n} else if (totalH < 7) {\n  tips.push(`Mit ${totalH.toFixed(1)}h etwas knapp - eine frueher Bettzeit wuerde guttun.`);\n} else {\n  tips.push(`Guter Schlafumfang (${totalH.toFixed(1)}h) - weiter so.`);\n}\nif (deepH < 1) {\n  tips.push('Wenig Tiefschlaf - heute Abend Alkohol, spaetes Essen und Bildschirmzeit vor dem Schlafen meiden.');\n}\nif (awakeMin > 30) {\n  tips.push(`${awakeMin} Min wach im Bett - Raumtemperatur und Laerm im Schlafzimmer pruefen.`);\n}\nif (remH < 1) {\n  tips.push('Wenig REM-Schlaf - Stresslevel vorm Schlafengehen (z.B. kurze Atemuebung) senken kann helfen.');\n}\n\nconst empfehlung = tips.join('\\n');\n\nreturn [{ json: { hasData: true, summary, empfehlung } }];"
+      }
+    },
+    {
+      "id": "hasdata_if",
+      "name": "Daten vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.hasData }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "telegram_ok",
+      "name": "Telegram Erfolg",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        200
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "6422093154",
+        "text": "=🌙 Schlaf-Report\n\n{{ $json.summary }}\n\n💡 {{ $json.empfehlung }}"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "acafc4a5-d436-49c1-a402-7c3ede22a238"
+    },
+    {
+      "id": "telegram_no",
+      "name": "Telegram Keine Daten",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        420
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "6422093154",
+        "text": "=🌙 Schlaf-Report\n\nKeine aktuellen Schlafdaten gefunden. Prüfe, ob die Health Auto Export App auf dem iPhone noch aktiv Daten an die Bridge sendet."
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "a1e19157-58ff-4095-87d4-403d7a694439"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-07-03T06:44:21.436Z",
+      "createdAt": "2026-07-03T06:44:21.436Z",
+      "role": "workflow:owner",
+      "workflowId": "evAHYsQEbzxZKefq",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Täglich 10 Uhr": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-07-03T20:53:17.498Z",
+  "versionId": "0012ec0a-9859-4ddf-aad0-454b8ba18303"
+}
