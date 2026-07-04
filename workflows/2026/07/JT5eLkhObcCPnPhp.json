@@ -1,0 +1,503 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-07-03T21:09:23.283Z",
+    "createdAt": "2026-07-03T21:09:23.283Z",
+    "versionId": "9c5d4fb3-78a8-4797-be55-d236194b5ec4",
+    "workflowId": "JT5eLkhObcCPnPhp",
+    "nodes": [
+      {
+        "id": "trigger",
+        "name": "Täglich 09 Uhr",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 9
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "digest",
+        "name": "Feeds laden & Digest bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          220,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const FEEDS = [{\"category\": \"Homelab\", \"name\": \"selfh.st\", \"url\": \"https://selfh.st/rss/\"}, {\"category\": \"Homelab\", \"name\": \"noted.lol\", \"url\": \"https://noted.lol/rss/\"}, {\"category\": \"Homelab\", \"name\": \"Virtualization Howto\", \"url\": \"https://virtualizationhowto.com/feed/\"}, {\"category\": \"Smart Home\", \"name\": \"Home Assistant Blog\", \"url\": \"https://www.home-assistant.io/atom.xml\"}, {\"category\": \"Smart Home\", \"name\": \"SmartHomeScene\", \"url\": \"https://www.smarthomescene.com/feed/\"}, {\"category\": \"Smart Home\", \"name\": \"The Verge - Smart Home\", \"url\": \"https://www.theverge.com/rss/smart-home/index.xml\"}, {\"category\": \"Radfahren\", \"name\": \"DC Rainmaker\", \"url\": \"https://www.dcrainmaker.com/feed\"}, {\"category\": \"Radfahren\", \"name\": \"Bikepacking.com\", \"url\": \"https://www.bikepacking.com/feed/\"}, {\"category\": \"Radfahren\", \"name\": \"Escape Collective\", \"url\": \"https://escapecollective.com/feed/\"}, {\"category\": \"Radfahren\", \"name\": \"road.cc\", \"url\": \"https://road.cc/rss\"}, {\"category\": \"Radfahren\", \"name\": \"Enduro Mountainbike Magazine\", \"url\": \"https://enduro-mtb.com/en/feed/\"}, {\"category\": \"Wandern & Outdoor\", \"name\": \"CleverHiker\", \"url\": \"https://www.cleverhiker.com/feed/\"}, {\"category\": \"Wandern & Outdoor\", \"name\": \"Halfway Anywhere\", \"url\": \"https://www.halfwayanywhere.com/feed/\"}, {\"category\": \"Wandern & Outdoor\", \"name\": \"Bearfoot Theory\", \"url\": \"https://bearfoottheory.com/feed/\"}, {\"category\": \"Vanlife/Camping\", \"name\": \"Gnomad Home\", \"url\": \"https://gnomadhome.com/feed/\"}, {\"category\": \"Vanlife/Camping\", \"name\": \"Drivin' & Vibin'\", \"url\": \"https://drivinvibin.com/feed/\"}, {\"category\": \"Vanlife/Camping\", \"name\": \"The Wayward Home\", \"url\": \"https://www.thewaywardhome.com/feed/\"}, {\"category\": \"Fotografie\", \"name\": \"PetaPixel\", \"url\": \"https://petapixel.com/feed/\"}, {\"category\": \"Fotografie\", \"name\": \"Fstoppers\", \"url\": \"https://fstoppers.com/feed\"}, {\"category\": \"Fotografie\", \"name\": \"The Phoblographer\", \"url\": \"https://www.thephoblographer.com/feed/\"}, {\"category\": \"Kaffee\", \"name\": \"Perfect Daily Grind\", \"url\": \"https://perfectdailygrind.com/feed/\"}, {\"category\": \"Kaffee\", \"name\": \"Sprudge\", \"url\": \"https://sprudge.com/feed\"}, {\"category\": \"Kaffee\", \"name\": \"Barista Magazine\", \"url\": \"https://www.baristamagazine.com/feed/\"}, {\"category\": \"Kaffee\", \"name\": \"CoffeeGeek\", \"url\": \"https://coffeegeek.com/feed\"}];\n\nconst CUTOFF_HOURS = 30;\nconst now = Date.now();\nconst cutoff = now - CUTOFF_HOURS * 3600 * 1000;\n\nfunction decodeEntities(str) {\n  return (str || '')\n    .replace(/<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>/g, '$1')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/&apos;/g, \"'\")\n    .replace(/&#x([0-9a-fA-F]+);/g, (m, h) => String.fromCodePoint(parseInt(h, 16)))\n    .replace(/&#(\\d+);/g, (m, d) => String.fromCodePoint(parseInt(d, 10)))\n    .trim();\n}\n\nfunction stripHtml(str) {\n  return (str || '')\n    .replace(/<[^>]*>/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nfunction summarize(str, maxLen) {\n  const clean = stripHtml(decodeEntities(str || ''));\n  if (!clean) return '';\n  if (clean.length <= maxLen) return clean;\n  const cut = clean.slice(0, maxLen);\n  const lastSpace = cut.lastIndexOf(' ');\n  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut) + '…';\n}\n\nfunction parseFeed(xml) {\n  const items = [];\n  const isAtom = /<feed[\\s>]/i.test(xml) && !/<rss[\\s>]/i.test(xml);\n  const blockRegex = isAtom ? /<entry[\\s>][\\s\\S]*?<\\/entry>/g : /<item[\\s>][\\s\\S]*?<\\/item>/g;\n  const blocks = xml.match(blockRegex) || [];\n  for (const block of blocks) {\n    const titleMatch = block.match(/<title[^>]*>([\\s\\S]*?)<\\/title>/);\n    let link = null;\n    if (isAtom) {\n      const linkMatches = [...block.matchAll(/<link[^>]*href=\"([^\"]+)\"[^>]*\\/?>/g)];\n      const alt = linkMatches.find(m => /rel=\"alternate\"/.test(m[0])) || linkMatches[0];\n      link = alt ? alt[1] : null;\n    } else {\n      const linkMatch = block.match(/<link[^>]*>([\\s\\S]*?)<\\/link>/);\n      link = linkMatch ? linkMatch[1] : null;\n    }\n    const dateMatch = block.match(/<(?:pubDate|published|updated)>([\\s\\S]*?)<\\/(?:pubDate|published|updated)>/);\n    const descMatch = block.match(/<content:encoded[^>]*>([\\s\\S]*?)<\\/content:encoded>/)\n      || block.match(/<description[^>]*>([\\s\\S]*?)<\\/description>/)\n      || block.match(/<summary[^>]*>([\\s\\S]*?)<\\/summary>/)\n      || block.match(/<content[^>]*>([\\s\\S]*?)<\\/content>/);\n    const title = titleMatch ? decodeEntities(titleMatch[1]) : null;\n    const dateStr = dateMatch ? decodeEntities(dateMatch[1]) : null;\n    const ts = dateStr ? Date.parse(dateStr) : NaN;\n    const desc = descMatch ? summarize(descMatch[1], 150) : '';\n    if (title && link) {\n      items.push({ title, link: decodeEntities(link), ts: isNaN(ts) ? null : ts, desc });\n    }\n  }\n  return items;\n}\n\nconst results = await Promise.allSettled(FEEDS.map(async (feed) => {\n  const xml = await this.helpers.httpRequest({ method: 'GET', url: feed.url, timeout: 8000 });\n  const items = parseFeed(xml);\n  return { feed, items };\n}));\n\nconst byCategory = {};\nfor (const r of results) {\n  if (r.status !== 'fulfilled') continue;\n  const { feed, items } = r.value;\n  let qualifying = items.filter(it => it.ts && it.ts >= cutoff);\n  if (qualifying.length === 0 && items.length > 0 && !items[0].ts) {\n    qualifying = [items[0]];\n  }\n  qualifying.sort((a, b) => (b.ts || 0) - (a.ts || 0));\n  qualifying = qualifying.slice(0, 3);\n  if (qualifying.length === 0) continue;\n  byCategory[feed.category] = byCategory[feed.category] || [];\n  for (const it of qualifying) {\n    byCategory[feed.category].push({ ...it, feedName: feed.name });\n  }\n}\n\nconst catOrder = ['Homelab', 'Smart Home', 'Radfahren', 'Wandern & Outdoor', 'Vanlife/Camping', 'Fotografie', 'Kaffee'];\n\nconst allItems = [];\nlet idCounter = 0;\nfor (const cat of catOrder) {\n  const items = byCategory[cat];\n  if (!items || items.length === 0) continue;\n  items.sort((a, b) => (b.ts || 0) - (a.ts || 0));\n  const top = items.slice(0, 3);\n  for (const it of top) {\n    allItems.push({ id: idCounter++, category: cat, feedName: it.feedName, title: it.title, desc: it.desc, link: it.link });\n  }\n}\n\nconst translatePrompt = allItems.length > 0\n  ? `Uebersetze die folgenden RSS-Artikel-Titel und Kurzbeschreibungen ins Deutsche. Gib fuer JEDES Element genau EINE Zeile mit validem JSON zurueck (JSON Lines Format), keine Erklaerung, kein Markdown, keine leeren Zeilen. Format pro Zeile: {\"id\": 0, \"title\": \"...\", \"desc\": \"...\"}. Behalte Eigennamen, Produktnamen und Marken im Original bei. Falls desc leer ist, gib auch \"\" zurueck. WICHTIG: Verwende in title und desc NIEMALS doppelte Anfuehrungszeichen - nutze stattdessen einfache Anfuehrungszeichen (').\n\n${allItems.map(it => JSON.stringify({ id: it.id, title: it.title, desc: it.desc })).join('\\n')}`\n  : '';\n\nreturn [{ json: { allItems, translatePrompt, hasItems: allItems.length > 0 } }];"
+        }
+      },
+      {
+        "id": "if-has-items",
+        "name": "Artikel vorhanden?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          440,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "c1",
+                "leftValue": "={{ $json.hasItems }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "anthropic-translate",
+        "name": "Übersetzen (Claude)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          660,
+          -80
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "anthropicApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({model: \"claude-haiku-4-5-20251001\", max_tokens: 4096, messages: [{role: \"user\", content: $json.translatePrompt}]}) }}",
+          "options": {}
+        },
+        "credentials": {
+          "anthropicApi": {
+            "id": "9LB76hvnIilIJdFy",
+            "name": "Anthropic account"
+          }
+        }
+      },
+      {
+        "id": "build-text",
+        "name": "Nachricht bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          880,
+          -80
+        ],
+        "parameters": {
+          "jsCode": "function escapeHtml(str) {\n  return (str || '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;');\n}\n\nconst prep = $node[\"Feeds laden & Digest bauen\"].json;\nconst allItems = prep.allItems || [];\n\nif (allItems.length === 0) {\n  return [{ json: { text: '📰 RSS-Digest\\n\\nHeute keine neuen Artikel in deinen Feeds.' } }];\n}\n\nlet translated = [];\ntry {\n  const raw = $json.content[0].text;\n  const lines = raw.split('\\n').map(l => l.trim()).filter(l => l.startsWith('{') && l.endsWith('}'));\n  for (const line of lines) {\n    try { translated.push(JSON.parse(line)); } catch (e2) { /* skip bad line */ }\n  }\n} catch (e) {\n  translated = [];\n}\nconst byId = {};\nfor (const t of translated) byId[t.id] = t;\n\nconst catEmoji = {\n  'Homelab': '🖥️', 'Smart Home': '🏠', 'Radfahren': '🚴', 'Wandern & Outdoor': '🥾',\n  'Vanlife/Camping': '🚐', 'Fotografie': '📷', 'Kaffee': '☕'\n};\n\nconst byCategory = {};\nfor (const it of allItems) {\n  const tr = byId[it.id];\n  const title = tr && tr.title ? tr.title : it.title;\n  const desc = tr && tr.desc !== undefined ? tr.desc : it.desc;\n  byCategory[it.category] = byCategory[it.category] || [];\n  byCategory[it.category].push({ ...it, title, desc });\n}\n\nconst sections = [];\nfor (const [cat, items] of Object.entries(byCategory)) {\n  const lines = items.map(it => {\n    const head = `• <a href=\"${escapeHtml(it.link)}\">${escapeHtml(it.title)}</a> (${escapeHtml(it.feedName)})`;\n    return it.desc ? `${head}\\n  ${escapeHtml(it.desc)}` : head;\n  });\n  sections.push(`${catEmoji[cat] || ''} <b>${escapeHtml(cat)}</b>\\n${lines.join('\\n')}`);\n}\n\nconst MAX_LEN = 4000;\nconst header = `📰 <b>RSS-Digest</b>`;\nlet text = header;\nlet truncated = false;\nfor (const section of sections) {\n  const candidate = text + '\\n\\n' + section;\n  if (candidate.length > MAX_LEN) { truncated = true; break; }\n  text = candidate;\n}\nif (truncated) {\n  text += '\\n\\n…(gekürzt, weitere Kategorien ausgelassen)';\n}\n\nreturn [{ json: { text } }];"
+        }
+      },
+      {
+        "id": "build-text-empty",
+        "name": "Leere Nachricht",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          80
+        ],
+        "parameters": {
+          "jsCode": "return [{ json: { text: '📰 RSS-Digest\\n\\nHeute keine neuen Artikel in deinen Feeds.' } }];"
+        }
+      },
+      {
+        "id": "telegram",
+        "name": "Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1,
+        "position": [
+          1100,
+          0
+        ],
+        "parameters": {
+          "resource": "message",
+          "operation": "sendMessage",
+          "chatId": "6422093154",
+          "text": "={{ $json.text }}",
+          "additionalFields": {
+            "parse_mode": "HTML",
+            "disable_web_page_preview": true
+          }
+        },
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "003f1464-e04d-4f80-83ab-51cb88e92cb3"
+      }
+    ],
+    "connections": {
+      "Täglich 09 Uhr": {
+        "main": [
+          [
+            {
+              "node": "Feeds laden & Digest bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Feeds laden & Digest bauen": {
+        "main": [
+          [
+            {
+              "node": "Artikel vorhanden?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Artikel vorhanden?": {
+        "main": [
+          [
+            {
+              "node": "Übersetzen (Claude)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Leere Nachricht",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Übersetzen (Claude)": {
+        "main": [
+          [
+            {
+              "node": "Nachricht bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Nachricht bauen": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leere Nachricht": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "9c5d4fb3-78a8-4797-be55-d236194b5ec4",
+  "connections": {
+    "Täglich 09 Uhr": {
+      "main": [
+        [
+          {
+            "node": "Feeds laden & Digest bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feeds laden & Digest bauen": {
+      "main": [
+        [
+          {
+            "node": "Artikel vorhanden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Artikel vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "Übersetzen (Claude)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leere Nachricht",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Übersetzen (Claude)": {
+      "main": [
+        [
+          {
+            "node": "Nachricht bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nachricht bauen": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leere Nachricht": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-03T06:51:07.235Z",
+  "id": "JT5eLkhObcCPnPhp",
+  "isArchived": false,
+  "meta": null,
+  "name": "📰 RSS-Digest – Täglich 09 Uhr",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Täglich 09 Uhr",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "digest",
+      "name": "Feeds laden & Digest bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const FEEDS = [{\"category\": \"Homelab\", \"name\": \"selfh.st\", \"url\": \"https://selfh.st/rss/\"}, {\"category\": \"Homelab\", \"name\": \"noted.lol\", \"url\": \"https://noted.lol/rss/\"}, {\"category\": \"Homelab\", \"name\": \"Virtualization Howto\", \"url\": \"https://virtualizationhowto.com/feed/\"}, {\"category\": \"Smart Home\", \"name\": \"Home Assistant Blog\", \"url\": \"https://www.home-assistant.io/atom.xml\"}, {\"category\": \"Smart Home\", \"name\": \"SmartHomeScene\", \"url\": \"https://www.smarthomescene.com/feed/\"}, {\"category\": \"Smart Home\", \"name\": \"The Verge - Smart Home\", \"url\": \"https://www.theverge.com/rss/smart-home/index.xml\"}, {\"category\": \"Radfahren\", \"name\": \"DC Rainmaker\", \"url\": \"https://www.dcrainmaker.com/feed\"}, {\"category\": \"Radfahren\", \"name\": \"Bikepacking.com\", \"url\": \"https://www.bikepacking.com/feed/\"}, {\"category\": \"Radfahren\", \"name\": \"Escape Collective\", \"url\": \"https://escapecollective.com/feed/\"}, {\"category\": \"Radfahren\", \"name\": \"road.cc\", \"url\": \"https://road.cc/rss\"}, {\"category\": \"Radfahren\", \"name\": \"Enduro Mountainbike Magazine\", \"url\": \"https://enduro-mtb.com/en/feed/\"}, {\"category\": \"Wandern & Outdoor\", \"name\": \"CleverHiker\", \"url\": \"https://www.cleverhiker.com/feed/\"}, {\"category\": \"Wandern & Outdoor\", \"name\": \"Halfway Anywhere\", \"url\": \"https://www.halfwayanywhere.com/feed/\"}, {\"category\": \"Wandern & Outdoor\", \"name\": \"Bearfoot Theory\", \"url\": \"https://bearfoottheory.com/feed/\"}, {\"category\": \"Vanlife/Camping\", \"name\": \"Gnomad Home\", \"url\": \"https://gnomadhome.com/feed/\"}, {\"category\": \"Vanlife/Camping\", \"name\": \"Drivin' & Vibin'\", \"url\": \"https://drivinvibin.com/feed/\"}, {\"category\": \"Vanlife/Camping\", \"name\": \"The Wayward Home\", \"url\": \"https://www.thewaywardhome.com/feed/\"}, {\"category\": \"Fotografie\", \"name\": \"PetaPixel\", \"url\": \"https://petapixel.com/feed/\"}, {\"category\": \"Fotografie\", \"name\": \"Fstoppers\", \"url\": \"https://fstoppers.com/feed\"}, {\"category\": \"Fotografie\", \"name\": \"The Phoblographer\", \"url\": \"https://www.thephoblographer.com/feed/\"}, {\"category\": \"Kaffee\", \"name\": \"Perfect Daily Grind\", \"url\": \"https://perfectdailygrind.com/feed/\"}, {\"category\": \"Kaffee\", \"name\": \"Sprudge\", \"url\": \"https://sprudge.com/feed\"}, {\"category\": \"Kaffee\", \"name\": \"Barista Magazine\", \"url\": \"https://www.baristamagazine.com/feed/\"}, {\"category\": \"Kaffee\", \"name\": \"CoffeeGeek\", \"url\": \"https://coffeegeek.com/feed\"}];\n\nconst CUTOFF_HOURS = 30;\nconst now = Date.now();\nconst cutoff = now - CUTOFF_HOURS * 3600 * 1000;\n\nfunction decodeEntities(str) {\n  return (str || '')\n    .replace(/<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>/g, '$1')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/&apos;/g, \"'\")\n    .replace(/&#x([0-9a-fA-F]+);/g, (m, h) => String.fromCodePoint(parseInt(h, 16)))\n    .replace(/&#(\\d+);/g, (m, d) => String.fromCodePoint(parseInt(d, 10)))\n    .trim();\n}\n\nfunction stripHtml(str) {\n  return (str || '')\n    .replace(/<[^>]*>/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nfunction summarize(str, maxLen) {\n  const clean = stripHtml(decodeEntities(str || ''));\n  if (!clean) return '';\n  if (clean.length <= maxLen) return clean;\n  const cut = clean.slice(0, maxLen);\n  const lastSpace = cut.lastIndexOf(' ');\n  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut) + '…';\n}\n\nfunction parseFeed(xml) {\n  const items = [];\n  const isAtom = /<feed[\\s>]/i.test(xml) && !/<rss[\\s>]/i.test(xml);\n  const blockRegex = isAtom ? /<entry[\\s>][\\s\\S]*?<\\/entry>/g : /<item[\\s>][\\s\\S]*?<\\/item>/g;\n  const blocks = xml.match(blockRegex) || [];\n  for (const block of blocks) {\n    const titleMatch = block.match(/<title[^>]*>([\\s\\S]*?)<\\/title>/);\n    let link = null;\n    if (isAtom) {\n      const linkMatches = [...block.matchAll(/<link[^>]*href=\"([^\"]+)\"[^>]*\\/?>/g)];\n      const alt = linkMatches.find(m => /rel=\"alternate\"/.test(m[0])) || linkMatches[0];\n      link = alt ? alt[1] : null;\n    } else {\n      const linkMatch = block.match(/<link[^>]*>([\\s\\S]*?)<\\/link>/);\n      link = linkMatch ? linkMatch[1] : null;\n    }\n    const dateMatch = block.match(/<(?:pubDate|published|updated)>([\\s\\S]*?)<\\/(?:pubDate|published|updated)>/);\n    const descMatch = block.match(/<content:encoded[^>]*>([\\s\\S]*?)<\\/content:encoded>/)\n      || block.match(/<description[^>]*>([\\s\\S]*?)<\\/description>/)\n      || block.match(/<summary[^>]*>([\\s\\S]*?)<\\/summary>/)\n      || block.match(/<content[^>]*>([\\s\\S]*?)<\\/content>/);\n    const title = titleMatch ? decodeEntities(titleMatch[1]) : null;\n    const dateStr = dateMatch ? decodeEntities(dateMatch[1]) : null;\n    const ts = dateStr ? Date.parse(dateStr) : NaN;\n    const desc = descMatch ? summarize(descMatch[1], 150) : '';\n    if (title && link) {\n      items.push({ title, link: decodeEntities(link), ts: isNaN(ts) ? null : ts, desc });\n    }\n  }\n  return items;\n}\n\nconst results = await Promise.allSettled(FEEDS.map(async (feed) => {\n  const xml = await this.helpers.httpRequest({ method: 'GET', url: feed.url, timeout: 8000 });\n  const items = parseFeed(xml);\n  return { feed, items };\n}));\n\nconst byCategory = {};\nfor (const r of results) {\n  if (r.status !== 'fulfilled') continue;\n  const { feed, items } = r.value;\n  let qualifying = items.filter(it => it.ts && it.ts >= cutoff);\n  if (qualifying.length === 0 && items.length > 0 && !items[0].ts) {\n    qualifying = [items[0]];\n  }\n  qualifying.sort((a, b) => (b.ts || 0) - (a.ts || 0));\n  qualifying = qualifying.slice(0, 3);\n  if (qualifying.length === 0) continue;\n  byCategory[feed.category] = byCategory[feed.category] || [];\n  for (const it of qualifying) {\n    byCategory[feed.category].push({ ...it, feedName: feed.name });\n  }\n}\n\nconst catOrder = ['Homelab', 'Smart Home', 'Radfahren', 'Wandern & Outdoor', 'Vanlife/Camping', 'Fotografie', 'Kaffee'];\n\nconst allItems = [];\nlet idCounter = 0;\nfor (const cat of catOrder) {\n  const items = byCategory[cat];\n  if (!items || items.length === 0) continue;\n  items.sort((a, b) => (b.ts || 0) - (a.ts || 0));\n  const top = items.slice(0, 3);\n  for (const it of top) {\n    allItems.push({ id: idCounter++, category: cat, feedName: it.feedName, title: it.title, desc: it.desc, link: it.link });\n  }\n}\n\nconst translatePrompt = allItems.length > 0\n  ? `Uebersetze die folgenden RSS-Artikel-Titel und Kurzbeschreibungen ins Deutsche. Gib fuer JEDES Element genau EINE Zeile mit validem JSON zurueck (JSON Lines Format), keine Erklaerung, kein Markdown, keine leeren Zeilen. Format pro Zeile: {\"id\": 0, \"title\": \"...\", \"desc\": \"...\"}. Behalte Eigennamen, Produktnamen und Marken im Original bei. Falls desc leer ist, gib auch \"\" zurueck. WICHTIG: Verwende in title und desc NIEMALS doppelte Anfuehrungszeichen - nutze stattdessen einfache Anfuehrungszeichen (').\n\n${allItems.map(it => JSON.stringify({ id: it.id, title: it.title, desc: it.desc })).join('\\n')}`\n  : '';\n\nreturn [{ json: { allItems, translatePrompt, hasItems: allItems.length > 0 } }];"
+      }
+    },
+    {
+      "id": "if-has-items",
+      "name": "Artikel vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.hasItems }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "anthropic-translate",
+      "name": "Übersetzen (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        -80
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({model: \"claude-haiku-4-5-20251001\", max_tokens: 4096, messages: [{role: \"user\", content: $json.translatePrompt}]}) }}",
+        "options": {}
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "9LB76hvnIilIJdFy",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "id": "build-text",
+      "name": "Nachricht bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -80
+      ],
+      "parameters": {
+        "jsCode": "function escapeHtml(str) {\n  return (str || '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;');\n}\n\nconst prep = $node[\"Feeds laden & Digest bauen\"].json;\nconst allItems = prep.allItems || [];\n\nif (allItems.length === 0) {\n  return [{ json: { text: '📰 RSS-Digest\\n\\nHeute keine neuen Artikel in deinen Feeds.' } }];\n}\n\nlet translated = [];\ntry {\n  const raw = $json.content[0].text;\n  const lines = raw.split('\\n').map(l => l.trim()).filter(l => l.startsWith('{') && l.endsWith('}'));\n  for (const line of lines) {\n    try { translated.push(JSON.parse(line)); } catch (e2) { /* skip bad line */ }\n  }\n} catch (e) {\n  translated = [];\n}\nconst byId = {};\nfor (const t of translated) byId[t.id] = t;\n\nconst catEmoji = {\n  'Homelab': '🖥️', 'Smart Home': '🏠', 'Radfahren': '🚴', 'Wandern & Outdoor': '🥾',\n  'Vanlife/Camping': '🚐', 'Fotografie': '📷', 'Kaffee': '☕'\n};\n\nconst byCategory = {};\nfor (const it of allItems) {\n  const tr = byId[it.id];\n  const title = tr && tr.title ? tr.title : it.title;\n  const desc = tr && tr.desc !== undefined ? tr.desc : it.desc;\n  byCategory[it.category] = byCategory[it.category] || [];\n  byCategory[it.category].push({ ...it, title, desc });\n}\n\nconst sections = [];\nfor (const [cat, items] of Object.entries(byCategory)) {\n  const lines = items.map(it => {\n    const head = `• <a href=\"${escapeHtml(it.link)}\">${escapeHtml(it.title)}</a> (${escapeHtml(it.feedName)})`;\n    return it.desc ? `${head}\\n  ${escapeHtml(it.desc)}` : head;\n  });\n  sections.push(`${catEmoji[cat] || ''} <b>${escapeHtml(cat)}</b>\\n${lines.join('\\n')}`);\n}\n\nconst MAX_LEN = 4000;\nconst header = `📰 <b>RSS-Digest</b>`;\nlet text = header;\nlet truncated = false;\nfor (const section of sections) {\n  const candidate = text + '\\n\\n' + section;\n  if (candidate.length > MAX_LEN) { truncated = true; break; }\n  text = candidate;\n}\nif (truncated) {\n  text += '\\n\\n…(gekürzt, weitere Kategorien ausgelassen)';\n}\n\nreturn [{ json: { text } }];"
+      }
+    },
+    {
+      "id": "build-text-empty",
+      "name": "Leere Nachricht",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        80
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: { text: '📰 RSS-Digest\\n\\nHeute keine neuen Artikel in deinen Feeds.' } }];"
+      }
+    },
+    {
+      "id": "telegram",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "6422093154",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "003f1464-e04d-4f80-83ab-51cb88e92cb3"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-07-03T06:51:07.237Z",
+      "createdAt": "2026-07-03T06:51:07.237Z",
+      "role": "workflow:owner",
+      "workflowId": "JT5eLkhObcCPnPhp",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Täglich 09 Uhr": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-07-03T21:09:23.282Z",
+  "versionId": "9c5d4fb3-78a8-4797-be55-d236194b5ec4"
+}
