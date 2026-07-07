@@ -1,0 +1,322 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-07-06T08:46:27.582Z",
+    "createdAt": "2026-07-06T08:46:27.582Z",
+    "versionId": "e53816cd-95e8-4592-8942-c4f07ea05b5d",
+    "workflowId": "nvXdca1z8hnSqHQD",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "analyse-insights",
+          "responseMode": "responseNode",
+          "options": {},
+          "httpMethod": "POST"
+        },
+        "id": "node_wh",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "0b8af880-83e8-45ea-9e29-9c9efde07cc1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const d = $input.first().json.body || $input.first().json;\nconst rec = d.recovery || {};\nconst sleep = d.sleep || {};\nconst strain = d.strain || {};\nconst rhr = d.rhr || null;\nconst date = d.date || new Date().toISOString().slice(0,10);\nconst fmt = (v,dec=1) => v!=null ? Number(v).toFixed(dec) : '–';\nconst prompt = 'Du bist ein persönlicher Fitness-Coach für Dennis. Analysiere folgende Gesundheitsdaten und antworte NUR mit einem JSON-Objekt (ohne Markdown, kein Codeblock):\\n{\"mood\":\"emoji\",\"summary\":\"1-2 Sätze auf Deutsch zur heutigen Gesundheitssituation\",\"tip\":\"1 konkreter Tipp für heute auf Deutsch\"}\\n\\nDaten vom '+date+':\\n- Erholung: '+(rec.score||0)+'/100 ('+(rec.label||'–')+')\\n- Schlaf: '+fmt(sleep.perf,0)+'% Leistung ('+fmt(sleep.total)+'h gesamt, Tief '+fmt(sleep.deep)+'h, REM '+fmt(sleep.rem)+'h)\\n- Ruhepuls: '+(rhr?Math.round(rhr)+' bpm':'nicht verfügbar')+'\\n- Belastung: '+(strain.score||0)+'/21 ('+(strain.label||'–')+') – '+(strain.kcal||0)+' kcal aktiv, '+(strain.steps||0)+' Schritte\\n\\nNur das JSON-Objekt, kein Text darum.';\nreturn [{json:{prompt}}];"
+        },
+        "id": "node_code1",
+        "name": "Prompt bauen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          220,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "anthropicApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({model: \"claude-haiku-4-5-20251001\", max_tokens: 256, messages: [{role: \"user\", content: $json.prompt}]}) }}",
+          "options": {}
+        },
+        "id": "node_http",
+        "name": "Claude Analyse",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          440,
+          0
+        ],
+        "credentials": {
+          "anthropicApi": {
+            "id": "9LB76hvnIilIJdFy",
+            "name": "Anthropic account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json.content?.[0]?.text || '{}';\nlet out = {mood:'📊',summary:'Analyse nicht verfügbar.',tip:'Halte deine Schlafzeiten konsistent.',source:'claude'};\ntry { const p=JSON.parse(raw.trim().replace(/^```json?\\s*/,'').replace(/```\\s*$/,'')); out={...out,...p,source:'claude'}; } catch(e) { out.summary = raw.slice(0,200); out.source='claude'; }\nreturn [{json:out}];"
+        },
+        "id": "node_code2",
+        "name": "Antwort parsen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}",
+          "options": {}
+        },
+        "id": "node_resp",
+        "name": "Antwort senden",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          880,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Prompt bauen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prompt bauen": {
+        "main": [
+          [
+            {
+              "node": "Claude Analyse",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Claude Analyse": {
+        "main": [
+          [
+            {
+              "node": "Antwort parsen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Antwort parsen": {
+        "main": [
+          [
+            {
+              "node": "Antwort senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "e53816cd-95e8-4592-8942-c4f07ea05b5d",
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prompt bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt bauen": {
+      "main": [
+        [
+          {
+            "node": "Claude Analyse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Analyse": {
+      "main": [
+        [
+          {
+            "node": "Antwort parsen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antwort parsen": {
+      "main": [
+        [
+          {
+            "node": "Antwort senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-06T08:42:49.579Z",
+  "id": "nvXdca1z8hnSqHQD",
+  "isArchived": false,
+  "meta": null,
+  "name": "📊 Analyse-Insights – Claude AI",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "analyse-insights",
+        "responseMode": "responseNode",
+        "options": {},
+        "httpMethod": "POST"
+      },
+      "id": "node_wh",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "0b8af880-83e8-45ea-9e29-9c9efde07cc1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json.body || $input.first().json;\nconst rec = d.recovery || {};\nconst sleep = d.sleep || {};\nconst strain = d.strain || {};\nconst rhr = d.rhr || null;\nconst date = d.date || new Date().toISOString().slice(0,10);\nconst fmt = (v,dec=1) => v!=null ? Number(v).toFixed(dec) : '–';\nconst prompt = 'Du bist ein persönlicher Fitness-Coach für Dennis. Analysiere folgende Gesundheitsdaten und antworte NUR mit einem JSON-Objekt (ohne Markdown, kein Codeblock):\\n{\"mood\":\"emoji\",\"summary\":\"1-2 Sätze auf Deutsch zur heutigen Gesundheitssituation\",\"tip\":\"1 konkreter Tipp für heute auf Deutsch\"}\\n\\nDaten vom '+date+':\\n- Erholung: '+(rec.score||0)+'/100 ('+(rec.label||'–')+')\\n- Schlaf: '+fmt(sleep.perf,0)+'% Leistung ('+fmt(sleep.total)+'h gesamt, Tief '+fmt(sleep.deep)+'h, REM '+fmt(sleep.rem)+'h)\\n- Ruhepuls: '+(rhr?Math.round(rhr)+' bpm':'nicht verfügbar')+'\\n- Belastung: '+(strain.score||0)+'/21 ('+(strain.label||'–')+') – '+(strain.kcal||0)+' kcal aktiv, '+(strain.steps||0)+' Schritte\\n\\nNur das JSON-Objekt, kein Text darum.';\nreturn [{json:{prompt}}];"
+      },
+      "id": "node_code1",
+      "name": "Prompt bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({model: \"claude-haiku-4-5-20251001\", max_tokens: 256, messages: [{role: \"user\", content: $json.prompt}]}) }}",
+        "options": {}
+      },
+      "id": "node_http",
+      "name": "Claude Analyse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "9LB76hvnIilIJdFy",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.content?.[0]?.text || '{}';\nlet out = {mood:'📊',summary:'Analyse nicht verfügbar.',tip:'Halte deine Schlafzeiten konsistent.',source:'claude'};\ntry { const p=JSON.parse(raw.trim().replace(/^```json?\\s*/,'').replace(/```\\s*$/,'')); out={...out,...p,source:'claude'}; } catch(e) { out.summary = raw.slice(0,200); out.source='claude'; }\nreturn [{json:out}];"
+      },
+      "id": "node_code2",
+      "name": "Antwort parsen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "node_resp",
+      "name": "Antwort senden",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        880,
+        0
+      ]
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "timezone": "Europe/Berlin"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-07-06T08:42:49.581Z",
+      "createdAt": "2026-07-06T08:42:49.581Z",
+      "role": "workflow:owner",
+      "workflowId": "nvXdca1z8hnSqHQD",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-07-06T08:46:27.581Z",
+  "versionId": "e53816cd-95e8-4592-8942-c4f07ea05b5d"
+}
