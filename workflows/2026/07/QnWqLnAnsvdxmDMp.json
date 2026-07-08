@@ -1,0 +1,737 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Täglich 7:00 Uhr": {
+      "main": [
+        [
+          {
+            "node": "Datum berechnen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datum berechnen": {
+      "main": [
+        [
+          {
+            "node": "IMAP: Emails lesen",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Paperless: Dokumente",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Nextcloud: Dateien listen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IMAP: Emails lesen": {
+      "main": [
+        [
+          {
+            "node": "Emails aufbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emails aufbereiten": {
+      "main": [
+        [
+          {
+            "node": "Alles zusammenführen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paperless: Dokumente": {
+      "main": [
+        [
+          {
+            "node": "Paperless aufbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paperless aufbereiten": {
+      "main": [
+        [
+          {
+            "node": "Alles zusammenführen",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Nextcloud: Dateien listen": {
+      "main": [
+        [
+          {
+            "node": "Neue PDFs filtern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neue PDFs filtern": {
+      "main": [
+        [
+          {
+            "node": "PDFs vorhanden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDFs vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "Nextcloud: PDF laden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alles zusammenführen",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Nextcloud: PDF laden": {
+      "main": [
+        [
+          {
+            "node": "PDF Text extrahieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF Text extrahieren": {
+      "main": [
+        [
+          {
+            "node": "Nextcloud aufbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nextcloud aufbereiten": {
+      "main": [
+        [
+          {
+            "node": "Alles zusammenführen",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Alles zusammenführen": {
+      "main": [
+        [
+          {
+            "node": "Claude-Prompt aufbauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude-Prompt aufbauen": {
+      "main": [
+        [
+          {
+            "node": "Inhalte vorhanden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inhalte vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "Claude API analysieren",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Claude API analysieren": {
+      "main": [
+        [
+          {
+            "node": "Antwort parsen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antwort parsen": {
+      "main": [
+        [
+          {
+            "node": "Aktionen vorhanden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aktionen vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "iCal Event erstellen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "iCal Event erstellen": {
+      "main": [
+        [
+          {
+            "node": "CalDAV: Termin speichern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CalDAV: Termin speichern": {
+      "main": [
+        [
+          {
+            "node": "Abschluss-Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-07T11:07:38.015Z",
+  "id": "QnWqLnAnsvdxmDMp",
+  "isArchived": false,
+  "meta": null,
+  "name": "Täglicher Email & Dokument Analyzer",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Täglich 7:00 Uhr",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];\nconst d = new Date();\nd.setDate(d.getDate() - 1);\nconst imapDate = `${String(d.getDate()).padStart(2,'0')}-${months[d.getMonth()]}-${d.getFullYear()}`;\nconst isoDate = d.toISOString().split('T')[0];\nreturn [{ json: { imapDate, isoDate } }];"
+      },
+      "id": "a1b2c3d4-0002-0002-0002-000000000002",
+      "name": "Datum berechnen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "credentials",
+        "mailbox": "INBOX",
+        "action": "getAllEmailsSince",
+        "date": "={{ $('Datum berechnen').item.json.imapDate }}",
+        "options": {
+          "downloadAttachments": true,
+          "dataPropertyAttachmentsPrefixName": "attachment_"
+        }
+      },
+      "id": "a1b2c3d4-0003-0003-0003-000000000003",
+      "name": "IMAP: Emails lesen",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        700,
+        160
+      ],
+      "credentials": {
+        "imap": {
+          "id": "ePxlcawqlUoNKC5W",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\nfor (const item of $input.all()) {\n  const email = item.json;\n  const attachmentTexts = [];\n  const binaryKeys = Object.keys(item.binary || {});\n  for (const key of binaryKeys) {\n    const bin = item.binary[key];\n    if (bin && bin.mimeType === 'application/pdf') {\n      attachmentTexts.push({ name: bin.fileName || key, type: 'pdf_attachment' });\n    }\n  }\n  items.push({\n    json: {\n      source: 'email',\n      subject: email.subject || '(kein Betreff)',\n      from: email.from?.value?.[0]?.address || email.from || '',\n      date: email.date || new Date().toISOString(),\n      body: (email.text || email.textHtml || '').substring(0, 3000),\n      attachments: attachmentTexts,\n      binary_keys: binaryKeys.filter(k => item.binary?.[k]?.mimeType === 'application/pdf')\n    },\n    binary: item.binary\n  });\n}\nreturn items;"
+      },
+      "id": "a1b2c3d4-0004-0004-0004-000000000004",
+      "name": "Emails aufbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://paperless.paun01.de/api/documents/?created__gte={{ $('Datum berechnen').item.json.isoDate }}&ordering=-created&page_size=50",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token 54f69347ba18315b156062cf21e1012d7e55c84f"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0005-0005-0005-000000000005",
+      "name": "Paperless: Dokumente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nconst docs = result.results || [];\nreturn docs.map(doc => ({\n  json: {\n    source: 'paperless',\n    subject: doc.title || 'Unbekannt',\n    from: 'paperless-ngx',\n    date: doc.created || doc.modified || new Date().toISOString(),\n    body: (doc.content || '').substring(0, 3000),\n    attachments: []\n  }\n}));"
+      },
+      "id": "a1b2c3d4-0006-0006-0006-000000000006",
+      "name": "Paperless aufbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PROPFIND",
+        "url": "https://nextcloud.paun01.de/remote.php/dav/files/n8n/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Depth",
+              "value": "1"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/xml"
+            }
+          ]
+        },
+        "sendBody": true,
+        "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><d:propfind xmlns:d=\"DAV:\"><d:prop><d:getlastmodified/><d:displayname/><d:getcontenttype/><d:href/></d:prop></d:propfind>",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0007-0007-0007-000000000007",
+      "name": "Nextcloud: Dateien listen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        540
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Rgza6RmHbVM0h9Wj",
+          "name": "Nextcloud n8n (Basic Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const xmlText = $input.first().json.data || $input.first().json.body || '';\nconst cutoff = new Date(Date.now() - 25 * 60 * 60 * 1000);\nconst hrefMatches = xmlText.match(/<[^:>]*:href>([^<]+)<\\/[^:>]*:href>/g) || [];\nconst lmMatches = xmlText.match(/<[^:>]*:getlastmodified>([^<]+)<\\/[^:>]*:getlastmodified>/g) || [];\nconst ctMatches = xmlText.match(/<[^:>]*:getcontenttype>([^<]+)<\\/[^:>]*:getcontenttype>/g) || [];\nconst files = [];\nfor (let i = 0; i < hrefMatches.length; i++) {\n  const href = hrefMatches[i].replace(/<[^>]+>/g, '');\n  const lm = lmMatches[i] ? new Date(lmMatches[i].replace(/<[^>]+>/g, '')) : null;\n  const ct = ctMatches[i] ? ctMatches[i].replace(/<[^>]+>/g, '') : '';\n  if (ct.includes('application/pdf') && lm && lm > cutoff) {\n    files.push({ href, lastModified: lm.toISOString(), name: href.split('/').pop() });\n  }\n}\nif (files.length === 0) return [{ json: { skip: true } }];\nreturn files.map(f => ({ json: f }));"
+      },
+      "id": "a1b2c3d4-0008-0008-0008-000000000008",
+      "name": "Neue PDFs filtern",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0009-0009-0009-000000000009",
+      "name": "PDFs vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://nextcloud.paun01.de{{ $json.href }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0010-0010-0010-000000000010",
+      "name": "Nextcloud: PDF laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        480
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Rgza6RmHbVM0h9Wj",
+          "name": "Nextcloud n8n (Basic Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "extractDocumentText",
+        "binaryPropertyName": "data"
+      },
+      "id": "a1b2c3d4-0011-0011-0011-000000000011",
+      "name": "PDF Text extrahieren",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => ({\n  json: {\n    source: 'nextcloud',\n    subject: item.json.fileName || item.json.name || 'nextcloud-dokument.pdf',\n    from: 'Nextcloud',\n    date: new Date().toISOString(),\n    body: (item.json.text || item.json.content || '').substring(0, 3000),\n    attachments: []\n  }\n}));"
+      },
+      "id": "a1b2c3d4-0012-0012-0012-000000000012",
+      "name": "Nextcloud aufbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0013-0013-0013-000000000013",
+      "name": "Alles zusammenführen",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1940,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().filter(i => !i.json.skip && (i.json.body || '').trim().length > 10);\nif (items.length === 0) {\n  return [{ json: { skip: true, reason: 'Keine Inhalte zum Analysieren' } }];\n}\nconst maxItems = 15;\nconst selected = items.slice(0, maxItems);\nconst contentParts = [];\nfor (let idx = 0; idx < selected.length; idx++) {\n  const item = selected[idx].json;\n  contentParts.push(`=== Dokument ${idx + 1}: ${item.subject} ===`);\n  contentParts.push(`Von: ${item.from}`);\n  contentParts.push(`Datum: ${item.date}`);\n  if (item.body) contentParts.push(`Inhalt:\\n${item.body.substring(0, 2000)}`);\n  contentParts.push('');\n}\nreturn [{ json: {\n  userMessage: contentParts.join('\\n').substring(0, 14000),\n  itemCount: selected.length\n}}];"
+      },
+      "id": "a1b2c3d4-0014-0014-0014-000000000014",
+      "name": "Claude-Prompt aufbauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2140,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0015-0015-0015-000000000015",
+      "name": "Inhalte vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2340,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: 'claude-sonnet-4-6',\n  max_tokens: 2000,\n  system: 'Du bist ein präziser Assistent, der E-Mails und Dokumente auf Handlungsbedarf analysiert.\\nAntworte ausschließlich mit gültigem JSON. Kein Markdown, keine Erklärungen.\\n\\nGesucht werden:\\n- Rechnungen / Zahlungsaufforderungen (Betrag, Fälligkeitsdatum)\\n- Abonnements / Verträge zum Kündigen (Frist, Kündigungsdatum)\\n- Vertragsverlängerungen / Opt-out-Fristen\\n- Behördliche Fristen, Steuern, Formulare\\n- Terminbestätigungen die nötig sind\\n\\nFormat:\\n{\\\"items\\\": [{\\\"type\\\": \\\"rechnung|kuendigung|verlaengerung|frist|termin|sonstiges\\\", \\\"title\\\": \\\"Kurzer Titel max 60 Zeichen\\\", \\\"description\\\": \\\"Details 1-2 Sätze\\\", \\\"due_date\\\": \\\"YYYY-MM-DD oder null\\\", \\\"amount\\\": \\\"29,99 EUR oder null\\\", \\\"action\\\": \\\"Was muss getan werden\\\", \\\"priority\\\": \\\"hoch|mittel|niedrig\\\"}]}\\n\\nWenn kein Handlungsbedarf: {\\\"items\\\": []}',\n  messages: [{ role: 'user', content: $json.userMessage }]\n}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0016-0016-0016-000000000016",
+      "name": "Claude API analysieren",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2560,
+        240
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "9LB76hvnIilIJdFy",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst text = response?.content?.[0]?.text || '{\"items\":[]}';\nlet parsed;\ntry {\n  parsed = JSON.parse(text);\n} catch (e) {\n  const match = text.match(/\\{[\\s\\S]*\\}/);\n  if (match) {\n    try { parsed = JSON.parse(match[0]); } catch { parsed = { items: [] }; }\n  } else {\n    parsed = { items: [] };\n  }\n}\nconst items = parsed.items || [];\nif (items.length === 0) return [{ json: { skip: true, reason: 'Kein Handlungsbedarf erkannt' } }];\nconsole.log(`Claude hat ${items.length} Handlungseinträge erkannt`);\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "a1b2c3d4-0017-0017-0017-000000000017",
+      "name": "Antwort parsen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2760,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "conditions": [
+            {
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0018-0018-0018-000000000018",
+      "name": "Aktionen vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const action = $json;\nconst today = new Date();\nconst reminderDaysBefore = 3;\nlet dueDate;\nif (action.due_date && action.due_date !== 'null') {\n  dueDate = new Date(action.due_date + 'T00:00:00');\n  if (isNaN(dueDate.getTime())) dueDate = new Date(today.getTime() + 7 * 86400000);\n} else {\n  dueDate = new Date(today.getTime() + 7 * 86400000);\n}\nconst reminderDate = new Date(dueDate.getTime() - reminderDaysBefore * 86400000);\nconst tomorrow = new Date(today.getTime() + 86400000);\nif (reminderDate < tomorrow) reminderDate.setTime(tomorrow.getTime());\nconst pad = n => String(n).padStart(2, '0');\nconst formatDate = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;\nconst uid = `email-analyzer-${Date.now()}-${Math.random().toString(36).substr(2,9)}@analyzer`;\nconst dtstart = formatDate(reminderDate);\nconst dtend = formatDate(new Date(reminderDate.getTime() + 86400000));\nconst dtstamp = new Date().toISOString().replace(/[-:]/g,'').replace(/\\.\\d{3}/,'') + 'Z';\nconst title = `[Analyzer] ${action.title || 'Aufgabe'}`;\nconst desc = [\n  action.description || '',\n  '',\n  `Aktion: ${action.action || ''}`,\n  action.amount ? `Betrag: ${action.amount}` : '',\n  `Priorität: ${action.priority || 'mittel'}`,\n  `Fällig: ${action.due_date || 'nicht angegeben'}`,\n  `Erstellt: ${today.toLocaleDateString('de-DE')} (Email-Analyzer)`\n].filter(Boolean).join('\\n').replace(/,/g, '\\\\,').replace(/\\n/g, '\\\\n');\nconst ical = [\n  'BEGIN:VCALENDAR',\n  'VERSION:2.0',\n  'PRODID:-//Email Analyzer//DE',\n  'BEGIN:VEVENT',\n  `UID:${uid}`,\n  `DTSTAMP:${dtstamp}`,\n  `DTSTART;VALUE=DATE:${dtstart}`,\n  `DTEND;VALUE=DATE:${dtend}`,\n  `SUMMARY:${title}`,\n  `DESCRIPTION:${desc}`,\n  'BEGIN:VALARM',\n  'ACTION:DISPLAY',\n  `DESCRIPTION:Erinnerung: ${action.title || 'Aufgabe'}`,\n  'TRIGGER:PT9H',\n  'END:VALARM',\n  'END:VEVENT',\n  'END:VCALENDAR'\n].join('\\r\\n');\nreturn [{ json: { ical, uid, title, reminderDate: reminderDate.toISOString().split('T')[0] } }];"
+      },
+      "id": "a1b2c3d4-0019-0019-0019-000000000019",
+      "name": "iCal Event erstellen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3180,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://dav.mailbox.org/caldav/Y2FsOi8vMC8zMg/{{ $json.uid }}.ics",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "text/calendar; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "={{ $json.ical }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0020-0020-0020-000000000020",
+      "name": "CalDAV: Termin speichern",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3380,
+        180
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "r4UXVtc4lfGUxjZ5",
+          "name": "mailbox.org CalDAV"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.all();\nconst successful = results.filter(r => !r.json.error).length;\nconsole.log(`Email-Analyzer abgeschlossen: ${successful}/${results.length} Termine erstellt`);\nreturn [{ json: { message: `${successful} Kalendereinträge erstellt`, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "a1b2c3d4-0021-0021-0021-000000000021",
+      "name": "Abschluss-Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3580,
+        180
+      ]
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-07-07T11:07:38.018Z",
+      "createdAt": "2026-07-07T11:07:38.018Z",
+      "role": "workflow:owner",
+      "workflowId": "QnWqLnAnsvdxmDMp",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-07-07T11:43:20.797Z",
+  "versionId": "91a101fd-457b-4ec3-8f43-18cac6321cbf"
+}
