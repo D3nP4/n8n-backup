@@ -1,0 +1,208 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-07-13T21:26:38.378Z",
+    "createdAt": "2026-07-13T21:26:38.378Z",
+    "versionId": "22526dda-682a-42c8-9392-05db70a8de7e",
+    "workflowId": "NMZt7j5utezgouBS",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 7 * * *"
+              }
+            ]
+          }
+        },
+        "id": "a1b2c3d4-0001-0001-0001-000000000001",
+        "name": "7 Uhr täglich",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          260,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://sport-dash.paun01.de/api/briefing",
+          "options": {}
+        },
+        "id": "a1b2c3d4-0001-0001-0001-000000000002",
+        "name": "Briefing holen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          480,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.text }}",
+          "additionalFields": {}
+        },
+        "id": "a1b2c3d4-0001-0001-0001-000000000003",
+        "name": "Telegram senden",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          700,
+          300
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "7aa57466-c87e-4f9c-b1fa-c74be4582a6a"
+      }
+    ],
+    "connections": {
+      "7 Uhr täglich": {
+        "main": [
+          [
+            {
+              "node": "Briefing holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Briefing holen": {
+        "main": [
+          [
+            {
+              "node": "Telegram senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "22526dda-682a-42c8-9392-05db70a8de7e",
+  "connections": {
+    "7 Uhr täglich": {
+      "main": [
+        [
+          {
+            "node": "Briefing holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Briefing holen": {
+      "main": [
+        [
+          {
+            "node": "Telegram senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-13T21:26:38.375Z",
+  "id": "NMZt7j5utezgouBS",
+  "isArchived": false,
+  "meta": null,
+  "name": "🏃 Morgen-Briefing Sport → Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "7 Uhr täglich",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://sport-dash.paun01.de/api/briefing",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000002",
+      "name": "Briefing holen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000003",
+      "name": "Telegram senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        700,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "7aa57466-c87e-4f9c-b1fa-c74be4582a6a"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-07-13T21:26:38.377Z",
+      "createdAt": "2026-07-13T21:26:38.377Z",
+      "role": "workflow:owner",
+      "workflowId": "NMZt7j5utezgouBS",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:7 Uhr täglich": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-07-13T21:26:38.375Z",
+  "versionId": "22526dda-682a-42c8-9392-05db70a8de7e"
+}
