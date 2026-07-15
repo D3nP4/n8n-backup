@@ -1,0 +1,256 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-07-14T08:19:35.220Z",
+    "createdAt": "2026-07-14T08:19:35.220Z",
+    "versionId": "586dfcdc-7b10-463e-97f9-b089b1fe0b96",
+    "workflowId": "iFMDt465QLXdwaJ5",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "30 7 * * *"
+              }
+            ]
+          }
+        },
+        "id": "b1c2d3e4-0002-0002-0002-000000000001",
+        "name": "7:30 täglich",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          240,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "url": "http://192.168.178.42:8098/?json=1",
+          "options": {}
+        },
+        "id": "b1c2d3e4-0002-0002-0002-000000000002",
+        "name": "Agenda holen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          450,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const t = ($json.text)||'';\nreturn t.includes('\\u2022') ? [{json:{text:t}}] : [];"
+        },
+        "id": "b1c2d3e4-0002-0002-0002-000000000003",
+        "name": "Nur wenn Termine",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.text }}",
+          "additionalFields": {}
+        },
+        "id": "b1c2d3e4-0002-0002-0002-000000000004",
+        "name": "Telegram senden",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          870,
+          300
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "eb5284b1-a678-4b6c-bfdd-27db4c59d22e"
+      }
+    ],
+    "connections": {
+      "7:30 täglich": {
+        "main": [
+          [
+            {
+              "node": "Agenda holen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Agenda holen": {
+        "main": [
+          [
+            {
+              "node": "Nur wenn Termine",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Nur wenn Termine": {
+        "main": [
+          [
+            {
+              "node": "Telegram senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "586dfcdc-7b10-463e-97f9-b089b1fe0b96",
+  "connections": {
+    "7:30 täglich": {
+      "main": [
+        [
+          {
+            "node": "Agenda holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agenda holen": {
+      "main": [
+        [
+          {
+            "node": "Nur wenn Termine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nur wenn Termine": {
+      "main": [
+        [
+          {
+            "node": "Telegram senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-14T08:19:35.217Z",
+  "id": "iFMDt465QLXdwaJ5",
+  "isArchived": false,
+  "meta": null,
+  "name": "📅 Tages-Agenda & Geburtstage → Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "b1c2d3e4-0002-0002-0002-000000000001",
+      "name": "7:30 täglich",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.178.42:8098/?json=1",
+        "options": {}
+      },
+      "id": "b1c2d3e4-0002-0002-0002-000000000002",
+      "name": "Agenda holen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const t = ($json.text)||'';\nreturn t.includes('\\u2022') ? [{json:{text:t}}] : [];"
+      },
+      "id": "b1c2d3e4-0002-0002-0002-000000000003",
+      "name": "Nur wenn Termine",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "id": "b1c2d3e4-0002-0002-0002-000000000004",
+      "name": "Telegram senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        870,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "eb5284b1-a678-4b6c-bfdd-27db4c59d22e"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T08:19:35.219Z",
+      "createdAt": "2026-07-14T08:19:35.219Z",
+      "role": "workflow:owner",
+      "workflowId": "iFMDt465QLXdwaJ5",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:7:30 täglich": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-07-14T08:19:35.217Z",
+  "versionId": "586dfcdc-7b10-463e-97f9-b089b1fe0b96"
+}
