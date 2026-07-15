@@ -1,0 +1,380 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-07-14T13:34:30.587Z",
+    "createdAt": "2026-07-14T13:34:30.587Z",
+    "versionId": "4aa91cbd-ca61-4f00-b7ab-4ce31a907feb",
+    "workflowId": "7Mensv0FPNNKM1dx",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 12 * * *"
+              }
+            ]
+          }
+        },
+        "id": "d1e2f3a4-0004-0004-0004-000000000001",
+        "name": "12 Uhr täglich",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          240,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://paperless.paun01.de/api/documents/?ordering=-added&page_size=15",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Token 54f69347ba18315b156062cf21e1012d7e55c84f"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "d1e2f3a4-0004-0004-0004-000000000002",
+        "name": "Paperless: neue Docs",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          450,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const docs=$json.results||[];const cut=Date.now()-26*3600*1000;return docs.filter(d=>new Date(d.added).getTime()>cut).map(d=>({json:{subject:d.title||'',body:(d.content||'').slice(0,4000)}}));"
+        },
+        "id": "d1e2f3a4-0004-0004-0004-000000000003",
+        "name": "Neue aufteilen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          660,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://192.168.178.42:8098/extract",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { \"subject\": $json.subject, \"body\": $json.body } }}",
+          "options": {}
+        },
+        "id": "d1e2f3a4-0004-0004-0004-000000000004",
+        "name": "Termin erkennen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          870,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return ($json.created&&$json.created>0)?[{json:$json}]:[];"
+        },
+        "id": "d1e2f3a4-0004-0004-0004-000000000005",
+        "name": "Nur wenn Termin",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1080,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.text }}",
+          "additionalFields": {}
+        },
+        "id": "d1e2f3a4-0004-0004-0004-000000000006",
+        "name": "Telegram senden",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1290,
+          300
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "ab3cb925-d4b6-4874-8239-be84be71c129"
+      }
+    ],
+    "connections": {
+      "12 Uhr täglich": {
+        "main": [
+          [
+            {
+              "node": "Paperless: neue Docs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Paperless: neue Docs": {
+        "main": [
+          [
+            {
+              "node": "Neue aufteilen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Neue aufteilen": {
+        "main": [
+          [
+            {
+              "node": "Termin erkennen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Termin erkennen": {
+        "main": [
+          [
+            {
+              "node": "Nur wenn Termin",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Nur wenn Termin": {
+        "main": [
+          [
+            {
+              "node": "Telegram senden",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "4aa91cbd-ca61-4f00-b7ab-4ce31a907feb",
+  "connections": {
+    "12 Uhr täglich": {
+      "main": [
+        [
+          {
+            "node": "Paperless: neue Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paperless: neue Docs": {
+      "main": [
+        [
+          {
+            "node": "Neue aufteilen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neue aufteilen": {
+      "main": [
+        [
+          {
+            "node": "Termin erkennen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Termin erkennen": {
+      "main": [
+        [
+          {
+            "node": "Nur wenn Termin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nur wenn Termin": {
+      "main": [
+        [
+          {
+            "node": "Telegram senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-14T13:34:30.582Z",
+  "id": "7Mensv0FPNNKM1dx",
+  "isArchived": false,
+  "meta": null,
+  "name": "📄 Paperless → Termine (Auto)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 12 * * *"
+            }
+          ]
+        }
+      },
+      "id": "d1e2f3a4-0004-0004-0004-000000000001",
+      "name": "12 Uhr täglich",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://paperless.paun01.de/api/documents/?ordering=-added&page_size=15",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token 54f69347ba18315b156062cf21e1012d7e55c84f"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d1e2f3a4-0004-0004-0004-000000000002",
+      "name": "Paperless: neue Docs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const docs=$json.results||[];const cut=Date.now()-26*3600*1000;return docs.filter(d=>new Date(d.added).getTime()>cut).map(d=>({json:{subject:d.title||'',body:(d.content||'').slice(0,4000)}}));"
+      },
+      "id": "d1e2f3a4-0004-0004-0004-000000000003",
+      "name": "Neue aufteilen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.178.42:8098/extract",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"subject\": $json.subject, \"body\": $json.body } }}",
+        "options": {}
+      },
+      "id": "d1e2f3a4-0004-0004-0004-000000000004",
+      "name": "Termin erkennen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        870,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return ($json.created&&$json.created>0)?[{json:$json}]:[];"
+      },
+      "id": "d1e2f3a4-0004-0004-0004-000000000005",
+      "name": "Nur wenn Termin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "id": "d1e2f3a4-0004-0004-0004-000000000006",
+      "name": "Telegram senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1290,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "ab3cb925-d4b6-4874-8239-be84be71c129"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T13:34:30.585Z",
+      "createdAt": "2026-07-14T13:34:30.585Z",
+      "role": "workflow:owner",
+      "workflowId": "7Mensv0FPNNKM1dx",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:12 Uhr täglich": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-07-14T13:34:30.582Z",
+  "versionId": "4aa91cbd-ca61-4f00-b7ab-4ce31a907feb"
+}
