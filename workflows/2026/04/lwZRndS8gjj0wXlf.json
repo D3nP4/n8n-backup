@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-16T10:34:39.901Z",
-    "createdAt": "2026-06-16T10:34:39.901Z",
-    "versionId": "482129a1-fee7-496a-b321-77a3dfaa4ea0",
+    "updatedAt": "2026-07-14T13:27:06.681Z",
+    "createdAt": "2026-07-14T13:27:06.681Z",
+    "versionId": "e34c4163-2fa0-443b-845d-4c7a592ae57e",
     "workflowId": "lwZRndS8gjj0wXlf",
     "nodes": [
       {
@@ -159,6 +159,59 @@
         "parameters": {
           "jsCode": "\nconst item = $input.first().json;\nconst subject = (item.subject || '').toLowerCase();\nconst from = (item.from || '').toLowerCase();\nconst text = (item.text || '').toLowerCase();\n\n// Drop: Bestellbestätigungen, Login-Links, Newsletter, eigene Services\nconst skipSubject = [\n  'bestellung', 'bestellbestätigung', 'order confirm', 'order #',\n  'ihre bestellung', 'deine bestellung', 'tracking',\n  'versandbestätigung', 'versand', 'shipment', 'shipped',\n  'magic link', 'login link', 'sign in link', 'anmeldelink',\n  'passwort', 'password reset', 'verify your', 'verifizier',\n  'confirm your email', 'bestätige deine',\n  'abonnement', 'unsubscribe', 'abmelden',\n  'newsletter', 'gutschein', 'rabatt', 'angebot',\n  'rechnung nr.', // auto-generated invoices handled separately\n  'healthchecks', 'n8n', 'paperless', 'immich',\n  'ihr paket', 'dein paket', 'paketnummer'\n];\n\nconst skipFrom = [\n  'noreply', 'no-reply', 'donotreply', 'do-not-reply',\n  'orders@', 'shipping@', 'notifications@', 'mailer@',\n  'amazon.', 'paypal.', 'dhl.', 'dpd.', 'ups.', 'hermes.',\n  'otto.de', 'zalando', 'ebay.', 'idealo',\n  'apple.com', 'google.com', 'microsoft.com',\n  'github.com', 'cloudflare', 'hetzner'\n];\n\nconst matchSubject = skipSubject.some(k => subject.includes(k));\nconst matchFrom   = skipFrom.some(k => from.includes(k));\n\nif (matchSubject || matchFrom) {\n  // Silently drop — return empty array\n  return [];\n}\n\nreturn [$input.first()];\n"
         }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://192.168.178.42:8098/extract",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { \"subject\": $json.subject, \"body\": ($json.text || $json.html || \"\") } }}",
+          "options": {}
+        },
+        "id": "c1d2e3f4-0003-0003-0003-000000000001",
+        "name": "Termin erkennen",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -708,
+          156
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "return ($json.created && $json.created > 0) ? [{json:$json}] : [];"
+        },
+        "id": "c1d2e3f4-0003-0003-0003-000000000002",
+        "name": "Nur wenn Termin",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -488,
+          156
+        ]
+      },
+      {
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.text }}",
+          "additionalFields": {}
+        },
+        "id": "c1d2e3f4-0003-0003-0003-000000000003",
+        "name": "Termin → Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          -268,
+          156
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "webhookId": "16c431dc-35c0-4f2b-a097-2c3c31712d4c"
       }
     ],
     "connections": {
@@ -167,6 +220,11 @@
           [
             {
               "node": "Prepare Mail",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Termin erkennen",
               "type": "main",
               "index": 0
             }
@@ -237,6 +295,28 @@
             }
           ]
         ]
+      },
+      "Termin erkennen": {
+        "main": [
+          [
+            {
+              "node": "Nur wenn Termin",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Nur wenn Termin": {
+        "main": [
+          [
+            {
+              "node": "Termin → Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "Dennis Paun",
@@ -244,13 +324,18 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "482129a1-fee7-496a-b321-77a3dfaa4ea0",
+  "activeVersionId": "e34c4163-2fa0-443b-845d-4c7a592ae57e",
   "connections": {
     "IMAP Trigger": {
       "main": [
         [
           {
             "node": "Prepare Mail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Termin erkennen",
             "type": "main",
             "index": 0
           }
@@ -316,6 +401,28 @@
         [
           {
             "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Termin erkennen": {
+      "main": [
+        [
+          {
+            "node": "Nur wenn Termin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nur wenn Termin": {
+      "main": [
+        [
+          {
+            "node": "Termin → Telegram",
             "type": "main",
             "index": 0
           }
@@ -484,6 +591,59 @@
       "parameters": {
         "jsCode": "\nconst item = $input.first().json;\nconst subject = (item.subject || '').toLowerCase();\nconst from = (item.from || '').toLowerCase();\nconst text = (item.text || '').toLowerCase();\n\n// Drop: Bestellbestätigungen, Login-Links, Newsletter, eigene Services\nconst skipSubject = [\n  'bestellung', 'bestellbestätigung', 'order confirm', 'order #',\n  'ihre bestellung', 'deine bestellung', 'tracking',\n  'versandbestätigung', 'versand', 'shipment', 'shipped',\n  'magic link', 'login link', 'sign in link', 'anmeldelink',\n  'passwort', 'password reset', 'verify your', 'verifizier',\n  'confirm your email', 'bestätige deine',\n  'abonnement', 'unsubscribe', 'abmelden',\n  'newsletter', 'gutschein', 'rabatt', 'angebot',\n  'rechnung nr.', // auto-generated invoices handled separately\n  'healthchecks', 'n8n', 'paperless', 'immich',\n  'ihr paket', 'dein paket', 'paketnummer'\n];\n\nconst skipFrom = [\n  'noreply', 'no-reply', 'donotreply', 'do-not-reply',\n  'orders@', 'shipping@', 'notifications@', 'mailer@',\n  'amazon.', 'paypal.', 'dhl.', 'dpd.', 'ups.', 'hermes.',\n  'otto.de', 'zalando', 'ebay.', 'idealo',\n  'apple.com', 'google.com', 'microsoft.com',\n  'github.com', 'cloudflare', 'hetzner'\n];\n\nconst matchSubject = skipSubject.some(k => subject.includes(k));\nconst matchFrom   = skipFrom.some(k => from.includes(k));\n\nif (matchSubject || matchFrom) {\n  // Silently drop — return empty array\n  return [];\n}\n\nreturn [$input.first()];\n"
       }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.178.42:8098/extract",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"subject\": $json.subject, \"body\": ($json.text || $json.html || \"\") } }}",
+        "options": {}
+      },
+      "id": "c1d2e3f4-0003-0003-0003-000000000001",
+      "name": "Termin erkennen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -708,
+        156
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return ($json.created && $json.created > 0) ? [{json:$json}] : [];"
+      },
+      "id": "c1d2e3f4-0003-0003-0003-000000000002",
+      "name": "Nur wenn Termin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -488,
+        156
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "id": "c1d2e3f4-0003-0003-0003-000000000003",
+      "name": "Termin → Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -268,
+        156
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "webhookId": "16c431dc-35c0-4f2b-a097-2c3c31712d4c"
     }
   ],
   "pinData": {},
@@ -505,11 +665,11 @@
   ],
   "staticData": {
     "node:IMAP Trigger": {
-      "lastMessageUid": 1480
+      "lastMessageUid": 1490
     }
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-16T10:34:39.900Z",
-  "versionId": "482129a1-fee7-496a-b321-77a3dfaa4ea0"
+  "updatedAt": "2026-07-14T13:27:06.679Z",
+  "versionId": "e34c4163-2fa0-443b-845d-4c7a592ae57e"
 }
