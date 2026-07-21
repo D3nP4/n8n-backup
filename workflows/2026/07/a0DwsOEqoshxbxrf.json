@@ -1,0 +1,146 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-07-20T13:14:53.886Z",
+    "createdAt": "2026-07-20T13:14:53.886Z",
+    "versionId": "6eb585e9-c95a-4bf6-ab28-b71b96a68ef1",
+    "workflowId": "a0DwsOEqoshxbxrf",
+    "nodes": [
+      {
+        "id": "wh",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          240,
+          300
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "telegram-send",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "webhookId": "telegram-send"
+      },
+      {
+        "id": "tg",
+        "name": "Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          460,
+          300
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "={{ $json.body.text }}",
+          "additionalFields": {}
+        },
+        "webhookId": "d8c6925f-5463-4f77-bb3e-9f67f1d87d15"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "6eb585e9-c95a-4bf6-ab28-b71b96a68ef1",
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-20T13:14:53.883Z",
+  "id": "a0DwsOEqoshxbxrf",
+  "isArchived": false,
+  "meta": null,
+  "name": "📨 Telegram Send (generisch)",
+  "nodes": [
+    {
+      "id": "wh",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-send",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "telegram-send"
+    },
+    {
+      "id": "tg",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "={{ $json.body.text }}",
+        "additionalFields": {}
+      },
+      "webhookId": "d8c6925f-5463-4f77-bb3e-9f67f1d87d15"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {},
+  "shared": [
+    {
+      "updatedAt": "2026-07-20T13:14:53.885Z",
+      "createdAt": "2026-07-20T13:14:53.885Z",
+      "role": "workflow:owner",
+      "workflowId": "a0DwsOEqoshxbxrf",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-07-20T13:14:53.883Z",
+  "versionId": "6eb585e9-c95a-4bf6-ab28-b71b96a68ef1"
+}
