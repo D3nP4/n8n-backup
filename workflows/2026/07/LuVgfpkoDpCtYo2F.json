@@ -1,0 +1,146 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-07-20T13:19:58.571Z",
+    "createdAt": "2026-07-20T13:19:58.571Z",
+    "versionId": "eb3390da-0025-4dbd-9769-0018e58c839a",
+    "workflowId": "LuVgfpkoDpCtYo2F",
+    "nodes": [
+      {
+        "id": "wh",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          240,
+          300
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "workout-packlist",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "webhookId": "workout-packlist"
+      },
+      {
+        "id": "tg",
+        "name": "Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          460,
+          300
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "🏋️ Packliste Mittagspausen-Workout\n\n☐ Sportshirt + kurze Hose\n☐ Sportschuhe\n☐ Handtuch\n☐ Trinkflasche (gefüllt)\n☐ Deo + Duschgel\n☐ Frische Socken + Unterhemd\n☐ Kopfhörer\n☐ Post-Workout Snack (Shake/Banane)\n\nGuten Morgen – pack die Tasche gleich, dann ist Mittag alles dabei! 💪",
+          "additionalFields": {}
+        },
+        "webhookId": "9611f1a5-0813-4263-b248-88bcddacf68c"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "eb3390da-0025-4dbd-9769-0018e58c839a",
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-20T13:19:58.568Z",
+  "id": "LuVgfpkoDpCtYo2F",
+  "isArchived": false,
+  "meta": null,
+  "name": "🏋️ Workout-Packliste (Wecker)",
+  "nodes": [
+    {
+      "id": "wh",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "workout-packlist",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "workout-packlist"
+    },
+    {
+      "id": "tg",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "🏋️ Packliste Mittagspausen-Workout\n\n☐ Sportshirt + kurze Hose\n☐ Sportschuhe\n☐ Handtuch\n☐ Trinkflasche (gefüllt)\n☐ Deo + Duschgel\n☐ Frische Socken + Unterhemd\n☐ Kopfhörer\n☐ Post-Workout Snack (Shake/Banane)\n\nGuten Morgen – pack die Tasche gleich, dann ist Mittag alles dabei! 💪",
+        "additionalFields": {}
+      },
+      "webhookId": "9611f1a5-0813-4263-b248-88bcddacf68c"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {},
+  "shared": [
+    {
+      "updatedAt": "2026-07-20T13:19:58.570Z",
+      "createdAt": "2026-07-20T13:19:58.570Z",
+      "role": "workflow:owner",
+      "workflowId": "LuVgfpkoDpCtYo2F",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-07-20T13:19:58.568Z",
+  "versionId": "eb3390da-0025-4dbd-9769-0018e58c839a"
+}
