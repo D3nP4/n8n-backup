@@ -1,0 +1,164 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-07-20T08:11:59.026Z",
+    "createdAt": "2026-07-20T08:11:59.026Z",
+    "versionId": "72613e93-619a-47e8-b81c-c9891f6b7f9b",
+    "workflowId": "Xjk0u8eWeiJtdF2x",
+    "nodes": [
+      {
+        "id": "schedule-node",
+        "name": "Schedule",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          240,
+          300
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 9 1 * *"
+              },
+              {
+                "field": "cronExpression",
+                "expression": "0 9 15 * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "telegram-node",
+        "name": "Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          460,
+          300
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "parameters": {
+          "chatId": "6422093154",
+          "text": "📊 Zeit für deinen Finanz-Check!\n\nSchau rein was du diesen Monat ausgegeben hast und wo du sparen kannst:\n\nhttps://dash.paun01.de/d/finanzen-sparen",
+          "additionalFields": {}
+        },
+        "webhookId": "28193b91-33ec-45ad-adf9-be41c7c50904"
+      }
+    ],
+    "connections": {
+      "Schedule": {
+        "main": [
+          [
+            {
+              "node": "Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "72613e93-619a-47e8-b81c-c9891f6b7f9b",
+  "connections": {
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-20T08:11:59.023Z",
+  "id": "Xjk0u8eWeiJtdF2x",
+  "isArchived": false,
+  "meta": null,
+  "name": "💰 Finanz-Check Erinnerung (1. & 15.)",
+  "nodes": [
+    {
+      "id": "schedule-node",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 1 * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 9 15 * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "telegram-node",
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "parameters": {
+        "chatId": "6422093154",
+        "text": "📊 Zeit für deinen Finanz-Check!\n\nSchau rein was du diesen Monat ausgegeben hast und wo du sparen kannst:\n\nhttps://dash.paun01.de/d/finanzen-sparen",
+        "additionalFields": {}
+      },
+      "webhookId": "28193b91-33ec-45ad-adf9-be41c7c50904"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {},
+  "shared": [
+    {
+      "updatedAt": "2026-07-20T08:11:59.025Z",
+      "createdAt": "2026-07-20T08:11:59.025Z",
+      "role": "workflow:owner",
+      "workflowId": "Xjk0u8eWeiJtdF2x",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "node:Schedule": {
+      "recurrenceRules": []
+    }
+  },
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-07-20T08:11:59.023Z",
+  "versionId": "72613e93-619a-47e8-b81c-c9891f6b7f9b"
+}
