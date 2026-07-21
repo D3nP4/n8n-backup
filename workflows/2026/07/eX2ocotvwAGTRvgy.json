@@ -1,0 +1,232 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-07-20T13:34:51.509Z",
+    "createdAt": "2026-07-20T13:34:51.509Z",
+    "versionId": "6362f9ad-543c-4c26-b49d-871c724a51e4",
+    "workflowId": "eX2ocotvwAGTRvgy",
+    "nodes": [
+      {
+        "id": "wh",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          240,
+          300
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "tg-mailqa",
+          "responseMode": "onReceived",
+          "options": {}
+        },
+        "webhookId": "tg-mailqa"
+      },
+      {
+        "id": "ask",
+        "name": "Ask Mail",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          470,
+          300
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://192.168.178.42:8101/api/ask",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "keypair",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "token",
+                "value": "20c346d162ced7bd1b0dba21fc27ebbc"
+              },
+              {
+                "name": "question",
+                "value": "={{ $json.body.message.text }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 90000
+          }
+        }
+      },
+      {
+        "id": "rep",
+        "name": "Reply",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          700,
+          300
+        ],
+        "credentials": {
+          "telegramApi": {
+            "id": "qBKlXY3RPqAi76pW",
+            "name": "Telegram account"
+          }
+        },
+        "parameters": {
+          "chatId": "={{ $('Webhook').item.json.body.message.chat.id }}",
+          "text": "={{ $json.answer }}",
+          "additionalFields": {}
+        },
+        "webhookId": "65df0d4e-f53f-48e5-a080-09a15abb09ca"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Ask Mail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ask Mail": {
+        "main": [
+          [
+            {
+              "node": "Reply",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "6362f9ad-543c-4c26-b49d-871c724a51e4",
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Ask Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Mail": {
+      "main": [
+        [
+          {
+            "node": "Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-20T13:34:51.507Z",
+  "id": "eX2ocotvwAGTRvgy",
+  "isArchived": false,
+  "meta": null,
+  "name": "💬 Mail-Assistent (Telegram Q&A)",
+  "nodes": [
+    {
+      "id": "wh",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tg-mailqa",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "tg-mailqa"
+    },
+    {
+      "id": "ask",
+      "name": "Ask Mail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        470,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.178.42:8101/api/ask",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "20c346d162ced7bd1b0dba21fc27ebbc"
+            },
+            {
+              "name": "question",
+              "value": "={{ $json.body.message.text }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 90000
+        }
+      }
+    },
+    {
+      "id": "rep",
+      "name": "Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        700,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "qBKlXY3RPqAi76pW",
+          "name": "Telegram account"
+        }
+      },
+      "parameters": {
+        "chatId": "={{ $('Webhook').item.json.body.message.chat.id }}",
+        "text": "={{ $json.answer }}",
+        "additionalFields": {}
+      },
+      "webhookId": "65df0d4e-f53f-48e5-a080-09a15abb09ca"
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {},
+  "shared": [
+    {
+      "updatedAt": "2026-07-20T13:34:51.509Z",
+      "createdAt": "2026-07-20T13:34:51.509Z",
+      "role": "workflow:owner",
+      "workflowId": "eX2ocotvwAGTRvgy",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-07-20T13:34:51.507Z",
+  "versionId": "6362f9ad-543c-4c26-b49d-871c724a51e4"
+}
