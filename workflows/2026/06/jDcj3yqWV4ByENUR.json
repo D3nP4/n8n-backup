@@ -381,8 +381,13 @@
       ]
     },
     "global": {
-      "sentKeys": {},
-      "sentDate": "2026-07-21"
+      "sentKeys": {
+        "2026-07-21|-107|PayPal Europe S.a.r.l. et Cie S.C.A": true,
+        "2026-07-20|-103.99|": true,
+        "2026-07-21|57|Dennis Paun": true,
+        "2026-07-21|-57|Dennis Paun": true
+      },
+      "sentDate": "2026-07-22"
     }
   },
   "tags": [],
