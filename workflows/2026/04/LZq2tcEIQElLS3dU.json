@@ -1,9 +1,9 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-06-23T13:14:04.176Z",
-    "createdAt": "2026-06-23T13:14:04.176Z",
-    "versionId": "b42651db-234e-4cb1-8b35-8de3c5a6d149",
+    "updatedAt": "2026-07-22T06:51:19.429Z",
+    "createdAt": "2026-07-22T06:51:19.429Z",
+    "versionId": "cede3f45-332c-4a58-b210-73490d00022b",
     "workflowId": "LZq2tcEIQElLS3dU",
     "nodes": [
       {
@@ -327,7 +327,10 @@
             "name": "Unnamed credential"
           }
         },
-        "continueOnFail": true
+        "continueOnFail": true,
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000
       },
       {
         "parameters": {
@@ -424,20 +427,29 @@
           5000,
           876
         ],
-        "continueOnFail": true,
+        "continueOnFail": false,
         "parameters": {
           "method": "MKCOL",
           "url": "={{ $('Konfiguration').item.json.nextcloud_url }}/remote.php/dav/files/{{ $('Konfiguration').item.json.nextcloud_user }}/{{ $('Nextcloud - Upload vorbereiten1').item.json.folderName }}/",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBasicAuth",
-          "options": {}
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
         },
         "credentials": {
           "httpBasicAuth": {
             "id": "fWv04bRwaM2io6AB",
             "name": "Unnamed credential"
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000
       }
     ],
     "connections": {
@@ -640,7 +652,7 @@
     "description": null,
     "autosaved": false
   },
-  "activeVersionId": "b42651db-234e-4cb1-8b35-8de3c5a6d149",
+  "activeVersionId": "cede3f45-332c-4a58-b210-73490d00022b",
   "connections": {
     "Konfiguration": {
       "main": [
@@ -1165,7 +1177,10 @@
           "name": "Unnamed credential"
         }
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
@@ -1262,20 +1277,29 @@
         5000,
         876
       ],
-      "continueOnFail": true,
+      "continueOnFail": false,
       "parameters": {
         "method": "MKCOL",
         "url": "={{ $('Konfiguration').item.json.nextcloud_url }}/remote.php/dav/files/{{ $('Konfiguration').item.json.nextcloud_user }}/{{ $('Nextcloud - Upload vorbereiten1').item.json.folderName }}/",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBasicAuth",
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
       },
       "credentials": {
         "httpBasicAuth": {
           "id": "fWv04bRwaM2io6AB",
           "name": "Unnamed credential"
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
     }
   ],
   "pinData": {},
@@ -1305,6 +1329,6 @@
   },
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-06-23T13:14:04.175Z",
-  "versionId": "b42651db-234e-4cb1-8b35-8de3c5a6d149"
+  "updatedAt": "2026-07-22T06:51:19.427Z",
+  "versionId": "cede3f45-332c-4a58-b210-73490d00022b"
 }
