@@ -379,6 +379,12 @@
       "recurrenceRules": [
         0
       ]
+    },
+    "global": {
+      "sentKeys": {
+        "2026-07-28|-470|Sigrid Gronwald": true
+      },
+      "sentDate": "2026-07-28"
     }
   },
   "tags": [],
