@@ -379,6 +379,16 @@
       "recurrenceRules": [
         0
       ]
+    },
+    "global": {
+      "sentKeys": {
+        "2026-07-31|55|PAYPAL": true,
+        "2026-08-03|-140|Iris Mönig": true,
+        "2026-08-03|-130|Allianz Lebensversicherungs-Aktiengesellschaft": true,
+        "2026-08-03|-178.61|PayPal (Europe) S.a r.l. et Cie, S.C.A.": true,
+        "2026-08-03|-99.9|PayPal (Europe) S.a r.l. et Cie, S.C.A.": true
+      },
+      "sentDate": "2026-08-03"
     }
   },
   "tags": [],
