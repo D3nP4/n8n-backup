@@ -1,0 +1,396 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-08-02T10:09:23.699Z",
+    "createdAt": "2026-08-02T10:09:23.699Z",
+    "versionId": "d600b969-3c56-48e5-831e-a94e8ef84458",
+    "workflowId": "rzXCil8Cy1i7pOsh",
+    "nodes": [
+      {
+        "id": "wh-data",
+        "name": "Webhook: Sensordaten",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          400,
+          300
+        ],
+        "webhookId": "bulli-data-v1",
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "bulli-data",
+          "authentication": "headerAuth",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "924HACuYy3e75HNq",
+            "name": "Bulli Secret"
+          }
+        }
+      },
+      {
+        "id": "code-store",
+        "name": "Reading speichern",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          620,
+          300
+        ],
+        "parameters": {
+          "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst body = $input.first().json.body || {};\nconst temp = Number(body.temp);\nconst hum  = Number(body.hum);\nconst tilt = body.tilt !== undefined ? Number(body.tilt) : null;\nif (!Number.isFinite(temp) || !Number.isFinite(hum)) {\n  return [{json: {ok: false, error: 'temp/hum fehlt oder ungueltig'}}];\n}\nstaticData.lastReading = {temp, hum, tilt: Number.isFinite(tilt) ? tilt : null, ts: new Date().toISOString()};\nreturn [{json: {ok: true}}];"
+        }
+      },
+      {
+        "id": "respond-data",
+        "name": "Respond: Sensordaten",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          840,
+          300
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}",
+          "options": {
+            "responseCode": 200,
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "wh-status",
+        "name": "Webhook: Status",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          400,
+          520
+        ],
+        "webhookId": "bulli-status-v1",
+        "parameters": {
+          "httpMethod": "GET",
+          "path": "bulli-status",
+          "responseMode": "responseNode",
+          "options": {}
+        }
+      },
+      {
+        "id": "code-read",
+        "name": "Letzten Wert lesen",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          620,
+          520
+        ],
+        "parameters": {
+          "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst r = staticData.lastReading;\nreturn [{json: r || {temp: null, hum: null, tilt: null, ts: null, error: 'noch keine Daten'}}];"
+        }
+      },
+      {
+        "id": "respond-status",
+        "name": "Respond: Status",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          840,
+          520
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}",
+          "options": {
+            "responseCode": 200,
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook: Sensordaten": {
+        "main": [
+          [
+            {
+              "node": "Reading speichern",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reading speichern": {
+        "main": [
+          [
+            {
+              "node": "Respond: Sensordaten",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook: Status": {
+        "main": [
+          [
+            {
+              "node": "Letzten Wert lesen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Letzten Wert lesen": {
+        "main": [
+          [
+            {
+              "node": "Respond: Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Dennis Paun",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "d600b969-3c56-48e5-831e-a94e8ef84458",
+  "connections": {
+    "Webhook: Sensordaten": {
+      "main": [
+        [
+          {
+            "node": "Reading speichern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reading speichern": {
+      "main": [
+        [
+          {
+            "node": "Respond: Sensordaten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: Status": {
+      "main": [
+        [
+          {
+            "node": "Letzten Wert lesen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Letzten Wert lesen": {
+      "main": [
+        [
+          {
+            "node": "Respond: Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-08-02T09:19:56.469Z",
+  "id": "rzXCil8Cy1i7pOsh",
+  "isArchived": false,
+  "meta": null,
+  "name": "🐶 Bulli-Monitor",
+  "nodes": [
+    {
+      "id": "wh-data",
+      "name": "Webhook: Sensordaten",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        400,
+        300
+      ],
+      "webhookId": "bulli-data-v1",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bulli-data",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "924HACuYy3e75HNq",
+          "name": "Bulli Secret"
+        }
+      }
+    },
+    {
+      "id": "code-store",
+      "name": "Reading speichern",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst body = $input.first().json.body || {};\nconst temp = Number(body.temp);\nconst hum  = Number(body.hum);\nconst tilt = body.tilt !== undefined ? Number(body.tilt) : null;\nif (!Number.isFinite(temp) || !Number.isFinite(hum)) {\n  return [{json: {ok: false, error: 'temp/hum fehlt oder ungueltig'}}];\n}\nstaticData.lastReading = {temp, hum, tilt: Number.isFinite(tilt) ? tilt : null, ts: new Date().toISOString()};\nreturn [{json: {ok: true}}];"
+      }
+    },
+    {
+      "id": "respond-data",
+      "name": "Respond: Sensordaten",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        840,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "wh-status",
+      "name": "Webhook: Status",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        400,
+        520
+      ],
+      "webhookId": "bulli-status-v1",
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "bulli-status",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "code-read",
+      "name": "Letzten Wert lesen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        520
+      ],
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst r = staticData.lastReading;\nreturn [{json: r || {temp: null, hum: null, tilt: null, ts: null, error: 'noch keine Daten'}}];"
+      }
+    },
+    {
+      "id": "respond-status",
+      "name": "Respond: Status",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        840,
+        520
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "repo_name": "n8n-backup",
+  "repo_owner": "D3nP4",
+  "repo_path": "workflows/",
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-08-02T09:19:56.474Z",
+      "createdAt": "2026-08-02T09:19:56.474Z",
+      "role": "workflow:owner",
+      "workflowId": "rzXCil8Cy1i7pOsh",
+      "projectId": "Iyrtd5xOBA8QCG1f"
+    }
+  ],
+  "staticData": {
+    "global": {
+      "lastReading": {
+        "temp": 22.3,
+        "hum": 48,
+        "tilt": 3.2,
+        "ts": "2026-08-02T10:09:31.514Z"
+      }
+    }
+  },
+  "tags": [],
+  "triggerCount": 2,
+  "updatedAt": "2026-08-02T10:09:23.692Z",
+  "versionId": "d600b969-3c56-48e5-831e-a94e8ef84458"
+}
