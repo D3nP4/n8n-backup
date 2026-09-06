@@ -1,70 +1,7 @@
 {
-  "active": true,
-  "activeVersion": {
-    "updatedAt": "2026-09-02T18:58:48.504Z",
-    "createdAt": "2026-09-02T18:58:48.504Z",
-    "versionId": "6ed24ce7-8ea2-4937-a1f2-5d3e9a80fee9",
-    "workflowId": "gYLSrmnidrb5krb9",
-    "nodes": [
-      {
-        "id": "webhook-node",
-        "name": "Webhook",
-        "type": "n8n-nodes-base.webhook",
-        "typeVersion": 2,
-        "position": [
-          240,
-          300
-        ],
-        "parameters": {
-          "httpMethod": "POST",
-          "path": "bank-notify",
-          "responseMode": "lastNode",
-          "options": {}
-        },
-        "webhookId": "bank-notify"
-      },
-      {
-        "id": "telegram-node",
-        "name": "Telegram",
-        "type": "n8n-nodes-base.telegram",
-        "typeVersion": 1.2,
-        "position": [
-          460,
-          300
-        ],
-        "credentials": {
-          "telegramApi": {
-            "id": "qBKlXY3RPqAi76pW",
-            "name": "Telegram account"
-          }
-        },
-        "parameters": {
-          "chatId": "6422093154",
-          "text": "={{ \"🏦 Bankdaten werden abgerufen (\" + $json.body.type + \")\" }}",
-          "additionalFields": {}
-        },
-        "webhookId": "99d8ac1f-3252-4f5e-a29f-415d4ce7284f"
-      }
-    ],
-    "connections": {
-      "Webhook": {
-        "main": [
-          [
-            {
-              "node": "Telegram",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      }
-    },
-    "authors": "Dennis Paun",
-    "name": null,
-    "description": null,
-    "autosaved": false
-  },
-  "activeVersionId": "6ed24ce7-8ea2-4937-a1f2-5d3e9a80fee9",
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
   "connections": {
     "Webhook": {
       "main": [
